@@ -1,0 +1,314 @@
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+/* Container */
+.container {
+    padding: 10px;
+    margin-left: 250px;
+}
+
+/* Styling the nav-tabs */
+.nav-tabs {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.nav-tabs .nav-item {
+    flex: 1;
+    text-align: center;
+    margin: 0 10px;
+    font-size: 14px;
+    margin-top: 50px;
+}
+
+.nav-tabs .nav-link {
+    display: block;
+    padding: 15px 0;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: rgba(255, 255, 255, 0.514);
+    position: relative;
+    width: 105%;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.644);
+    color: rgb(20, 197, 20);
+}
+
+.nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: rgba(0, 255, 106, 0.9);   
+    border-color: rgba(0, 123, 255, 0.9);
+    font-weight: 700;
+}
+
+/* Adding an underline effect on hover */
+.nav-tabs .nav-link::after {
+    content: '';
+    width: 0;
+    height: 3px;
+    background-color: green;
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transition: width 0.3s ease, left 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover::after {
+    width: 100%;
+    left: 0;
+}
+
+.nav-tabs .nav-link.active::after {
+    width: 100%;
+    left: 0;
+}
+
+/* Tab Content */
+.tab-content {
+    margin-top: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    height: 420px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    background-color: white;
+}
+
+/* Responsive design */ 
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .nav-tabs .nav-item {
+        flex: 1 1 33.33%;
+        /* Ensure 3 items in a row */
+        margin-bottom: 10px;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+.lostfound-heading h3 {
+    display: inline-block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    position: relative;
+    padding-left: 20px;
+}
+
+.lostfound-heading h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5px;
+    height: 30px;
+    background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+    transform: translateY(-50%);
+}
+
+.add-btn {
+    position: absolute;
+    right: 30px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 10px;
+
+}
+
+.add-btn .btn {
+    background-color: green;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-btn .btn:hover {
+    background-color: rgba(0, 128, 0, 0.719);
+    color: white;
+}
+
+
+/* Modal Styling*/
+.modal-content {
+    border-radius: 12px;
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.1rem;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.btn-close {
+    outline: none;
+}
+
+/* Modal Styles*/
+.modal-content {
+    border-radius: 16px;
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+.modal-header {
+    padding-bottom: 0;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.form-select option {
+    font-size: 14px;
+}
+
+.form-control { 
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+    font-size: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: #0ba360;
+    box-shadow: 0 0 0 0.2rem rgba(11, 163, 96, 0.25);
+}
+
+.form-floating label {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.btn-success {
+    background-color: green;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: green;
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #565e64;
+}
+
+.modal-footer {
+    padding-top: 0;
+}
+
+button.btn-close {
+    background-color: transparent;
+    border: none;
+}
+
+button.btn-close:focus {
+    box-shadow: none;
+}
+
+/*Popup Alert*/
+.popup-alert {
+    display: none;
+    background-color: #e6f4ea;
+    color: #155724;
+    font-weight: 500;
+    font-size: 12px;
+    border-radius: 10px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1055;
+    min-width: 300px;
+    text-align: center;
+    position: fixed;
+}
+
+.popup-alert .btn-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0.5;
+
+}
+
+.popup-alert i {
+    color: #28a745;
+    /* Icon color */
+}
+
+.popup-alert h4 {
+    color: #28a745;
+    font-weight: 800;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}

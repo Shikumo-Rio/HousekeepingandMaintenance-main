@@ -1,0 +1,142 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    }
+    /* Container for pagination */
+    .pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    }
+    
+    /* Custom pagination styles */
+    .custom-pagination .page-link {
+    color: #fff;
+    background-color: #4CAF50;
+    border: 1px solid #4CAF50;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0 5px;
+    text-decoration: none;
+    font-size: 10px;
+    }
+    
+    /* Hover effect */
+    .custom-pagination .page-link:hover {
+    background-color: #3b8c42;
+    color: #fff;
+    }
+    
+    /* Active page styling */
+    .custom-pagination .active .page-link {
+    background-color: #2e7d32;
+    /* Dark green for active page */
+    border-color: #2e7d32;
+    color: #fff;
+    font-weight: bold;
+    }
+    
+    /* Disabled pagination items */
+    .custom-pagination .disabled .page-link {
+    background-color: #ccc;
+    color: #888;
+    border-color: #ccc;
+    pointer-events: none;
+    cursor: not-allowed;
+    }
+    
+    /* Responsive padding adjustments for smaller screens */
+    @media (max-width: 768px) {
+    .custom-pagination .page-link {
+        padding: 6px 10px;
+    }
+    }
+    
+    
+    /* For Claim and Return*/
+    .table-wrapper {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 5px;
+    }
+    
+    /* Fix the width of table columns to maintain layout */
+    table th,
+    table td {
+        white-space: nowrap;
+    }
+    
+    .table {
+    border-radius: 0.5rem;
+    border: none;
+    font-size: 12px;
+    border-collapse: separate;
+    border-spacing: 0 15px;
+    }
+    
+    .table th,
+    .table td {
+        vertical-align: middle;
+        border: none;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.3s ease;
+        /* Smooth transition for hover */
+    }
+    
+    .badge {
+        font-size: 0.6rem;
+    }
+    
+    .d-flex {
+        gap: 12px;
+        /* Adjust this value to increase or decrease the gap between elements */
+    }
+    
+    /* Select Dropdown for Status Update */
+    .status-select {
+    width: 55%;
+    padding: 5px;
+    font-size: 12px;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    height: auto;
+    appearance: none;
+    background-size: 12px;
+    outline: none;
+    }
+    
+    .status-select:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+        outline: none;
+    }
+    
+    /* Update Button */
+    .btn-update {
+        background-color: #28a745;
+        color: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+        border: none;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-update:hover {
+        background-color: #218838;
+        color: white;
+    }
+    
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.2);
+        position: absolute;
+         z-index: 1060; /* Lighter background */
+    }
+    
+    .modal-content {
+        background-color: white; /* Keep modal content background white */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    }

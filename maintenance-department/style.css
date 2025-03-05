@@ -1,0 +1,298 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navbar styling */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notification {
+    position: relative;
+    margin-left: auto;
+    /* Pushes notification to the right end */
+}
+
+/* Sidebar styling for larger screens */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: white;
+    z-index: 9999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    font-size: 14px;
+}
+
+.sidebar.active {
+    transform: translateX(0);
+    /* Slide in when active */
+}
+
+.sidebar.active~.content {
+    margin-left: 250px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 10px 20px;
+    color: darkgreen;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    background-color: green;
+    color: white;
+}
+
+/* Profile section styles */
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    background-color: darkgreen;
+    color: white;
+    padding: 30px 0;
+    height: 30%;
+    justify-content: center;
+    width: 100%;
+}
+
+.profile-img {
+    width: 100px;
+    /* Profile picture width */
+    height: 100px;
+    /* Profile picture height */
+    border-radius: 50%;
+    /* Circular profile picture */
+    object-fit: cover;
+    /* Ensure image covers the area */
+    justify-content: center;
+}
+
+/* Hamburger and logo positioning */
+.hamburger-logo-wrapper {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 10000;
+    cursor: pointer;
+    transition: left 0.3s ease;
+}
+
+.hamburger {
+    font-size: 24px;
+    margin-right: 10px;
+    padding-left: 20px;
+}
+
+.logo {
+    font-size: 20px;
+    color: #333;
+}
+
+/* Content styling */
+.content {
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+    z-index: 1;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: space-between;
+    overflow-y: auto;
+    margin-left: 0;
+}
+
+.content.dimmed {
+    opacity: 0.5;
+}
+
+.content.active {
+    margin-left: 250px;
+    /* Adjust margin when sidebar is active */
+}
+
+/* Overlay effect for dimmed background */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    display: none;
+}
+
+.overlay.active {
+    display: block;
+    /* Show overlay when active */
+}
+
+/* Hide overlay in desktop view */
+@media (min-width: 769px) {
+    .overlay {
+        display: none;
+        /* Ensure overlay is hidden for larger screens */
+    }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+
+    /* Sidebar styling for mobile view */
+    .sidebar {
+        transform: translateX(-100%);
+        /* Initially hidden */
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+        /* Slide in when active */
+    }
+
+    /* In mobile view, ensure content is below the overlay */
+    .content {
+        padding-top: 50px;
+        /* Space for the hamburger and logo */
+    }
+
+    .profile {
+        padding: 20px 0;
+    }
+
+    /* Hide content scrolling when sidebar is open */
+    body.no-scroll {
+        overflow: hidden;
+    }
+
+    /* Hide hamburger and logo when sidebar is active */
+    .hamburger-logo-wrapper.active {
+        display: none;
+        /* Hide when sidebar is active */
+    }
+
+    .card {
+        margin: 0;
+    }
+}
+
+/* Desktop view adjustments */
+@media (min-width: 769px) {
+    .content.active {
+        margin-left: 250px;
+        /* Content takes full width when sidebar is active */
+    }
+
+    .content {
+        margin-left: 0;
+        transition: margin-left 0.3s ease;
+        /* Smooth transition */
+    }
+
+    .hamburger-logo-wrapper.active {
+        left: 250px;
+        /* Move hamburger and logo when sidebar is active */
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+        /* Sidebar slides in when active */
+    }
+}
+
+/* Navigation Styles */
+.nav {
+    list-style-type: none;
+    padding: 0;
+}
+
+/* Individual Nav Item Styles */
+.nav-item {
+    margin: 10px 0;
+
+}
+
+/* Nav Link Styles */
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Icon Styles */
+.nav-link i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+    color: green;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Change icon color on hover */
+.nav-link:hover i {
+    color: #13d140;
+}
+
+/* Active Link Style (optional) */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.card {
+    border: none; /* Remove border for a cleaner look */
+    border-radius: 10px; /* Round corners */
+    width: 100%;
+    min-height: 230px;
+    justify-content: center;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.card-title {
+    font-size: 0.7rem; /* Increase title font size */
+    font-weight: bold; /* Bold font */
+}
+
+.card-subtitle {
+    font-size: 0.7rem; /* Subtitle font size */
+    color: #6c757d; /* Muted color for subtitle */
+}
+
+.card-text {
+    font-size: 0.7rem; /* Regular text size */
+    color: #343a40; /* Dark color for regular text */
+}
+
+.btn-primary {
+    background-color: #28a745; /* Custom green button color */
+    border: none; /* No border */
+    transition: background-color 0.3s ease; /* Transition for hover effect */
+    font-size: 10px;
+    width: 90px;
+}
+
+.btn-primary:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+

@@ -1,0 +1,461 @@
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Navbar styling */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    margin-top: 20px;
+    border-radius: 30px;
+}
+
+.notification {
+    position: relative;
+    margin-left: auto; /* Pushes notification to the right end */
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+
+.notification i {
+    font-size: 24px;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.notification i:hover {
+    color: #4CAF50;
+}
+
+/* Sidebar styling for larger screens */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: white;
+    z-index: 9999; /* Ensure sidebar is above everything */
+    transform: translateX(-100%); /* Initially hidden */
+    transition: transform 0.3s ease;
+    overflow-y: auto; /* Scrollable if content overflows */
+}
+
+.sidebar.active {
+    transform: translateX(0); /* Slide in when active */
+}
+.sidebar.active ~ .content {
+    margin-left: 250px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 10px 20px;
+    color: black;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    background-color: green;
+    color: white;
+}
+
+/* Profile section styles */
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    background-color: darkgreen;
+    color: white;
+    padding: 30px 0;
+    height: 30%;
+    justify-content: center;
+    width: 100%;
+}
+
+.profile-img {
+    width: 100px; /* Profile picture width */
+    height: 100px; /* Profile picture height */
+    border-radius: 50%; /* Circular profile picture */
+    object-fit: cover; /* Ensure image covers the area */
+    justify-content: center;
+}
+
+/* Hamburger and logo positioning */
+.hamburger-logo-wrapper {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    left: 10px;
+    z-index: 10000;
+    cursor: pointer;
+    transition: left 0.3s ease;
+}
+
+.hamburger {
+    font-size: 24px;
+    margin-right: 10px;
+    padding-left: 20px;
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.hamburger:hover {
+    transform: scale(1.1);
+    background-color: #ffffff43;
+}
+
+.logo {
+    width: 40px;
+    height: auto;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.logo:hover {
+    opacity: 0.8;
+}
+
+/* Content styling */
+.content {
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    overflow-y: auto;
+    margin-left: 0;
+    background-color: #f4f4f4;
+    height: 90vh;
+}
+
+.content.dimmed {
+    opacity: 0.5;
+}
+
+.content.active {
+    margin-left: 250px; /* Adjust margin when sidebar is active */
+}
+
+/* Overlay effect for dimmed background */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998; 
+    display: none;
+}
+
+.overlay.active {
+    display: block; /* Show overlay when active */
+}
+
+/* Hide overlay in desktop view */
+@media (min-width: 769px) {
+    .overlay {
+        display: none; /* Ensure overlay is hidden for larger screens */
+    }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    /* Sidebar styling for mobile view */
+    .sidebar {
+        transform: translateX(-100%); /* Initially hidden */
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Slide in when active */
+    }
+
+    /* In mobile view, ensure content is below the overlay */
+    .content {
+        padding-top: 15px; /* Space for the hamburger and logo */
+    }
+
+    .profile {
+        padding: 20px 0;
+    }   
+
+    /* Hide content scrolling when sidebar is open */
+    body.no-scroll {
+        overflow: hidden;
+    }
+
+    /* Hide hamburger and logo when sidebar is active */
+    .hamburger-logo-wrapper.active {
+        display: none; /* Hide when sidebar is active */
+    }
+
+    .hamburger-logo-wrapper{
+        position: relative;
+    }
+
+    .navbar {
+        padding: 10px 0;
+        width: 100%;
+    }
+
+    .btn {
+        font-size: 14px;
+    }
+
+    .content-task {
+        font-size: 16px;
+    }
+}
+
+/* Desktop view adjustments */
+@media (min-width: 769px) {
+    .content.active {
+        margin-left: 250px; /* Content takes full width when sidebar is active */
+    }
+
+    .content {
+        margin-left: 0;
+        transition: margin-left 0.3s ease; /* Smooth transition */
+    }
+
+    .hamburger-logo-wrapper.active {
+        left: 250px; /* Move hamburger and logo when sidebar is active */
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Sidebar slides in when active */
+    }
+}
+
+/* Buttons */
+.btn {
+    width: 100px;
+    height: 90px;
+    font-size: 13px;
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    grid-gap: 15px;
+    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+    grid-gap: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #28a745;
+    transition: transform 0.2s ease-in-out;
+    font-weight: 600;
+}
+
+
+.btn:hover {
+    background-color: #218838;
+    transform: translateY(-5px);
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.btn-primary {
+    background-color: #28a745;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 40px;
+}
+
+
+.task-table {
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    font-size: 13px;
+    padding: 5px ;
+}
+
+content, .content-task {
+    position: relative;
+    flex: 1; /* Make both divs take up equal space */
+    margin: 10px;
+}
+
+.content-task {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    text-align: center;
+    font-size: 18px;
+    color: #6c757d;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/*Profle Settings*/
+.profile-pic {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.change-password {
+    margin-top: 20px;
+}
+
+.change-password input{
+    outline: none;
+    outline-color: none;
+    border-radius: 30px;
+}
+
+
+/* Navigation Sidebar Styles */
+.nav {
+    list-style-type: none;
+    padding: 0;
+}
+
+/* Individual Nav Item Styles */
+.nav-item {
+    margin: 10px 0;
+
+}
+
+/* Nav Link Styles */
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 240px;
+    margin-left: 5px;
+}
+
+/* Icon Styles */
+.nav-link i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+    color: green;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    border-radius: 50px;
+}
+
+/* Change icon color on hover */
+.nav-link:hover i {
+    color: white;
+}
+
+/* Active Link Style (optional) */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Modal Styles*/
+.modal-content {
+    border-radius: 16px;
+    background-color: #ffffff;
+    padding: 20px;
+}
+
+.modal-header {
+    padding-bottom: 0;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.form-control {
+    background-color: #d8d1d155;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    background-color: #d8d1d155;
+    border-color: none;
+    box-shadow: none;
+}
+
+.form-select {
+    border: none;
+    background-color: #d8d1d155;
+}
+
+.form-select:focus {
+    background-color: #d8d1d155;
+    border-color: none;
+    box-shadow: none;
+}
+
+.form-floating label {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.btn-success {
+    background-color: green;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: green;
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #565e64;
+}
+
+.modal-footer {
+    padding-top: 0;
+}

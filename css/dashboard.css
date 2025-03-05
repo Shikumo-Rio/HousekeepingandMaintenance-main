@@ -1,0 +1,510 @@
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+.dashboard-heading {
+    text-align: left;
+    margin: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.dashboard-heading h3 {
+    display: inline-block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    position: relative;
+    padding-left: 20px;
+}
+
+.dashboard-heading h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5px;
+    height: 30px;
+    background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+    transform: translateY(-50%);
+}
+
+/* Card styling Top Employees Chart*/
+.top-employee .card-body {
+    padding: 5px;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+}
+
+.top-employee .card-body{
+    height: 285px;
+}
+
+.top-employee .card-header h4 {
+    padding: 0.5rem;
+    font-size: medium;
+    font-weight: bold;
+}
+
+/* Custom Styles for Maintenance Requests Chart Card */
+.maintenance-card {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    height: 500px;
+    width: 200px;
+}
+
+.maintenance-card .card-header h5 {
+    padding: 0.5rem;
+    font-size: medium;
+}
+
+.maintenance-card .card-body {
+    padding: 1.0rem;
+    height: 300px;
+    width: 500px;
+}
+
+/* Style for the canvas */
+.maintenance-card canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0.5rem;
+}
+
+#priorityDonutChart {
+    width: 100%;
+    height: 600px;
+    /* Adjust the height here */
+}
+
+
+/* Custom Styles for Lost and Found Chart Card */
+.lost-found-card {
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: 400px;
+    margin: 0 auto;
+}
+
+.lost-found-card .card-header h5{
+    padding: 0.5rem;
+    font-size: medium;
+}
+
+.lost-found-card .card-body {
+    padding: 1.5rem;
+    height: calc(100% - 60px);
+    width: calc(150% - 250px);
+}
+
+/* Style for the canvas */
+.lost-found-card canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0.5rem;
+}
+
+#lostFoundChart {
+    width: 100%;
+}
+
+
+/* Room Schedule Service Card Styling */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px;
+    border-radius: 0;
+    transition: background-color 0.3s ease;
+    width: 120%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.service-info {
+    display: flex;
+    flex-direction: column;
+    /* Stack room number and service type vertically */
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.service-info h6,
+.service-info p {
+    margin: 0;
+}
+
+.list-group-item h6.room-number {
+    font-size: calc(1.0em + 0.2vw);
+}
+
+.list-group-item p.service-type {
+    font-size: calc(0.7em + 0.1vw);
+}
+
+/* Adjust service time and status */
+.service-time,
+.service-status {
+    font-size: calc(1em + 0.1vw);
+    display: flex;
+    align-items: center;
+}
+
+.room-number {
+    font-size: 0.5rem;
+    font-weight: bold;
+}
+
+.room-service-schedule-card {
+    min-height: 348px;
+    width: 49%;
+}
+
+.room-service-schedule-card .card-body {
+    width: 425px;
+}
+
+.room-service-schedule-card .card-header h5{
+    padding: 0.5rem;
+    font-size: medium;
+}
+
+.service-card {
+    height: 100px;
+}
+
+.service-type {
+    font-size: 0.7rem;
+    /* Smaller font for service type */
+    color: #6c757d;
+    /* Muted text color */
+}
+
+.service-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.6rem;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.service-status i {
+    margin-right: 5px;
+    /* Space between icon and text */
+}
+
+.service-status.pending {
+    background-color: #ffc107;
+    /* Yellow for pending */
+}
+
+.service-status.completed {
+    background-color: #28a745;
+    /* Green for completed */
+}
+
+.service-status.in-progress {
+    background-color: #17a2b8;
+    /* Blue for in-progress */
+}
+
+
+.list-group-item {
+    padding: 0.5rem 1rem;
+}
+
+.btn {
+    font-size: 0.65rem;
+}
+
+/* Specific color overrides for each card type */
+.bg-primary {
+    background-color: #007bff;
+}
+
+.bg-warning {
+    background-color: #ffc107;
+}
+
+.bg-success {
+    background-color: #28a745;
+}
+
+.bg-info {
+    background-color: #17a2b8;
+}
+
+.bg-secondary {
+    background-color: #6c757d;
+}
+
+.bg-dark {
+    background-color: #343a40;
+}
+
+
+/* DASHBOARD*/
+:root {
+    --poppins: 'Poppins', sans-serif;
+    --lato: 'Lato', sans-serif;
+
+    --light: #F9F9F9;
+    --blue: #3C91E6;
+    --light-blue: #CFE8FF;
+    --grey: #eee;
+    --dark-grey: #AAAAAA;
+    --dark: #342E37;
+    --red: #DB504A;
+    --yellow: #FFCE26;
+    --light-yellow: #FFF2C6;
+    --orange: #FD7238;
+    --light-orange: #FFE0D3;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body.dark {
+    --light: #0C0C1E;
+    --grey: #060714;
+    --dark: #FBFBFB;
+}
+
+.custom-style {
+    padding-left: 0;
+    width: 570px;
+}
+
+
+#content main .box-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-gap: 5px;
+    margin-top: 24px;
+}
+
+#content main .box-info li {
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    height: 115px;
+    width: 180px;
+    flex-direction: column;
+    margin-left: 17px;
+}
+
+#content main .box-info li .bx {
+    width: 30px;
+    height: 30px;
+    border-radius: 30px;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#content main .box-info li:nth-child(1) .bx {
+    background: var(--light-blue);
+    color: var(--blue);
+}
+
+#content main .box-info li:nth-child(2) .bx {
+    background: var(--light-yellow);
+    color: var(--yellow);
+}
+
+#content main .box-info li:nth-child(3) .bx {
+    background: var(--light-orange);
+    color: var(--orange);
+}
+
+#content main .box-info li:nth-child(4) .bx {
+    background: var(--light-blue);
+    color: var(--blue);
+}
+
+#content main .box-info li:nth-child(5) .bx {
+    background: var(--light-yellow);
+    color: var(--yellow);
+}
+
+#content main .box-info li:nth-child(6) .bx {
+    background: var(--light-orange);
+    color: var(--orange);
+}
+
+#content main .box-info li:nth-child(7) .bx {
+    background: var(--light-yellow);
+    color: var(--yellow);
+}
+
+#content main .box-info li:nth-child(8) .bx {
+    background: var(--light-orange);
+    color: var(--orange);
+}
+
+#content main .box-info li:nth-child(9) .bx {
+    background: var(--light-blue);
+    color: var(--blue);
+}
+
+#content main .box-info li:nth-child(10) .bx {
+    background: var(--light-yellow);
+    color: var(--yellow);
+}
+
+#content main .box-info li .text h3 {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+#content main .box-info li .text p {
+    font-size: 11px;
+    margin-bottom: 0;
+}
+
+li {
+    list-style: none;
+}
+
+
+
+
+/* Media Queries for larger screens */
+@media (min-width: 1200px) {
+    .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .lost-found-card .card-body{
+        width: 100%;
+        height: 250px;
+    }
+
+    .top-employee .card-body {
+        width: 100%;
+        height: 250px;
+    }
+
+    .maintenance-card {
+        width: 100%;
+    }
+
+    .maintenance-card .card-body {
+        height: 260px;
+    }
+
+    .list-group-item {
+        width: 470px;
+        height: 45px;
+    }
+}
+
+/**/
+@media (min-width: 1600px) {
+    #content main .box-info li {
+        width: 18%;
+    }
+
+    .lost-found-card {
+        width: 100%;
+    }
+
+    .lost-found-card canvas {
+        width: 10px;
+    }
+
+    #lostFoundChart {
+        width: 10px;
+    }
+
+    .top-employee {
+        width: 100%;
+    }
+
+    .maintenance-card canvas {  
+        width: 100%;
+        margin-left: 50px;
+    }
+
+    #priorityDonutChart {
+        height: 500%;
+    }
+
+    .maintenance-card .card-body {
+        height: 300px;
+    }
+
+    .room-service-schedule-card .card-body {
+        width: 100%;
+        height: 300px;
+    }
+
+    .list-group-item {
+        width: 590px;
+        height: 50px;
+    }
+
+    .list-group {
+        height: 200px;
+    }
+}
+
+/* For mobile phones: */
+@media only screen and (max-width: 768px) {
+    #content main .box-info li {
+        width: 25%;
+    }
+
+   #content main .box-info li .text p {
+        font-size: 8px;
+    }
+
+    .lost-found-card .card-body {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .top-employee .card-body {
+        width: 100%;
+    }
+
+    .maintenance-card .card-body {
+        width: 100%;
+    }
+
+    .room-service-schedule-card .card-body {
+        width: 100%;
+    }
+
+    .list-group-item {
+        width: 100%;
+        height: 100%;
+    }
+
+    .list-group {
+        height: 100%;
+    }
+}

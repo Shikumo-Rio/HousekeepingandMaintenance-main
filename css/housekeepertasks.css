@@ -1,0 +1,164 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f8fa;
+}
+
+.task-allocation-heading {
+    font-size: 20px;
+    text-align: left;
+    margin: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.task-allocation-heading h3 {
+    display: inline-block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    position: relative;
+    padding-left: 20px;
+}
+
+.task-allocation-heading h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5px;
+    height: 30px;
+    background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+    transform: translateY(-50%);
+}
+
+.card-title {
+    font-weight: 500;
+    color: #333;
+}
+
+.card-with-line {
+    border: none;
+    border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    position: relative;
+    max-height: 100%;
+    max-width: 100%;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-with-line::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-color: green;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.card-with-line .card-body {
+    padding: 20px 30px;
+    text-align: center;
+}
+
+.card-with-line .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.card-with-line .card-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: green;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    display: flex;
+    margin-right: 10px;
+    justify-content: center;
+}
+
+.card-with-line .card-text i {
+    font-size: 28px;
+    margin-right: 10px;
+    color: green;
+}
+
+.card-with-line .card-body h5 {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 15px;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card table:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/*Table Styling*/
+table {
+    background-color: white;
+    border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    width: 100%;
+    font-size: 12px;
+}
+
+table thead {
+    background-color: #28a745;
+    color: white;
+    font-weight: 500;
+    color: #666;
+}
+
+.table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    /* Light hover effect */
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    border-radius: 50px;
+    font-size: 12px;
+}
+
+.add-housekeeper .btn {
+    border-radius: 15px;
+    right: 10px;
+    border: solid 2px;
+    border-color: green;
+    font-size: 12px;
+}
+
+.add-housekeeper .btn:hover {
+    background-color: green;
+    color: white;
+}
