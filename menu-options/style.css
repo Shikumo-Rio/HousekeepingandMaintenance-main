@@ -1,0 +1,425 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    place-items: center;
+    margin: 0;
+}
+.container {
+    max-width: 450px;
+}
+
+.menu-container {
+    width: 100%;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid lightgrey;
+    border-top: 0px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    min-height: 110%;
+}
+
+.menu-header {
+    background: white;
+    color: black;
+    font-size: 20px;
+    font-weight: 500;
+    text-align: center;
+    border-bottom: 1px solid #cacaca;
+    margin: 0 auto;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.menu-header img {
+    border: 2px solid #28a745;
+}
+
+.header-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.grid-template {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.menu-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 12px;
+    padding: 5px;
+    font-weight: 600;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-align: center;
+    flex-direction: column;
+    min-height: 100%;
+    margin-top: 30px;
+    text-decoration: none;
+}
+
+
+.icon-wrapper i {
+    color: #28a745;
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+
+/* Text Styling*/
+.menu-text h5 {
+    font-size: 14px;
+    margin: 0;
+    color: #333;
+}
+
+.menu-text p {
+    font-size: 12px;
+    margin: 5px 0 0;
+    color: #666;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-color: #28a745;
+}
+/*The code ends here for all services*/
+
+
+/* Nav Tab for Room Service/Order Food*/
+.nav-tabs {
+    border-bottom: 2px solid #ddd;
+    justify-content: center;
+    margin: 0;
+    /* Ensures no margins on sides */
+    padding: 0;
+    width: 100%;
+}
+
+/* Make each tab take up equal space */
+.nav-tabs .nav-item {
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Tab Links Styling */
+.nav-tabs .nav-link {
+    color: #555;
+    font-weight: 600;
+    border: none;
+    padding: 12px 20px;
+    transition: color 0.3s ease-in-out, background 0.3s ease-in-out;
+    width: 100%;
+}
+
+/* Active Tab */
+.nav-tabs .nav-link.active {
+    background-color: #28a745;
+    color: #fff;
+    border-radius: 0;
+    /* Ensures no rounded corners */
+}
+
+/* Remove Margin for Mobile View */
+@media (max-width: 768px) {
+    .nav-tabs {
+        white-space: nowrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .nav-tabs .nav-link {
+        flex-grow: 1;
+        text-align: center;
+    }
+}
+/* the code ends here for nav tab room service/order food*/
+
+
+/* Quantity Selector for Request Services*/
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Hide arrows for number input fields */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input {
+    -moz-appearance: textfield;
+    /* Firefox */
+}
+
+.quantity-input {
+    max-width: 50px;
+    border: none;
+    font-weight: bold;
+    text-align: center;
+    background: #f8f9fa;
+}
+
+.minus-btn,
+.plus-btn {
+    font-size: 18px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    border: 1px solid #28a745;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.minus-btn:hover,
+.plus-btn:hover {
+    background: #28a745;
+    color: #fff;
+}
+
+.list-group-item {
+    border: none !important;
+    background: #fff;
+    padding: 15px 25px;
+    box-shadow: none !important;
+}
+
+#amenities-form {
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    background: #fff;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+/*The code ends here for room services/amenities*/
+
+
+/*Order Food Category*/
+.nav-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Hide scrollbar for Firefox */
+}
+
+.nav-container::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar for Chrome & Safari */
+}
+
+/* Remove background color from nav items */
+.nav-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    /* Subtle bottom border */
+    padding-bottom: 5px;
+}
+
+.nav-pills .nav-link {
+    background: none !important;
+    /* Removes default background */
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 15px;
+    border-radius: 0;
+    position: relative;
+    transition: color 0.3s ease-in-out;
+    border: none;
+    /* Ensures no border appears */
+}
+
+/* Underline Effect */
+.nav-pills .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 0;
+    height: 2px;
+    background-color: #28a745;
+    transition: all 0.3s ease-in-out;
+    transform: translateX(-50%);
+}
+
+/* Underline on Hover */
+.nav-pills .nav-link:hover::after {
+    width: 80%;
+}
+
+/* Active tab styling (keeps underline when clicked) */
+.nav-pills .nav-link.active {
+    color: #28a745;
+    font-weight: bold;
+    background: none !important;
+    /* Ensure no background */
+}
+
+.nav-pills .nav-link.active::after {
+    width: 100%;
+}
+
+/* Quantity Selector*/
+.quantity-selector-order {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 30%;
+}
+
+/* Hide arrows for number input fields */
+.quantity-input-order::-webkit-outer-spin-button,
+.quantity-input-order::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input-order {
+    -moz-appearance: textfield;
+    /* Firefox */
+}
+
+.quantity-input-order {
+    max-width: 90px;
+    border: none;
+    font-weight: bold;
+    text-align: center;
+    background: #f8f9fa;
+}
+
+.container {
+    --bs-gutter-x: 0.0;
+}
+
+.list-group-item-order {
+    min-height: 110px;
+    /* Ensures all items have the same height */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: none !important;
+    background: #fff;
+    padding: 15px 25px;
+    box-shadow: none !important;
+}
+
+.quantity-selector-order {
+    display: flex;
+    align-items: center;
+    min-width: 110px;
+    /* Ensures enough space for buttons & input */
+}
+
+.quantity-input-order {
+    width: 40px;
+    text-align: center;
+}
+
+h6 {
+    margin-bottom: 5px;
+    /* Adds space between title and description */
+    font-size: 16px;
+    /* Adjusts size for readability */
+}
+
+p {
+    margin-bottom: 0;
+    font-size: 14px;
+    /* Ensures it's readable */
+}
+/*The code ends here for order food category*/
+
+/*The code starts here for request housekeeping*/
+.form-check-input {
+    appearance: none;
+    width: 1.2em;
+    height: 1.2em;
+    border: 2px solid #28a745;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-outline{
+    border: none !important;
+        /* Remove border */
+}
+
+/*The code ends here for request housekeeping*/
+
+/* The code starts here for report maintenance*/
+.card {
+    max-width: 500px;
+    margin: auto;
+    border-radius: 15px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.form-control {
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0px 0px 10px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #218838);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: scale(1.05);
+}
+
+.text-muted {
+    font-size: 0.9rem;
+}

@@ -10,6 +10,8 @@ if (isset($_SESSION['username'])) {
         header("Location: dashboard.php"); // Redirect to admin dashboard
     } elseif ($_SESSION['user_type'] == 'maintenance') {
         header("Location: /housekeepingandmaintenance-main/maintenance-department/maintenance.php"); // Redirect to maintenance dashboard
+    } elseif ($_SESSION['user_type'] == 'maintenance-staff') {
+        header("Location: /housekeepingandmaintenance-main/maintenance-staff/staff.php"); // Redirect to maintenance dashboard
     }
     exit;
 }
@@ -64,6 +66,8 @@ if (isset($_POST['login'])) {
             header("Location: dashboard.php");
         } elseif ($user['user_type'] == 'Maintenance') {
             header("Location: /housekeepingandmaintenance-main/maintenance-department/maintenance.php");
+        } elseif ($user['user_type'] == 'maintenance-staff') {
+            header("Location: /housekeepingandmaintenance-main/maintenance-staff/staff.php");
         }
         exit;
     } else {

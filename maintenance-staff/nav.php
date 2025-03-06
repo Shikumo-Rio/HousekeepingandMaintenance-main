@@ -6,7 +6,7 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
-if ($_SESSION['user_type'] !== 'Maintenance') {
+if ($_SESSION['user_type'] !== 'maintenance-staff') {
     // Redirect to unauthorized access page or admin dashboard
     header("Location: ../unauthorized.php"); // You can create this page
     exit;
@@ -14,7 +14,7 @@ if ($_SESSION['user_type'] !== 'Maintenance') {
 
 // Get user details from database
 $username = $_SESSION['username'];
-$sql = "SELECT emp_id, username FROM login_accounts WHERE username = ? AND user_type = 'Maintenance'";
+$sql = "SELECT emp_id, username FROM login_accounts WHERE username = ? AND user_type = 'maintenance-staff'";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -56,13 +56,8 @@ $user = $result->fetch_assoc();
         </div>
         <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link text-black" href="maintenance.php">
-            <i class="fas fa-tools"></i> Maintenance Requests
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-black" href="mainte-staff.php">
-            <i class="fas fa-user-circle "></i> Maintenance Staffs
+          <a class="nav-link text-black" href="staff.php">
+            <i class="fas fa-tools"></i> My Assigned Tasks
           </a>
         </li>
         <li class="nav-item">
