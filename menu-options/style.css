@@ -423,3 +423,8 @@ p {
 .text-muted {
     font-size: 0.9rem;
 }
+
+.btn-outline-secondary{
+    border: none !important;
+        /* Remove border */
+}

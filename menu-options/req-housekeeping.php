@@ -1,3 +1,42 @@
+<?php
+session_start();
+require_once("../database.php");
+
+if (!isset($_SESSION['verified']) || !isset($_SESSION['uname'])) {
+    header("Location: ../index.html");
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $uname = $_SESSION['uname'];
+    $room = $_SESSION['room_number'];
+    $request = "Housekeeping";
+    $status = "Pending";
+    
+    // Get selected services and additional request
+    $data = json_decode(file_get_contents('php://input'), true);
+    $selectedServices = $data['services'] ?? [];
+    $additionalRequest = $data['additionalRequest'] ?? '';
+    
+    // Build details string
+    $details = implode(", ", $selectedServices);
+    if ($additionalRequest) {
+        $details = $details . ($details ? " | " : "") . $additionalRequest;
+    }
+    
+    // Insert into database
+    $stmt = $conn->prepare("INSERT INTO customer_messages (uname, request, details, room, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("sssss", $uname, $request, $details, $room, $status);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
+    }
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +59,11 @@
                 </div>
             </div>
         </div>
+        <div class="d-flex align-items-center mb-4">
+                    <a href="services.php" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> 
+                    </a>
+                </div>
         <h5 class="mb-4 mt-4 m-2 fw-semibold">Housekeeping Services</h5>
         <!-- Housekeeping Request Form -->
         <div class="card shadow-lg border-0 rounded-4 p-4 text-center">
@@ -105,13 +149,39 @@
     <script>
         $(document).ready(function() {
             $('#confirmSubmit').click(function() {
-                let additionalRequest = $('#modalAdditionalRequest').val();
-                $('#additionalRequest').val(additionalRequest); // Copy it to the main form
+                // Collect all checked services
+                const selectedServices = [];
+                $('input[type="checkbox"]:checked').each(function() {
+                    selectedServices.push($(this).closest('label').find('span').text().trim());
+                });
 
-                $('#housekeepingForm').trigger('reset'); // Reset form after submission
-                $('#requestModal').modal('hide'); // Close the modal
+                const additionalRequest = $('#modalAdditionalRequest').val();
 
-                alert('Your housekeeping request has been submitted successfully!');
+                // Send request to server
+                fetch('req-housekeeping.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        services: selectedServices,
+                        additionalRequest: additionalRequest
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $('#housekeepingForm').trigger('reset');
+                        $('#requestModal').modal('hide');
+                        alert('Your housekeeping request has been submitted successfully!');
+                    } else {
+                        alert('Error submitting request');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting request');
+                });
             });
         });
 

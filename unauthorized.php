@@ -29,7 +29,8 @@
     <div class="warning-container">
         <img src="img/logo.webp" alt="Logo" class="logo">
         <div class="warning-text">
-            I'm sorry you're not allowed to access this if you're not logged in with right usertype
+            I'm sorry you're not allowed to access this, its either your not allowed or you're not logged in with the
+            right account
         </div>
         <button class="btn btn-secondary mt-3" onclick="window.history.back();">Go Back</button>
     </div>

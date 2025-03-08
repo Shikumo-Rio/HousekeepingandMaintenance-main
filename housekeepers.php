@@ -10,10 +10,15 @@ if ($_SESSION['user_type'] !== 'Admin') {
     exit;
 }
 
-// Fetch only employees from the database
-$employee = [];
+// Fetch employees from the database grouped by their roles
+$employees = [
+    'housekeeper' => [],
+    'room_attendant' => [],
+    'linen_attendant' => []
+];
+
 $query = "
-    SELECT e.emp_id, e.name, e.status 
+    SELECT e.emp_id, e.name, e.status, e.role 
     FROM employee e
     INNER JOIN login_accounts l ON e.emp_id = l.emp_id
     WHERE l.user_type = 'employee'
@@ -22,60 +27,34 @@ $result = $conn->query($query);
 
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        $employee[] = $row; // Store each housekeeper in the array
+        $role = $row['role'] ?? 'housekeeper';
+        $employees[$role][] = $row;
     }
 } else {
     echo "Error fetching employees: " . $conn->error;
 }
 
-// Adding a new housekeeper and creating a default login
-if (isset($_POST['addHousekeeper'])) {
+// Handle employee addition
+if (isset($_POST['addEmployee'])) {
     $name = $conn->real_escape_string($_POST['name']);
     $status = $conn->real_escape_string($_POST['status']);
+    $role = $conn->real_escape_string($_POST['role']);
 
-    // Insert the new employee into the employee table
-    $insertEmployee = "INSERT INTO employee (name, status) VALUES ('$name', '$status')";
+    $insertEmployee = "INSERT INTO employee (name, status, role) VALUES ('$name', '$status', '$role')";
     
     if ($conn->query($insertEmployee) === TRUE) {
-        $emp_id = $conn->insert_id;  // Get the inserted emp_id
-
-        // Insert a default login for the new employee into the login_accounts table
-        $defaultPassword = password_hash('paradise', PASSWORD_BCRYPT);  // Hash the default password
+        $emp_id = $conn->insert_id;
+        $defaultPassword = password_hash('paradise', PASSWORD_BCRYPT);
         $insertLogin = "INSERT INTO login_accounts (username, password, user_type, emp_id, is_online) 
                         VALUES ('$emp_id', '$defaultPassword', 'employee', '$emp_id', 0)";
         
         if ($conn->query($insertLogin) === TRUE) {
-            echo "<script>alert('Housekeeper and login account created successfully!');</script>";
+            echo "<script>alert('Employee and login account created successfully!');</script>";
         } else {
             echo "<script>alert('Error creating login account.');</script>";
         }
     } else {
-        echo "<script>alert('Error adding housekeeper.');</script>";
-    }
-}
-
-// Adding a new housekeeper with emp_id
-if (isset($_POST['addHousekeeperDetails'])) {
-    $emp_id = $conn->real_escape_string($_POST['emp_id']);
-    $name = $conn->real_escape_string($_POST['name']);
-    $status = $conn->real_escape_string($_POST['status']);
-
-    // Insert the new employee into the employee table
-    $insertEmployee = "INSERT INTO employee (emp_id, name, status) VALUES ('$emp_id', '$name', '$status')";
-    
-    if ($conn->query($insertEmployee) === TRUE) {
-        // Insert a default login for the new employee into the login_accounts table
-        $defaultPassword = password_hash('paradise', PASSWORD_BCRYPT);  // Hash the default password
-        $insertLogin = "INSERT INTO login_accounts (username, password, user_type, emp_id, is_online) 
-                        VALUES ('$emp_id', '$defaultPassword', 'Employee', '$emp_id', 0)";
-        
-        if ($conn->query($insertLogin) === TRUE) {
-            echo "<script>alert('Housekeeper and login account created successfully!');</script>";
-        } else {
-            echo "<script>alert('Error creating login account.');</script>";
-        }
-    } else {
-        echo "<script>alert('Error adding housekeeper.');</script>";
+        echo "<script>alert('Error adding employee.');</script>";
     }
 }
 
@@ -97,70 +76,66 @@ if (isset($_POST['addHousekeeperDetails'])) {
 <body>
     <?php include('index.php'); ?>
     <div class="container py-4">
-    <div class="p-4 housekeepers-heading card">
-        <h3>Housekeepers</h3>
-    </div>
-         <div class="housekeeper-btn">
+        <div class="p-4 housekeepers-heading card">
+            <h3>Housekeeping Staff</h3>
+        </div>
+        <div class="housekeeper-btn">
             <button class="btn" data-bs-toggle="modal" data-bs-target="#requestEmployeeModal">
                 <i class="fa-solid fa-plus"></i>Request Employee
             </button>
         </div>
+
+        <!-- Room Attendants Section -->
+        <h4 class="mt-4">Room Attendants</h4>
         <div class="row gx-6 mt-0 m-0">
-            <?php foreach ($employee as $housekeeper) : ?>
-                <div class="col-md-3 mb-0 mt-4">
-                    <div class="card housekeeper-card shadow-sm">
-                        <div class="card-body text-center">
-                            <!-- Dropdown for options -->
-                            <div class="dropdown position-absolute" style="top: 10px; right: 10px;">
-                                <button class="btn btn-link text-muted" type="button" id="dropdownMenu<?= $housekeeper['emp_id']; ?>" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenu<?= $housekeeper['emp_id']; ?>">
-                                    <li><span class="dropdown-item" onclick="editHousekeeper(<?= $housekeeper['emp_id']; ?>)">Edit</span></li>
-                                    <li><span class="dropdown-item text-danger" onclick="deleteHousekeeper(<?= $housekeeper['emp_id']; ?>)">Delete</span></li>
-                                </ul>
-                            </div>
+            <?php foreach ($employees['room_attendant'] as $employee) : ?>
+                <?php include('employee_card.php'); ?>
+            <?php endforeach; ?>
+        </div>
 
-                            <!-- Icon Placeholder -->
-                            <div class="icon">
-                                <i class="fas fa-user"></i>
-                            </div>
-
-                            <h5 class="card-title"><?= htmlspecialchars($housekeeper['name']); ?></h5>
-                            <p class="card-text">Status: <?= htmlspecialchars($housekeeper['status']); ?></p>
-                        </div>
-                    </div>
-                </div>
+        <!-- Linen Attendants Section -->
+        <h4 class="mt-4">Linen Attendants</h4>
+        <div class="row gx-6 mt-0 m-0">
+            <?php foreach ($employees['linen_attendant'] as $employee) : ?>
+                <?php include('employee_card.php'); ?>
             <?php endforeach; ?>
         </div>
     </div>
 
-    <div class="modal fade" id="requestEmployeeModal" tabindex="-1" aria-labelledby="requestEmployeeModalLabel" aria-hidden="true">
+    <!-- Updated Modal with Role Selection -->
+    <div class="modal fade" id="requestEmployeeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg rounded-4">
                 <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold" id="requestEmployeeModalLabel">Request New Housekeeper</h5>
+                    <h5 class="modal-title fw-bold">Request New Employee</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form action="" method="POST">
                         <div class="form-floating mb-3">
-                            <input type="number" name="quantity" class="form-control rounded-3" id="quantity" placeholder="Enter Quantity" required>
+                            <select name="role" class="form-control rounded-3" id="role" required>
+                                <option value="housekeeper">Housekeeper</option>
+                                <option value="room_attendant">Room Attendant</option>
+                                <option value="linen_attendant">Linen Attendant</option>
+                            </select>
+                            <label for="role">Employee Role</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="number" name="quantity" class="form-control rounded-3" id="quantity" required>
                             <label for="quantity">Quantity</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <textarea name="reason" class="form-control rounded-3" id="reason" placeholder="Enter a reason" style="height: 100px;" required></textarea>
+                            <textarea name="reason" class="form-control rounded-3" id="reason" style="height: 100px;" required></textarea>
                             <label for="reason">Reason</label>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" name="requestHousekeeperDetails" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
+                            <button type="submit" name="requestEmployee" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
 
     <script>
         function editHousekeeper(empId) {

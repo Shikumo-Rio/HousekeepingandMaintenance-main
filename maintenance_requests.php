@@ -139,6 +139,55 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
         </div>
     </div>
 
+    <!-- Guest Maintenance Table -->
+    <div class="container mt-4 mb-4">
+        <div class="card shadow-lg rounded-3">
+            <div class="card-body m-0">
+                <h3 class="mb-4 mt-2">Guest Maintenance Requests</h3>
+                <div class='table-responsive'>
+                    <table class="table table-hover">
+                        <thead class="striky-top">
+                            <tr class="bg-dark text-light">
+                                <th>ID</th>
+                                <th>Guest Name</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Room</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $sql = "SELECT id, uname, title, description, room, status, created_at FROM guest_maintenance";
+                            $result = $conn->query($sql);
+
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td>" . htmlspecialchars($row['id']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['uname']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['title']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['description']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['room']) . "</td>";
+                                    echo "<td><span class='badge text-bg-" .
+                                        ($row['status'] == 'Pending' ? 'secondary' : 
+                                        ($row['status'] == 'Completed' ? 'success' : 'warning')) .
+                                        "'>" . htmlspecialchars($row['status']) . "</span></td>";
+                                    echo "<td>" . htmlspecialchars($row['created_at']) . "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='7'>No guest maintenance records found.</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Email Modal -->
     <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

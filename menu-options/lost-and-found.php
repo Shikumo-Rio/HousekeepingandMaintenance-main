@@ -1,3 +1,43 @@
+<?php
+session_start();
+require_once("../database.php");
+
+if (!isset($_SESSION['verified']) || !isset($_SESSION['uname'])) {
+    header("Location: ../index.html");
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $found_by = $_POST['foundBy'];
+    $type = $_POST['selectType'];
+    $room = $_SESSION['room_number'];
+    $item = $_POST['itemName'];
+    $description = $_POST['description'];
+    $status = "Pending";
+    $action = "Processing";
+    
+    // Handle image upload
+    $picture = "";
+    if (isset($_FILES['imageUpload']) && $_FILES['imageUpload']['error'] == 0) {
+        $target_dir = "../uploads/";
+        $file_extension = pathinfo($_FILES["imageUpload"]["name"], PATHINFO_EXTENSION);
+        $picture = uniqid() . '.' . $file_extension;
+        move_uploaded_file($_FILES["imageUpload"]["tmp_name"], $target_dir . $picture);
+    }
+
+    // Insert into database
+    $stmt = $conn->prepare("INSERT INTO lost_and_found (found_by, type, room, date, item, description, status, picture, action) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $found_by, $type, $room, $item, $description, $status, $picture, $action);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
+    }
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,20 +60,25 @@
                 </div>
             </div>
         </div>
+        <div class="d-flex align-items-center mb-4">
+                    <a href="services.php" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
         <h5 class="mt-4 m-2 mb-2 fw-semibold">Lost and Found</h5>
         <!-- Lost and Found Request Form -->
         <div class="card p-4 mt-4">
             <p class="text-muted mb-4 text-center">Please fill out the details of the lost or found item.</p>
-            <form id="lostFoundForm">
+            <form id="lostFoundForm" enctype="multipart/form-data">
                 <!-- Found By -->
                 <div class="form-floating mb-3">
-                    <input type="text" id="foundBy" class="form-control" placeholder="Enter your name" required>
+                    <input type="text" id="foundBy" name="foundBy" class="form-control" placeholder="Enter your name" required>
                     <label for="foundBy">Found By</label>
                 </div>
 
                 <!-- Select Type (Lost/Found) -->
                 <div class="form-floating mb-3">
-                    <select id="selectType" class="form-select" required>
+                    <select id="selectType" name="selectType" class="form-select" required>
                         <option selected disabled>Select type</option>
                         <option value="lost">Lost</option>
                         <option value="found">Found</option>
@@ -41,33 +86,61 @@
                     <label for="selectType">Select Type</label>
                 </div>
 
-                <!-- Room Number -->
+                <!-- Room Number (readonly, from session) -->
                 <div class="form-floating mb-3">
-                    <input type="number" id="roomNumber" class="form-control" placeholder="Enter room number" required>
+                    <input type="text" id="roomNumber" class="form-control" value="<?php echo $_SESSION['room_number']; ?>" readonly>
                     <label for="roomNumber">Room Number</label>
                 </div>
 
                 <!-- Item Name -->
                 <div class="form-floating mb-3">
-                    <input type="text" id="itemName" class="form-control" placeholder="Enter item name" required>
+                    <input type="text" id="itemName" name="itemName" class="form-control" placeholder="Enter item name" required>
                     <label for="itemName">Item</label>
                 </div>
 
                 <!-- Description -->
                 <div class="form-floating mb-3">
-                    <textarea id="description" class="form-control" placeholder="Describe the item" style="height: 120px;" required></textarea>
+                    <textarea id="description" name="description" class="form-control" placeholder="Describe the item" style="height: 120px;" required></textarea>
                     <label for="description">Description</label>
                 </div>
 
                 <!-- Upload Image -->
                 <div class="mb-3">
                     <label for="imageUpload" class="form-label fw-semibold">Upload Image (Optional)</label>
-                    <input type="file" id="imageUpload" class="form-control">
+                    <input type="file" id="imageUpload" name="imageUpload" class="form-control" accept="image/*">
                 </div>
 
                 <button type="submit" class="btn btn-success fw-semibold w-100">Submit Request</button>
             </form>
         </div>
     </div>
+    <script>
+        $(document).ready(function() {
+            $('#lostFoundForm').submit(function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+
+                fetch('lost-and-found.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Report submitted successfully!');
+                        this.reset();
+                        document.getElementById('roomNumber').value = '<?php echo $_SESSION['room_number']; ?>';
+                    } else {
+                        alert('Error submitting report');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting report');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

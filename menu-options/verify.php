@@ -20,7 +20,7 @@ if ($result->num_rows > 0) {
     $_SESSION['uname'] = $uname; // Store the username in session
     
     // Redirect to bot.php
-    header("Location: bot.php");
+    header("Location: services.php");
     exit();
 } else {
     // Show an error if the user is not found

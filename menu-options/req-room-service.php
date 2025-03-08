@@ -1,3 +1,40 @@
+<?php
+session_start();
+require_once("../database.php");
+
+if (!isset($_SESSION['verified']) || !isset($_SESSION['uname'])) {
+    header("Location: ../index.html");
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $uname = $_SESSION['uname'];
+    $room = $_SESSION['room_number'];
+    $request = "Request Amenities";
+    $status = "Pending";
+    
+    // Build details string from amenities
+    $details = [];
+    foreach ($_POST as $item => $quantity) {
+        if ($quantity > 0) {
+            $details[] = "$item: $quantity";
+        }
+    }
+    $detailsStr = implode(", ", $details);
+    
+    // Insert into database
+    $stmt = $conn->prepare("INSERT INTO customer_messages (uname, request, details, room, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("sssss", $uname, $request, $detailsStr, $room, $status);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
+    }
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +76,13 @@
         <div class="tab-content p-3" id="serviceTabsContent">
             <!-- Request Services Content -->
             <div class="tab-pane fade show active" id="request-services" role="tabpanel" aria-labelledby="request-services-tab">
+                <!-- Back Button -->
+                <div class="d-flex align-items-center mb-4">
+                    <a href="services.php" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
+                
                 <h5 class="mb-4 mt-4 fw-semibold">Request Amenities</h5>
 
                 <!-- Amenities Quantity Selection -->
@@ -285,6 +329,41 @@
         });
     });
 
+    document.getElementById('amenities-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Collect all amenities quantities
+        const formData = new FormData(this);
+        const amenitiesWithQuantity = {};
+        
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            if (parseInt(input.value) > 0) {
+                formData.append(input.name, input.value);
+            }
+        });
+
+        // Send request
+        fetch('req-room-service.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Amenities requested successfully!');
+                // Reset all quantity inputs
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    input.value = '0';
+                });
+            } else {
+                alert('Error submitting request');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error submitting request');
+        });
+    });
     </script>
 
 </body>

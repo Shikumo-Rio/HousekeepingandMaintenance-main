@@ -8,6 +8,18 @@ if (!isset($_SESSION['verified']) || $_SESSION['verified'] !== true) {
 
 if (isset($_SESSION['uname'])) {
     $uname = $_SESSION['uname'];
+    
+    // Get customer room number from database if not already in session
+    if (!isset($_SESSION['room_number'])) {
+        $stmt = $conn->prepare("SELECT room FROM guess WHERE uname = ?");
+        $stmt->bind_param("s", $uname);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $_SESSION['room_number'] = $row['room'];
+        }
+        $stmt->close();
+    }
 } else {
     header("Location: index.html");
     exit();
