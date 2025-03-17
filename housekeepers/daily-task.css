@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+    background-color: white;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stats-card {
+    flex: 0 0 175px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    text-align: center;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stats-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.stats-number {
+    font-size: 20px;
+    font-weight: bold;
+    color: rgb(24, 117, 40);
+    margin: 5px 0;
+}
+
+.task-card {
+    margin-bottom: 15px;
+    transition: transform 0.2s;
+    border-radius: 8px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    border: none;
+}
+
+p {
+    font-size: 12px;
+}
+.card-title-task {
+    font-size: 14px;
+}
+
+.status-completed,
+.status-complete {
+    border-left-color: #198754;
+}
+
+.status-working {
+    border-left-color: #ffc107;
+}
+
+.status-invalid {
+    border-left-color: #6c757d;
+}
+
+.back-button {
+    text-decoration: none;
+    color: #6c757d;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.back-button:hover {
+    color: #495057;
+}
+
+/* Update status badge colors */
+.badge.bg-completed,
+.badge.bg-complete,
+.badge[class*='bg-'][class*='completed'],
+.badge[class*='bg-'][class*='complete'] {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.badge.bg-working {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+.badge.bg-invalid {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.card-title {
+    font-size: 14px;
+}

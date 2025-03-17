@@ -65,6 +65,7 @@ foreach ($rooms as $room) {
             text-overflow: ellipsis; /* Truncate the text if it's too long */
             overflow: hidden;
             white-space: nowrap;
+            font-weight: 300;
         }
 
         .room-status div {
@@ -97,10 +98,10 @@ foreach ($rooms as $room) {
 <?php include 'nav.php'; ?>
 <!-- Room Status Section -->
 <div class="container">
-    <h1 class="text-center mt-3">Room Status</h1>
+    <h4 class="text-center mt-4 fw-semibold">Room Status</h4>
     
     <?php foreach ($floors as $floorNumber => $floorRooms): ?>
-        <h3 class="mt-5"><?php 
+        <h5 class="mt-5 fw-semibold"><?php 
             if ($floorNumber == 1) {
                 echo 'Ground Floor';
             } elseif ($floorNumber == 2) {
@@ -116,7 +117,7 @@ foreach ($rooms as $room) {
              else {
                 echo 'Floor ' . $floorNumber;
             }
-        ?></h3>
+        ?></h5>
         <div class="row mt-4">
             <?php foreach ($floorRooms as $room): ?>
                 <div class="col-4 col-sm-4 col-md-4 col-lg-4">

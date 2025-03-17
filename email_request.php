@@ -12,6 +12,78 @@ if (!isset($_SESSION['username']) || $_SESSION['user_type'] !== 'Admin') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['requestEmployee'])) {
+    // Debug log
+    error_log('Received employee request');
+    
+    try {
+        $role = $conn->real_escape_string($_POST['role']);
+        $quantity = $conn->real_escape_string($_POST['quantity']);
+        $reason = $conn->real_escape_string($_POST['reason']);
+        $preferred_shift = $conn->real_escape_string($_POST['preferred_shift']);
+        $urgency_level = $conn->real_escape_string($_POST['urgency_level']);
+        $requested_by = $_SESSION['emp_id'];
+
+        // Debug log
+        error_log("Processing request: Role=$role, Quantity=$quantity");
+
+        $insertRequest = "INSERT INTO employee_requests (
+            role, quantity, reason, preferred_shift, 
+            urgency_level, status, requested_by, request_date
+        ) VALUES (
+            ?, ?, ?, ?, ?, 'Pending', ?, NOW()
+        )";
+        
+        $stmt = $conn->prepare($insertRequest);
+        $stmt->bind_param("sisssi", $role, $quantity, $reason, $preferred_shift, $urgency_level, $requested_by);
+        
+        if ($stmt->execute()) {
+            try {
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'paradisehotelmaintenance@gmail.com';
+                $mail->Password = 'fcbt duql lpzt xrmy';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                $mail->Port = 465;
+
+                $mail->setFrom('paradisehotelmaintenance@gmail.com', 'Paradise Hotel');
+                $mail->addAddress('shekkarhena@gmail.com', 'HR Department');
+
+                $mail->isHTML(true);
+                $mail->Subject = 'New Employee Request';
+                $mail->Body = "
+                    <h2>New Employee Request Details</h2>
+                    <p><strong>Role:</strong> {$role}</p>
+                    <p><strong>Quantity:</strong> {$quantity}</p>
+                    <p><strong>Shift:</strong> {$preferred_shift}</p>
+                    <p><strong>Urgency Level:</strong> {$urgency_level}</p>
+                    <p><strong>Reason:</strong> {$reason}</p>
+                ";
+
+                $mail->send();
+                echo json_encode(['success' => true, 'message' => 'Request submitted successfully and notification sent!']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Request submitted but email notification failed: ' . $mail->ErrorInfo]);
+            }
+        } else {
+            error_log("Database error: " . $conn->error);
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error submitting request to database.'
+            ]);
+        }
+    } catch (Exception $e) {
+        error_log("Error: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error processing request: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestID = $_POST['requestID'] ?? '';
     $emailTo = $_POST['emailAddress'] ?? '';

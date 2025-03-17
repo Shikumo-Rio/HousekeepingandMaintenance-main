@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Checkout Notices</title>
+    <title>Guest Requests</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .dataTables_wrapper .dataTables_filter {
             margin-bottom: 20px;
+            text-align: right !important;
         }
         
         .table-responsive {
@@ -68,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         @media screen and (max-width: 767px) {
             .dataTables_wrapper .dataTables_filter {
-                text-align: left;
+                text-align: right !important;
             }
             
             .table-responsive {
@@ -92,6 +93,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        .dataTables_filter input {
+            margin-left: 5px;
+        }
+
+        .filter-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-filter {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .dataTables_filter {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            gap: 10px;
+        }
+
+        .filter-button {
+            margin-right: 10px;
+        }
+
+        body {
+            overflow-y: auto !important;
+        }
+        
+        .modal-open {
+            overflow: auto !important;
+            padding-right: 0 !important;
+        }
+        
+        .table-responsive {
+            overflow-y: visible !important;
+        }
     </style>
 </head>
 <body>
@@ -101,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Header Section -->
         <div class="p-4 mb-4 task-allocation-heading card">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Stepping out</h3>
+                <h3>Guest Requests</h3>
             </div>
         </div>
 
@@ -142,59 +182,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <!-- Notices Table Section -->
-        <div class="p-4 task-allocation-heading card mb-4">
-            <h3>Checkout Notices</h3>
-        </div>
-
-        <!-- Table Card -->
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <!-- Add Filter Options -->
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <select class="form-select w-auto" id="statusFilter">
-                            <option value="">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Assigned">Assigned</option>
-                        </select>
+        <div class="row">
+            <!-- Checkout Notices -->
+            <div class="col-md-6">
+                <div class="p-4 task-allocation-heading card mb-4">
+                    <h3>Checkout Notices</h3>
+                </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="checkoutTable" class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Room No</th>
+                                        <th>Return Time</th>
+                                        <th>Type</th>
+                                        <th>Special Request</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $query = "SELECT * FROM checkout_notices ORDER BY id DESC, created_at DESC";
+                                    $result = $conn->query($query);
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo "<tr>";
+                                        echo "<td>{$row['id']}</td>";
+                                        echo "<td>{$row['room_no']}</td>";
+                                        echo "<td>{$row['checkout_time']}</td>";
+                                        echo "<td>{$row['request']}</td>";
+                                        echo "<td>{$row['special_request']}</td>";
+                                        echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                        echo "<td>{$row['created_at']}</td>";
+                                        echo "<td>";
+                                        if ($row['status'] == 'Pending') {
+                                            echo "<button class='btn btn-sm btn-success assign-btn' data-id='{$row['id']}' data-bs-toggle='modal' data-bs-target='#assignModal'>
+                                                    Assign
+                                                  </button>";
+                                        } else {
+                                            echo "<span class='badge bg-info'>Assigned</span>";
+                                        }
+                                        echo "</td>";
+                                        echo "</tr>";
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Food Orders -->
+            <div class="col-md-6">
+                <div class="p-4 task-allocation-heading card mb-4">
+                    <h3>Food Orders</h3>
+                </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="foodOrdersTable" class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Code</th>
+                                        <th>Customer Name</th>
+                                        <th>Food Item</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $query = "SELECT * FROM foodorders ORDER BY id DESC, created_at DESC";
+                                    $result = $conn->query($query);
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo "<tr>";
+                                        echo "<td>{$row['id']}</td>";
+                                        echo "<td>{$row['code']}</td>";
+                                        echo "<td>{$row['customer_name']}</td>";
+                                        echo "<td>{$row['food_item']}</td>";
+                                        echo "<td>{$row['quantity']}</td>";
+                                        echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                        echo "<td>{$row['created_at']}</td>";
+                                        echo "</tr>";
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Messages -->
+        <div class="p-4 task-allocation-heading card mb-4 mt-4">
+            <h3>Customer Messages</h3>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
                 <div class="table-responsive">
-                    <table id="checkoutTable" class="table table-hover">
+                    <table id="customerMessagesTable" class="table table-hover">
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
-                                <th>Room No</th>
-                                <th>Return Time</th>
-                                <th>Type</th>
-                                <th>Special Request</th>
+                                <th>Username</th>
+                                <th>Request</th>
+                                <th>Details</th>
+                                <th>Room</th>
                                 <th>Status</th>
+                                <th>Priority</th>
                                 <th>Created At</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $query = "SELECT * FROM checkout_notices ORDER BY created_at DESC";
+                            $query = "SELECT * FROM customer_messages ORDER BY id DESC, created_at DESC";
                             $result = $conn->query($query);
                             while ($row = $result->fetch_assoc()) {
                                 echo "<tr>";
                                 echo "<td>{$row['id']}</td>";
-                                echo "<td>{$row['room_no']}</td>";
-                                echo "<td>{$row['checkout_time']}</td>";
+                                echo "<td>{$row['uname']}</td>";
                                 echo "<td>{$row['request']}</td>";
-                                echo "<td>{$row['special_request']}</td>";
+                                echo "<td>{$row['details']}</td>";
+                                echo "<td>{$row['room']}</td>";
                                 echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                echo "<td>{$row['priority']}</td>";
                                 echo "<td>{$row['created_at']}</td>";
-                                echo "<td>";
-                                if ($row['status'] == 'Pending') {
-                                    echo "<button class='btn btn-success btn-sm assign-btn' data-id='{$row['id']}' data-bs-toggle='modal' data-bs-target='#assignModal'>
-                                            <i class='fas fa-user-plus'></i> Assign
-                                          </button>";
-                                } else {
-                                    echo "<span class='badge bg-info'>Assigned</span>";
-                                }
-                                echo "</td>";
                                 echo "</tr>";
                             }
                             ?>
@@ -203,6 +322,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
+
+        <!-- Filter Modal -->
+        <div class="modal fade" id="filterModal" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Filter by Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-secondary filter-btn" data-status="">All Status</button>
+                            <button class="btn btn-outline-warning filter-btn" data-status="Pending">Pending</button>
+                            <button class="btn btn-outline-info filter-btn" data-status="Working">Working</button>
+                            <button class="btn btn-outline-success filter-btn" data-status="Complete">Complete</button>
+                            <button class="btn btn-outline-danger filter-btn" data-status="Invalid">Invalid</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Assignment Modal -->
@@ -236,69 +376,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script src="https://code.jquery.c
-    <!-- Assignment Modal -->
-    <div class="modal fade" id="assignModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Assign Housekeeper</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="assignForm">
-                        <input type="hidden" id="checkout_id" name="checkout_id">
-                        <div class="mb-3">
-                            <label for="housekeeper" class="form-label">Select Housekeeper</label>
-                            <select class="form-select" id="housekeeper" name="housekeeper" required>
-                                <option value="">Choose...</option>
-                                <?php
-                                $employeeQuery = "SELECT name FROM employee WHERE status = 'active'";
-                                $employeeResult = $conn->query($employeeQuery);
-                                while ($employee = $employeeResult->fetch_assoc()) {
-                                    echo "<option value='{$employee['name']}'>{$employee['name']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success">Assign</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-om/jquery-3.6.0.min.js"></script>
-    c
-    <!-- Assignment Modal -->
-    <div class="modal fade" id="assignModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Assign Housekeeper</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="assignForm">
-                        <input type="hidden" id="checkout_id" name="checkout_id">
-                        <div class="mb-3">
-                            <label for="housekeeper" class="form-label">Select Housekeeper</label>
-                            <select class="form-select" id="housekeeper" name="housekeeper" required>
-                                <option value="">Choose...</option>
-                                <?php
-                                $employeeQuery = "SELECT name FROM employee WHERE status = 'active'";
-                                $employeeResult = $conn->query($employeeQuery);
-                                while ($employee = $employeeResult->fetch_assoc()) {
-                                    echo "<option value='{$employee['name']}'>{$employee['name']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success">Assign</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
@@ -308,8 +386,14 @@ om/jquery-3.6.0.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize DataTable with custom options
-            var table = $('#checkoutTable').DataTable({
+            // Function to style search bars
+            function styleSearchBar() {
+                $('.dataTables_filter input').addClass('form-control');
+                $('.dataTables_filter').addClass('d-flex justify-content-end');
+            }
+
+            // Initialize tables and apply styling
+            var checkoutTable = $('#checkoutTable').DataTable({
                 dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
                 language: {
                     search: "",
@@ -323,21 +407,11 @@ om/jquery-3.6.0.min.js"></script>
                 ordering: true,
                 info: false,
                 lengthChange: false,
-                scrollX: false,
-                responsive: true,
-                scrollY: false,
-                scrollCollapse: true
-            });
-
-            // Add custom filter functionality
-            $('#statusFilter').on('change', function() {
-                var status = $(this).val();
-                table.column(5).search(status).draw();
+                order: [[0, 'desc']] // Order by first column (ID) descending
             });
 
             // Style the search bar
-            $('.dataTables_filter input').addClass('form-control');
-            $('.dataTables_filter').addClass('d-flex justify-content-end');
+            styleSearchBar();
 
             $('.assign-btn').click(function() {
                 $('#checkout_id').val($(this).data('id'));
@@ -358,6 +432,85 @@ om/jquery-3.6.0.min.js"></script>
                         }
                     }
                 });
+            });
+
+            var foodOrdersTable = $('#foodOrdersTable').DataTable({
+                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search...",
+                    paginate: {
+                        previous: "<i class='bi bi-chevron-left'></i>",
+                        next: "<i 'bi bi-chevron-right'></i>"
+                    }
+                },
+                pageLength: 10,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                order: [[0, 'desc']] // Order by first column (ID) descending
+            });
+
+            var customerMessagesTable = $('#customerMessagesTable').DataTable({
+                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search...",
+                    paginate: {
+                        previous: "<i class='bi bi-chevron-left'></i>",
+                        next: "<i class='bi bi-chevron-right'></i>"
+                    }
+                },
+                pageLength: 10,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                order: [[0, 'desc']] // Order by first column (ID) descending
+            });
+
+            // Add filter functionality for customer messages
+            $('#messageStatusFilter').on('change', function() {
+                var status = $(this).val();
+                customerMessagesTable.column(5).search(status).draw();
+            });
+
+            // Apply styling to all search bars
+            styleSearchBar();
+
+            // Move filter button to search bar
+            var filterButton = $('<button class="btn btn-secondary filter-button" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="bi bi-funnel"></i> Filter</button>');
+            $('#customerMessagesTable_filter').prepend(filterButton);
+
+            // Handle filter button clicks
+            $('.filter-btn').click(function() {
+                var status = $(this).data('status');
+                customerMessagesTable.column(5).search(status).draw();
+                
+                // Properly close the modal and remove backdrop
+                $('#filterModal').modal('hide');
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+                
+                // Update button text to show current filter
+                var filterText = status || 'All Status';
+                $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
+            });
+
+            // Handle filter button clicks
+            $('.filter-btn').click(function() {
+                var status = $(this).data('status');
+                customerMessagesTable.column(5).search(status).draw();
+                
+                // Close modal without affecting page scroll
+                $('#filterModal').modal('hide');
+                setTimeout(function() {
+                    $('body').removeClass('modal-open');
+                    $('.modal-backdrop').remove();
+                }, 200);
+                
+                // Update button text to show current filter
+                var filterText = status || 'All Status';
+                $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
             });
         });
     </script>

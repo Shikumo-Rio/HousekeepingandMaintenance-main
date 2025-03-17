@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uname = $_SESSION['uname'];
     $room = $_SESSION['room_number'];
     $request = "Housekeeping";
-    $status = "Pending";
+    $status = "pending";
     
     // Get selected services and additional request
     $data = json_decode(file_get_contents('php://input'), true);

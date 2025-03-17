@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
     background-color: #f8f9fa;
 }
 
@@ -16,7 +19,6 @@ body {
     position: sticky;
     top: 0;
     z-index: 999;
-    margin-top: 20px;
     border-radius: 30px;
 }
 
@@ -106,6 +108,30 @@ body {
     justify-content: center;
 }
 
+.change-password {
+    margin-top: 20px;
+}
+
+.change-password input {
+    outline: none;
+    outline-color: none;
+    border-radius: 30px;
+}
+
+.btn-primary {
+    background-color: #28a745;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 40px;
+}
+
+
 /* Hamburger and logo positioning */
 .hamburger-logo-wrapper {
     display: flex;
@@ -121,6 +147,7 @@ body {
     font-size: 24px;
     margin-right: 10px;
     padding-left: 20px;
+    margin-top: 5px;
     transition: transform 0.3s ease;
     position: relative;
 }
@@ -284,11 +311,12 @@ body {
 .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
+    color: white !important;
 }
 
 /* Change icon color on hover */
 .nav-link:hover i {
-    color: #13d140;
+    color: white;
 }
 
 /* Active Link Style (optional) */
@@ -332,3 +360,73 @@ body {
     background-color: #218838; /* Darker green on hover */
 }
 
+
+/* the code starts here for staff stats*/
+.staff-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    min-height: 10%;
+}
+
+.staff-card:hover {
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.staff-info {
+    padding: 15px;
+}
+
+.task-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #198754;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.staff-name {
+    font-size: 1.25rem;
+    color: #212529;
+    margin-bottom: 10px;
+}
+
+.view-tasks-btn {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.online-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.online-indicator.online {
+    background-color: #28a745;
+}
+
+.online-indicator.offline {
+    background-color: #dc3545;
+}

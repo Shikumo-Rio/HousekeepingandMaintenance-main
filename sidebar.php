@@ -51,18 +51,18 @@ if ($_SESSION['user_type'] !== 'Admin') {
             </li>
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link collapsed" data-bs-target="#housekeeping" data-bs-toggle="collapse" aria-expanded="false">
-                    <i class="fa fa-broom pe-2" aria-hidden="true"></i> <!-- Housekeeping Icon -->
-                    Housekeeping
+                    <i class="fa-solid fa-bell-concierge pe-1" aria-hidden="true"></i> <!-- Housekeeping Icon -->
+                    Room Service
                 </a>
                 <ul id="housekeeping" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                     <li class="sidebar-item">
                         <a href="roomservice.php" class="sidebar-link">
-                            Room Service
+                            Housekeeping Panel
                         </a>
                     </li>
                     <li class="sidebar-item">
                         <a href="guest.php" class="sidebar-link">
-                            Guest Notices
+                            Guest Requests
                         </a>
                     </li>
                 </ul>
@@ -71,7 +71,7 @@ if ($_SESSION['user_type'] !== 'Admin') {
             <li class="sidebar-item">
                 <a href="task_allocation.php" class="sidebar-link">
                     <i class="fas fa-tasks pe-2"></i> <!-- Added a tasks icon for Task Allocation -->
-                    Task Allocation
+                    AI Task Allocation
                 </a>
             </li>
             <li class="sidebar-item">

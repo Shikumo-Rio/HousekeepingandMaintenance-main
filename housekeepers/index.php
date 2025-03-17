@@ -187,7 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
     <div class="main-container">
         <div class="content container-fluid" id="content">
             <!-- Lost and Found & Maintenance Buttons -->
-            <div class="row justify-content-center">
+            <div class="row justify-content-center p-0 me-4 mx-4 mt-4">
                 <div class="col-6 col-md-4 mb-3 mt-0 d-flex justify-content-center">
                     <button class="btn mb-3 mx-2" data-bs-toggle="modal" data-bs-target="#lostFoundModal">
                         <i class="fa-solid fas fa-box fa-2x"></i>Lost and Found
@@ -207,23 +207,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
                 $housekeeperId = $_SESSION['emp_id']; // Assuming user_id is stored in session
                 $task = getAssignedTask($housekeeperId);
                 if ($task) {
-                    echo '<div class="card shadow-sm mb-4">';
-                    echo '<div class="card-body">';
-                    echo '<h5 class="card-title">Task ID: ' . htmlspecialchars($task['task_id']) . '</h5>';
-                    echo '<p class="card-text"><strong>Guest name:</strong> ' . htmlspecialchars($task['uname']) . '</p>';
-                    echo '<p class="card-text"><strong>Room:</strong> ' . htmlspecialchars($task['room']) . '</p>';
-                    echo '<p class="card-text"><strong>Request:</strong> ' . htmlspecialchars($task['request']) . '</p>';
-                    echo '<p class="card-text"><strong>Details:</strong> ' . htmlspecialchars($task['details']) . '</p>';
-                    echo '<p class="card-text"><strong>Status:</strong> ' . htmlspecialchars($task['status']) . '</p>';
-                    echo '<p class="card-text"><strong>Created at:</strong> ' . htmlspecialchars($task['create_at']) . '</p>';
-                    echo '<div class="d-flex justify-content-end">';
-                    echo '<button class="btn btn-success btn-sm mx-2" data-bs-toggle="modal" data-bs-target="#completeModal">Complete</button>';
-                    echo '<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal">Report</button>';
+                    echo '<div class="card mb-3 shadow-sm border-0">';
+                    echo '<div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f8f9fa;">';
+                    echo '<span class="badge bg-warning text-dark">' . htmlspecialchars($task['status']) . '</span>';
+                    echo '<small class="text-muted">' . date("F j, g:i A", strtotime($task['create_at'])) . '</small>';
                     echo '</div>';
+                    
+                    echo '<div class="card-body">';
+                    echo '<h6 class="fw-bold">id# ' . htmlspecialchars($task['task_id']) . '</h6>';
+                    echo '<p class="text-muted m-0"><strong>' . htmlspecialchars($task['room']) . '</strong></p>';
+                    echo '<p class="text-muted m-0"><strong>' . htmlspecialchars($task['uname']) . '</strong></p>';
+                    
+                    echo '<hr class="my-2">';
+                    echo '<p class="fw-bold m-0">Request</p>';
+                    echo '<p class="m-0">' . htmlspecialchars($task['request']) . '</p>';
+                    echo '<p class="fw-bold m-0">Details</p>';
+                    echo '<p class="m-0">' . htmlspecialchars($task['details']) . '</p>';
+                    
+                    echo '<div class="d-flex justify-content-center align-items-center mt-3">';
+                    echo '<button class="btn btn-complete btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal">Complete</button>';
+                    echo '<button class="btn btn-report btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal">Report</button>';
+                    echo '</div>';
+                    
                     echo '</div>';
                     echo '</div>';
                 } else {
-                    echo '<div class="center" role="alert">No task available</div>';
+                    echo '<div class="alert alert-info text-center">No task available</div>';
                 }
                 ?>
             </div>
@@ -242,8 +251,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
                     <p>Are you sure you want to mark this task as complete?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success btn-sm">Complete</button>
+                    <button type="button" class="btn btn-closed btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-complete btn-sm">Complete</button>
                 </div>
             </div>
         </div>
@@ -265,7 +274,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
                             <label for="reportDetails" class="form-label">Enter details</label>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-danger btn-sm">Report</button>
+                            <button type="submit" class="btn btn-report btn-sm">Report</button>
                         </div>
                     </form>
                 </div>

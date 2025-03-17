@@ -36,7 +36,7 @@ $user = $result->fetch_assoc();
 </head>
 <body>
     <!-- Navbar -->
-    <div class="navbar">
+    <div class="navbar fixed-top d-flex justify-content-between align-items-center p-2 shadow-sm">
         <div class="hamburger-logo-wrapper" id="hamburgerLogoWrapper" onclick="toggleSidebar()">
             <div class="hamburger">&#9776;</div> <!-- Hamburger icon -->
             <!-- Replace the text with an image -->

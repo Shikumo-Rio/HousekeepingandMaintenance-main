@@ -25,12 +25,12 @@ $user_type = $_SESSION['user_type'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/housekeeper.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <?php include 'nav.php'; ?>
 
-    <div class="container">
+    <div class="container p-0 mt-0">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8 col-sm-12">
                 <!-- Profile Section -->
@@ -42,7 +42,7 @@ $user_type = $_SESSION['user_type'];
                 </div>
 
                 <!-- Change Password Form -->
-                <div class="change-password">
+                <div class="change-password p-2">
                     <h4>Change Password</h4>
                     <form action="change_password.php" method="POST">
                         <div class="mb-3">

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uname = $_SESSION['uname'];
     $room = $_SESSION['room_number'];
     $request = "Request Amenities";
-    $status = "Pending";
+    $status = "pending";
     
     // Build details string from amenities
     $details = [];

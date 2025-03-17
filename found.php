@@ -50,7 +50,7 @@ $totalPages = ceil($totalRows / $limit);
                         <tr>
                         <th>ID</th>
                         <th>Found by</th>
-                        <th>Room</th>
+                        <th>Room/Area</th>
                         <th>Date</th>
                         <th>Item</th>
                         <th>Description</th>

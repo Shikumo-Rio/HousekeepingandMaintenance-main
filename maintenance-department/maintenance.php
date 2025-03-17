@@ -57,179 +57,28 @@ $requests = $conn->query($requests_query);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="maintenance.css">
     <script src="https://kit.fontawesome.com/ae360af17e.js" crossorigin="anonymous"></script>
-    <style>
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 0 10px;
-        }
-        .stats-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 15px 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 100%;
-        }
-        .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stats-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #198754;
-        }
-        @media (max-width: 768px) {
-            .stats-container {
-                padding: 0 5px;
-            }
-            .stats-label {
-                font-size: 0.8rem;
-            }
-            .stats-number {
-                font-size: 1.2rem;
-            }
-        }
-        @media (max-width: 480px) {
-            .stats-container {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .stats-card {
-                padding: 10px 5px;
-            }
-        }
-        .request-card {
-            border-left: 4px solid;
-            margin-bottom: 20px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .request-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .priority-High { border-left-color: #dc3545; }
-        .priority-Medium { border-left-color: #ffc107; }
-        .priority-Low { border-left-color: #198754; }
-        
-        .badge.bg-completed { background-color: #198754 !important; }
-        .badge.bg-working { background-color: #ffc107 !important; color: black !important; }
-        .badge.bg-pending { background-color: #6c757d !important; }
 
-        .search-container {
-            background: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .search-container .form-control:focus,
-        .search-container .form-select:focus {
-            box-shadow: none;
-            border-color: #198754;
-        }
-        .search-container .btn-filter {
-            background-color: #198754;
-            color: white;
-        }
-        .search-container .btn-reset {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-filter {
-            background-color: #198754;
-            color: white;
-            min-width: 100px;
-        }
-        .btn-filter:hover {
-            background-color: #157347;
-            color: white;
-        }
-        .offcanvas {
-            border-left: 4px solid #198754;
-        }
-        .filter-section {
-            margin-bottom: 1.5rem;
-        }
-        .filter-section h5 {
-            color: #198754;
-            margin-bottom: 1rem;
-        }
-        .btn-apply-filters {
-            background-color: #198754;
-            color: white;
-            width: 100%;
-            padding: 10px;
-        }
-        .btn-reset-filters {
-            background-color: #6c757d;
-            color: white;
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        .staff-dropdown .dropdown-toggle {
-            min-width: 200px;
-            text-align: left;
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            color: #212529;
-            font-size: 0.875rem;
-            padding: 0.25rem 0.5rem;
-        }
-        .staff-dropdown .dropdown-toggle.assigned {
-            background-color: #198754;
-            color: white;
-            border-color: #198754;
-        }
-        .staff-dropdown .dropdown-item.active {
-            background-color: #198754;
-            color: white;
-        }
-        .staff-dropdown .dropdown-item i {
-            width: 20px;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 1rem;
-        }
-        .btn-schedule {
-            background-color: #6f42c1;
-            color: white;
-        }
-        .btn-schedule:hover {
-            background-color: #5a32a3;
-            color: white;
-        }
-    </style>
 </head>
 <body>
     <?php include 'nav.php'; ?>
     
     <div class="container mt-4">
-        <h2 class="mb-4">Maintenance Requests</h2>
+        <h5 class="mb-4 fw-semibold">Maintenance Requests</h5>
         
         <!-- Statistics -->
-        <div class="stats-container">
+        <div class="stats-container p-0">
             <div class="stats-card">
-                <div class="stats-label">Total Requests</div>
+                <div class="stats-label fw-semibold">Total Requests</div>
                 <div class="stats-number"><?php echo $stats['total_count']; ?></div>
             </div>
             <div class="stats-card">
-                <div class="stats-label">In Progress</div>
+                <div class="stats-label fw-semibold">In Progress</div>
                 <div class="stats-number"><?php echo $stats['working_count']; ?></div>
             </div>
             <div class="stats-card">
-                <div class="stats-label">Completed</div>
+                <div class="stats-label fw-semibold">Completed</div>
                 <div class="stats-number"><?php echo $stats['completed_count']; ?></div>
             </div>
         </div>
@@ -246,8 +95,8 @@ $requests = $conn->query($requests_query);
                     </div>
                 </div>
                 <div class="col-auto">
-                    <button type="button" class="btn btn-filter" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
-                        <i class="fas fa-filter"></i> Filters
+                    <button type="button" class="btn btn-filter text-light" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                        <i class="fas fa-filter text-light"></i> Filters
                     </button>
                 </div>
             </form>
@@ -256,7 +105,7 @@ $requests = $conn->query($requests_query);
         <!-- Filter Offcanvas -->
         <div class="offcanvas offcanvas-end" tabindex="-1" id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="filterOffcanvasLabel">Filter Requests</h5>
+                <h6 class="offcanvas-title fw-semibold" id="filterOffcanvasLabel">Filter Requests</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
@@ -305,8 +154,8 @@ $requests = $conn->query($requests_query);
                     </div>
 
                     <div class="mt-4">
-                        <button type="submit" class="btn btn-apply-filters">Apply Filters</button>
-                        <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-reset-filters">Reset Filters</a>
+                        <button type="submit" class="btn btn-apply-filters">Apply</button>
+                        <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-reset-filters">Reset</a>
                     </div>
                 </form>
             </div>
@@ -324,7 +173,6 @@ $requests = $conn->query($requests_query);
                                     <p class="mb-1"><strong>Room:</strong> <?php echo $request['room_no']; ?></p>
                                     <p class="mb-1"><strong>Title:</strong> <?php echo $request['request_title']; ?></p>
                                     <p class="mb-1"><strong>Description:</strong> <?php echo $request['description']; ?></p>
-                                    <p class="mb-1"><strong>Priority:</strong> <?php echo $request['priority']; ?></p>
                                     <p class="mb-1">
                                         <strong>Being worked by:</strong>
                                         <?php 
@@ -348,20 +196,24 @@ $requests = $conn->query($requests_query);
                                 </div>
                                 <div class="d-flex flex-column align-items-end">
                                     <span class="badge bg-<?php 
-                                        echo match($request['status']) {
-                                            'Completed' => 'completed',
-                                            'In Progress' => 'working',
-                                            default => 'pending'
-                                        };
+                                        if ($request['status'] === 'Completed') {
+                                            echo 'completed';
+                                        } elseif ($request['status'] === 'In Progress') {
+                                            echo 'working';
+                                        } else {
+                                            echo 'pending';
+                                        }
                                     ?> mb-2">
                                         <?php echo $request['status']; ?>
                                     </span>
                                     <span class="badge bg-<?php 
-                                        echo match($request['priority']) {
-                                            'High' => 'danger',
-                                            'Medium' => 'warning',
-                                            'Low' => 'success'
-                                        };
+                                        if ($request['priority'] === 'High') {
+                                            echo 'danger';
+                                        } elseif ($request['priority'] === 'Medium') {
+                                            echo 'warning';
+                                        } else {
+                                            echo 'success';
+                                        }
                                     ?>">
                                         Priority: <?php echo $request['priority']; ?>
                                     </span>
@@ -411,7 +263,7 @@ $requests = $conn->query($requests_query);
 
     <!-- Schedule Modal -->
     <div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="scheduleModalLabel">Schedule Task</h5>
@@ -429,7 +281,7 @@ $requests = $conn->query($requests_query);
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-schedule" onclick="submitSchedule()">Save Schedule</button>
+                    <button type="button" class="btn btn-scheduleSave" onclick="submitSchedule()">Save Schedule</button>
                 </div>
             </div>
         </div>

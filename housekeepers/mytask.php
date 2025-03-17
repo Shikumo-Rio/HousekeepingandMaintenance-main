@@ -64,6 +64,15 @@ if (!is_null($stats['avg_completion_time'])) {
     <title>My Tasks</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
         .task-card {
             cursor: pointer;
             transition: transform 0.2s;
@@ -98,20 +107,20 @@ if (!is_null($stats['avg_completion_time'])) {
         }
         .stats-container {
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
         }
         .stats-card {
-            flex: 0 0 200px;
+            flex: 0 0 175px;
             background: #fff;
             border-radius: 8px;
             padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
             text-align: center;
         }
         .stats-number {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color:rgb(24, 117, 40);
             margin: 5px 0;
@@ -137,13 +146,13 @@ if (!is_null($stats['avg_completion_time'])) {
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .task-count {
-            font-size: 1.2rem;
+            font-size: 12px;
             font-weight: bold;
             color: #198754;
         }
         .date-header {
             color: #495057;
-            font-size: 1.1rem;
+            font-size: 12px;
             font-weight: 500;
         }
         .task-list-item {
@@ -153,13 +162,18 @@ if (!is_null($stats['avg_completion_time'])) {
             background: #f8f9fa;
             border-radius: 4px;
         }
+
+        h5 {
+            font-size: 12px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <?php include 'nav.php'; ?>
     
     <div class="container mt-4">
-        <h2 class="mb-4">My Tasks</h2>
+        <h5 class="mb-4 mt-4 fw-semibold">My Tasks</h5>
         
         <!-- Statistics Section -->
         <div class="stats-container">

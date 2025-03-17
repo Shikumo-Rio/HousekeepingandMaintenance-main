@@ -8,41 +8,102 @@ if (!isset($_SESSION['username']) || $_SESSION['user_type'] !== 'Employee') {
 }
 
 $emp_id = $_SESSION['emp_id'];
-$selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$selected_date = $_GET['date'] ?? date('Y-m-d');
 
-// Get daily statistics
+// Version agnostic error handling
+function handleError($conn) {
+    if (is_object($conn)) {
+        return $conn->errno ? error_log("MySQL Error ({$conn->errno}): {$conn->error}") : false;
+    }
+    return mysqli_errno($conn) ? error_log("MySQL Error (" . mysqli_errno($conn) . "): " . mysqli_error($conn)) : false;
+}
+
+// Version agnostic query execution
+function executeQuery($conn, $query, $params = [], $types = '') {
+    $result = false;
+    
+    try {
+        if (is_object($conn)) {
+            // Object-oriented style
+            $stmt = $conn->prepare($query);
+            if ($stmt && $params) {
+                $stmt->bind_param($types, ...$params);
+            }
+        } else {
+            // Procedural style
+            $stmt = mysqli_prepare($conn, $query);
+            if ($stmt && $params) {
+                mysqli_stmt_bind_param($stmt, $types, ...$params);
+            }
+        }
+
+        if ($stmt) {
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        }
+    } catch (Exception $e) {
+        error_log("Database error: " . $e->getMessage());
+    }
+    
+    return $result;
+}
+
 $daily_stats_query = "SELECT 
-    COUNT(CASE WHEN status = 'completed' OR status = 'complete' THEN 1 END) as completed_count,
-    AVG(TIMESTAMPDIFF(MINUTE, create_at, completed_at)) as avg_completion_time
+    SUM(CASE WHEN LOWER(status) IN ('completed', 'complete') THEN 1 ELSE 0 END) as completed_count,
+    SEC_TO_TIME(AVG(
+        CASE WHEN completed_at IS NOT NULL 
+        THEN TIME_TO_SEC(TIMEDIFF(completed_at, create_at))
+        ELSE NULL END
+    )) as avg_completion_time
+    FROM assigntasks 
+    WHERE emp_id = ? 
+    AND DATE(create_at) = ?";
+
+$daily_stats = ['completed_count' => 0, 'avg_completion_time' => null];
+
+$result = executeQuery(
+    $conn, 
+    $daily_stats_query, 
+    [$emp_id, $selected_date], 
+    "is"
+);
+
+if ($result) {
+    $daily_stats = is_object($result) ? 
+        $result->fetch_assoc() : 
+        mysqli_fetch_assoc($result);
+    is_object($result) ? $result->free() : mysqli_free_result($result);
+}
+
+// Format daily completion time using modern null handling
+$daily_avg_time = match(true) {
+    isset($daily_stats['avg_completion_time']) => (function() use ($daily_stats) {
+        $time_parts = explode(':', $daily_stats['avg_completion_time']);
+        $hours = (int)($time_parts[0] ?? 0);
+        $minutes = (int)($time_parts[1] ?? 0);
+        return "{$hours}h {$minutes}m";
+    })(),
+    default => 'N/A'
+};
+
+// Get tasks with modern error handling
+$tasks_query = "SELECT *, 
+    IFNULL(
+        TIMESTAMPDIFF(MINUTE, create_at, completed_at),
+        TIMESTAMPDIFF(MINUTE, create_at, NOW())
+    ) as duration_minutes 
     FROM assigntasks 
     WHERE emp_id = ? 
     AND DATE(create_at) = ?
-    AND (status = 'completed' OR status = 'complete')
-    AND completed_at IS NOT NULL";
+    ORDER BY create_at DESC";
 
-$stmt = $conn->prepare($daily_stats_query);
-$stmt->bind_param("is", $emp_id, $selected_date);
-$stmt->execute();
-$daily_stats = $stmt->get_result()->fetch_assoc();
-
-// Format daily completion time
-$daily_avg_time = 'N/A';
-if (!is_null($daily_stats['avg_completion_time'])) {
-    $minutes = round($daily_stats['avg_completion_time']);
-    $hours = floor($minutes / 60);
-    $remaining_minutes = $minutes % 60;
-    $daily_avg_time = $hours . 'h ' . $remaining_minutes . 'm';
-}
-
-// Get tasks for selected date
-$tasks_query = "SELECT * FROM assigntasks 
-                WHERE emp_id = ? 
-                AND DATE(create_at) = ?
-                ORDER BY create_at DESC";
-$stmt = $conn->prepare($tasks_query);
-$stmt->bind_param("is", $emp_id, $selected_date);
-$stmt->execute();
-$tasks = $stmt->get_result();
+$tasks = executeQuery(
+    $conn, 
+    $tasks_query, 
+    [$emp_id, $selected_date], 
+    "is"
+);
 ?>
 
 <!DOCTYPE html>
@@ -52,75 +113,18 @@ $tasks = $stmt->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Tasks - <?php echo date('F d, Y', strtotime($selected_date)); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .stats-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stats-card {
-            flex: 0 0 200px;
-            background: #fff;
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stats-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #198754;
-        }
-        .task-card {
-            border-left: 4px solid;
-            margin-bottom: 15px;
-            transition: transform 0.2s;
-        }
-        .task-card:hover {
-            transform: translateX(5px);
-        }
-        .status-completed, .status-complete { border-left-color: #198754; }
-        .status-working { border-left-color: #ffc107; }
-        .status-invalid { border-left-color: #6c757d; }
-        .back-button {
-            text-decoration: none;
-            color: #6c757d;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
-        .back-button:hover {
-            color: #495057;
-        }
-        
-        /* Update status badge colors */
-        .badge.bg-completed, 
-        .badge.bg-complete,
-        .badge[class*='bg-'][class*='completed'],
-        .badge[class*='bg-'][class*='complete'] { 
-            background-color: #198754 !important; 
-            color: white !important; 
-        }
-        .badge.bg-working { 
-            background-color: #ffc107 !important; 
-            color: black !important; 
-        }
-        .badge.bg-invalid { 
-            background-color: #6c757d !important; 
-            color: white !important; 
-        }
-    </style>
+    <link rel="stylesheet" href="daily-task.css">
+
 </head>
 <body>
     <?php include 'nav.php'; ?>
     
     <div class="container mt-4">
         <a href="mytask.php" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to All Tasks
+            <i class="fas fa-arrow-left"></i>
         </a>
         
-        <h2 class="mb-4">Tasks for <?php echo date('F d, Y', strtotime($selected_date)); ?></h2>
+        <h4 class="mb-4">Tasks for <?php echo date('F d, Y', strtotime($selected_date)); ?></h4>
         
         <!-- Daily Statistics -->
         <div class="stats-container">
@@ -137,16 +141,16 @@ $tasks = $stmt->get_result();
         <!-- Tasks List -->
         <div class="tasks-list">
             <?php
-            if ($tasks->num_rows > 0) {
-                while ($task = $tasks->fetch_assoc()) {
+            if ($tasks && mysqli_num_rows($tasks) > 0) {
+                while ($task = mysqli_fetch_assoc($tasks)) {
                     $status_class = 'status-' . strtolower($task['status']);
                     ?>
-                    <div class="card task-card <?php echo $status_class; ?>">
+                    <div class="task-card <?php echo $status_class; ?>">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h5 class="card-title">Task #<?php echo $task['task_id']; ?></h5>
-                                    <p class="mb-1"><strong>Room:</strong> <?php echo $task['room']; ?></p>
+                                    <h5 class="card-title-task fw-semibold">Task #<?php echo $task['task_id']; ?></h5>
+                                    <p class="mb-1"><strong>Room <?php echo $task['room']; ?></strong></p>
                                     <p class="mb-1"><strong>Request:</strong> <?php echo $task['request']; ?></p>
                                     <p class="mb-1"><strong>Details:</strong> <?php echo $task['details']; ?></p>
                                     <small class="text-muted">Created: <?php echo date('h:i A', strtotime($task['create_at'])); ?></small>

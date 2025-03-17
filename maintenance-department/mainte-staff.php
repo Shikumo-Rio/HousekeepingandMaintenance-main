@@ -32,71 +32,15 @@ $staff_result = $conn->query($staff_query);
     <title>Maintenance Staff Overview</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://kit.fontawesome.com/ae360af17e.js" crossorigin="anonymous"></script>
-    <style>
-        .staff-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-        }
-        .staff-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .staff-info {
-            padding: 20px;
-        }
-        .task-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .stat-item {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #f8f9fa;
-        }
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #198754;
-        }
-        .stat-label {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .staff-name {
-            font-size: 1.25rem;
-            color: #212529;
-            margin-bottom: 10px;
-        }
-        .view-tasks-btn {
-            width: 100%;
-            margin-top: 15px;
-        }
-        .online-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .online-indicator.online {
-            background-color: #28a745;
-        }
-        .online-indicator.offline {
-            background-color: #dc3545;
-        }
-    </style>
+
 </head>
 <body>
     <?php include 'nav.php'; ?>
 
     <div class="container mt-4">
-        <h2 class="mb-4">Maintenance Staff Overview</h2>
+        <h5 class="mb-4 fw-semibold mt-4">Maintenance Staff Overview</h5>
         
         <div class="row">
             <?php while ($staff = $staff_result->fetch_assoc()): ?>
@@ -124,8 +68,6 @@ $staff_result = $conn->query($staff_query);
                                     <div class="stat-label">Completed</div>
                                 </div>
                             </div>
-
-                            
                         </div>
                     </div>
                 </div>

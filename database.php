@@ -2,18 +2,30 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 // Database connection settings
 $db_host = 'localhost';
 $db_username = 'root';
 $db_password = '';
 $db_name = 'bot';
 
+// MySQLi Connection
 $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
 // Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+// PDO Connection
+try {
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_username, $db_password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
+// Add priority column to customer_messages and assigntasks tables if it doesn't exist
 
 // Function to delete a room cleaning and service from the database
 function deleteRoomCleaningAndService($conn, $id) {

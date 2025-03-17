@@ -123,6 +123,24 @@ body {
 }
 
 .add-btn {
+    background-color: #198754; /* Bootstrap's success green */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-btn:hover {
+    background-color: #157347; /* Darker shade for hover */
+}
+
+.add-btn i {
+    margin-right: 5px;
+}
+
+.add-btn {
     position: absolute;
     right: 30px;
     display: flex;
@@ -130,7 +148,6 @@ body {
     align-items: center;
     margin-bottom: 10px;
     margin-bottom: 20px;
-
 }
 
 .add-btn .btn {

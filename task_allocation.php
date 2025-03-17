@@ -42,6 +42,11 @@ if (!$employeesResult) {
     die("Query failed: " . $conn->error);
 }
 
+// Add these lines before search conditions
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 10; // Number of records per page
+$offset = ($page - 1) * $limit;
+
 ?>
 
 <!DOCTYPE html>
@@ -64,7 +69,7 @@ if (!$employeesResult) {
     <!-- Task Allocation Section -->
     <div class="p-4 mb-4 task-allocation-heading card">
         <div class="d-flex justify-content-between align-items-center">
-            <h3>Task Allocation</h3>
+            <h3>AI Task Allocation</h3>
             <!-- Settings Icon to Trigger Modal -->
             <button class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
                     style="width: 40px; height: 40px; border-radius: 50%; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" 
@@ -100,7 +105,12 @@ if (!$employeesResult) {
 
     <!-- Allocated Tasks Section -->
     <div class="p-4 task-allocation-heading card">
-        <h3>Logs </h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Logs</h3>
+            <button class="btn btn-success" onclick="exportLogs()">
+                <i class="bi bi-download me-2"></i>Export to Excel
+            </button>
+        </div>
     </div>
     <div class="container"> <!-- Added container for margin -->
     <?php
@@ -108,13 +118,80 @@ echo "<div class='card border-0 shadow-sm mb-3'>
         <div class='card-body p-2'>
         <h5 class='card-title mb-4 mt-4 m-2'>All Task Logs</h5>";
 
-// Query to fetch all task logs
-$logsQuery = "SELECT log_id, task_id, emp_id, action, change_details, log_time FROM task_logs";
-$logsResult = $conn->query($logsQuery);
+// Search and filter form
+echo "<div class='row mb-3'>
+        <div class='col-md-4'>
+            <div class='dropdown'>
+                <button class='btn btn-secondary dropdown-toggle w-100' type='button' id='employeeFilter' data-bs-toggle='dropdown' aria-expanded='false'>
+                    Filter by Employee
+                </button>
+                <ul class='dropdown-menu w-100' aria-labelledby='employeeFilter'>
+                    <li><a class='dropdown-item' href='?'>All Employees</a></li>";
+                    
+// Fetch unique employees from task_logs
+$empQuery = "SELECT DISTINCT tl.emp_id, e.name 
+             FROM task_logs tl 
+             JOIN employee e ON tl.emp_id = e.emp_id 
+             ORDER BY e.name";
+$empResult = $conn->query($empQuery);
+while($emp = $empResult->fetch_assoc()) {
+    $selected = (isset($_GET['emp_id']) && $_GET['emp_id'] == $emp['emp_id']) ? 'active' : '';
+    echo "<li><a class='dropdown-item {$selected}' href='?emp_id={$emp['emp_id']}'>" . 
+         htmlspecialchars($emp['name']) . "</a></li>";
+}
+echo "      </ul>
+            </div>
+        </div>
+        <div class='col-md-4'>
+            <input type='date' id='dateFilter' class='form-control'>
+        </div>
+        <div class='col-md-4'>
+            <input type='text' id='searchInput' class='form-control' placeholder='Search by ID...'>
+        </div>
+      </div>";
+
+// Modify search conditions to include employee filter
+$searchCondition = "";
+if (isset($_GET['search'])) {
+    $search = $conn->real_escape_string($_GET['search']);
+    $searchCondition = " WHERE (log_id LIKE '%$search%' 
+                        OR task_id LIKE '%$search%' 
+                        OR emp_id LIKE '%$search%')";
+}
+
+if (isset($_GET['date'])) {
+    $date = $conn->real_escape_string($_GET['date']);
+    $searchCondition .= $searchCondition ? " AND" : " WHERE";
+    $searchCondition .= " DATE(log_time) = '$date'";
+}
+
+if (isset($_GET['emp_id'])) {
+    $emp_id = $conn->real_escape_string($_GET['emp_id']);
+    $searchCondition .= $searchCondition ? " AND" : " WHERE";
+    $searchCondition .= " emp_id = '$emp_id'";
+}
+
+// Update the query to use proper LIMIT syntax
+$logsQuery = "SELECT log_id, task_id, emp_id, action, change_details, log_time 
+              FROM task_logs" . 
+              ($searchCondition ? $searchCondition : "") . 
+              " ORDER BY log_time DESC LIMIT ?, ?";
+
+// Use prepared statement to prevent SQL injection
+$stmt = $conn->prepare($logsQuery);
+$stmt->bind_param("ii", $offset, $limit);
+$stmt->execute();
+$logsResult = $stmt->get_result();
+
+// Get total records for pagination
+$totalQuery = "SELECT COUNT(*) as count FROM task_logs" . ($searchCondition ? $searchCondition : "");
+$totalResult = $conn->query($totalQuery);
+$totalRows = $totalResult->fetch_assoc()['count'];
+$totalPages = ceil($totalRows / $limit);
 
 if ($logsResult->num_rows > 0) {
     echo "<div class='table-responsive'>
-            <table class='table table-hover'>
+            <table class='table table-hover' id='logsTable'>
             <thead class='sticky-top'>
                 <tr class='bg-dark text-light'>
                     <th scope='col'>Log ID</th>
@@ -159,9 +236,45 @@ if ($logsResult->num_rows > 0) {
     }
 
     echo "</tbody></table></div>";
+
+    // Add pagination controls
+    echo "<nav aria-label='Page navigation' class='mt-3'>
+            <ul class='pagination justify-content-center'>";
+    
+    for ($i = 1; $i <= $totalPages; $i++) {
+        $active = $page === $i ? 'active' : '';
+        echo "<li class='page-item $active'>
+                <a class='page-link' href='?page=$i'>$i</a>
+              </li>";
+    }
+    
+    echo "</ul></nav>";
 } else {
     echo "<p class='mb-0'>No task logs found.</p>";
 }
+
+// Update the JavaScript for maintaining filters
+echo "<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchValue = this.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('search', searchValue);
+    if (currentUrl.searchParams.has('emp_id')) {
+        currentUrl.searchParams.set('emp_id', currentUrl.searchParams.get('emp_id'));
+    }
+    window.location.href = currentUrl.toString();
+});
+
+document.getElementById('dateFilter').addEventListener('change', function() {
+    const dateValue = this.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('date', dateValue);
+    if (currentUrl.searchParams.has('emp_id')) {
+        currentUrl.searchParams.set('emp_id', currentUrl.searchParams.get('emp_id'));
+    }
+    window.location.href = currentUrl.toString();
+});
+</script>";
 
 echo "</div></div>";
 $conn->close();
@@ -224,5 +337,10 @@ $conn->close();
     <script type="text/javascript" src="../js/bootstrap.min.js"></script>
      <script src="js/script.js"></script>
      <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
+     <script>
+function exportLogs() {
+    window.location.href = 'func/export_logs.php' + window.location.search;
+}
+</script>
 </body>
 </html>

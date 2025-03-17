@@ -1,45 +1,47 @@
 <?php
-include '../database.php';
+require_once '../database.php';
+require_once '../PHP_AItask/allocate_tasks.php';
 
-// Read JSON input
-$data = json_decode(file_get_contents("php://input"), true);
+// Get the POST data
+$data = json_decode(file_get_contents('php://input'), true);
+$taskId = $data['id'] ?? '';
+$newStatus = $data['status'] ?? '';
 
-// Validate JSON input
-if (!isset($data['id']) || !isset($data['status'])) {
-    echo json_encode(['success' => false, 'error' => 'Invalid input']);
+if (empty($taskId) || empty($newStatus)) {
+    echo json_encode(['success' => false, 'error' => 'Missing required data']);
     exit;
 }
 
-$task_id = $data['id'];
-$new_status = $data['status'];
+// Start transaction
+$conn->begin_transaction();
 
 try {
-    // Update the task status in the customer_messages table
+    // Update customer_messages status
     $stmt = $conn->prepare("UPDATE customer_messages SET status = ? WHERE id = ?");
-    $stmt->bind_param("si", $new_status, $task_id);
+    $stmt->bind_param('ss', $newStatus, $taskId);
     $stmt->execute();
 
-    // SQL for updating assigntasks with conditional use of NOW()
-    if ($new_status === 'complete') {
-        $updateAssignTaskSql = "UPDATE assigntasks SET status = ?, completed_at = NOW() WHERE task_id = ?";
-        $stmt2 = $conn->prepare($updateAssignTaskSql);
-        $stmt2->bind_param("si", $new_status, $task_id);
-    } else {
-        $updateAssignTaskSql = "UPDATE assigntasks SET status = ?, completed_at = NULL WHERE task_id = ?";
-        $stmt2 = $conn->prepare($updateAssignTaskSql);
-        $stmt2->bind_param("si", $new_status, $task_id);
+    // Update assigntasks status and employee status
+    $stmt = $conn->prepare("UPDATE assigntasks SET status = ? WHERE task_id = ?");
+    $stmt->bind_param('ss', $newStatus, $taskId);
+    $stmt->execute();
+
+    // If task is completed, update employee status
+    if ($newStatus === 'complete') {
+        $stmt = $conn->prepare("
+            UPDATE employee e
+            INNER JOIN assigntasks a ON e.emp_id = a.emp_id
+            SET e.status = 'active'
+            WHERE a.task_id = ? AND e.status = 'busy'
+        ");
+        $stmt->bind_param('s', $taskId);
+        $stmt->execute();
     }
 
-    $stmt2->execute();
-
-    // Check if both updates were successful
-    if ($stmt->affected_rows > 0 || $stmt2->affected_rows > 0) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'No rows were updated']);
-    }
-
+    $conn->commit();
+    echo json_encode(['success' => true]);
 } catch (Exception $e) {
+    $conn->rollback();
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 

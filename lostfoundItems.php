@@ -127,9 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <div class="container p-4">
         <div class="p-4 mt-0 lostfound-heading card">
             <h3>Lost and Found Management</h3>
-        </div>
-        <div class="add-btn">
-            <button class="btn" data-bs-toggle="modal" data-bs-target="#createModal">
+            <button class="btn btn-success add-btn" data-bs-toggle="modal" data-bs-target="#createModal">
                 <i class="fa-solid fa-plus"></i>Create
             </button>
         </div>
@@ -156,8 +154,100 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                 <?php include 'claim_return.php'; ?>
             </div>
         </div>
-    </div>
 
+        <!-- Claims Table Section -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Claims History</h5>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput" class="form-control form-control-sm" 
+                           placeholder="Search claims..." onkeyup="filterTable()">
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="claimsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Lost Item ID</th>
+                                <th>Guest Name</th>
+                                <th>Room No</th>
+                                <th>Contact Info</th>
+                                <th>Area Lost</th>
+                                <th>Date Lost</th>
+                                <th>Date Claimed</th>
+                                <th>Description</th>
+                                <th>Validated By</th>
+                                <th>Proof ID</th>
+                                <th>Proof of Ownership</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Get the current page number
+                            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                            $limit = 5; // Items per page
+                            $offset = ($page - 1) * $limit;
+
+                            // Get search term if any
+                            $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
+                            
+                            // Build the search condition
+                            $searchCondition = '';
+                            if (!empty($search)) {
+                                $searchCondition = " WHERE guest_name LIKE '%$search%' 
+                                                   OR room_no LIKE '%$search%' 
+                                                   OR description LIKE '%$search%'";
+                            }
+
+                            // Count total records for pagination
+                            $countQuery = "SELECT COUNT(*) as total FROM claims" . $searchCondition;
+                            $countResult = $conn->query($countQuery);
+                            $totalRows = $countResult->fetch_assoc()['total'];
+                            $totalPages = ceil($totalRows / $limit);
+
+                            // Main query with limit
+                            $query = "SELECT * FROM claims" . $searchCondition . 
+                                    " ORDER BY date_claimed DESC LIMIT $offset, $limit";
+                            $result = $conn->query($query);
+
+                            if ($result->num_rows > 0) {
+                                while($row = $result->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td>".$row['id']."</td>";
+                                    echo "<td>".$row['lost_item_id']."</td>";
+                                    echo "<td>".$row['guest_name']."</td>";
+                                    echo "<td>".$row['room_no']."</td>";
+                                    echo "<td>".$row['contact_info']."</td>";
+                                    echo "<td>".$row['area_lost']."</td>";
+                                    echo "<td>".date('Y-m-d', strtotime($row['date_lost']))."</td>";
+                                    echo "<td>".date('Y-m-d', strtotime($row['date_claimed']))."</td>";
+                                    echo "<td>".$row['description']."</td>";
+                                    echo "<td>".$row['validated_by']."</td>";
+                                    echo "<td>".$row['proof_id']."</td>";
+                                    echo "<td>";
+                                    if (!empty($row['proof_ownership'])) {
+                                        echo "<button class='btn btn-primary btn-sm' onclick='viewImage(\"".$row['proof_ownership']."\")'>
+                                                <i class='fas fa-image'></i> View
+                                              </button>";
+                                    } else {
+                                        echo "No image";
+                                    }
+                                    echo "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='11' class='text-center'>No claims found</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal for Submitting Lost/Found Item -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -182,7 +272,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                         </div>
                         <div class="form-floating mb-3">
                             <input type="text" class="form-control" id="room" name="room" placeholder="Enter room" required>
-                            <label for="room">Room</label>
+                            <label for="room">Room/Area</label>
                         </div>
                         <div class="form-floating mb-3">
                             <input type="date" class="form-control" id="date" name="date" placeholder="Date" required>
@@ -203,6 +293,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                             <button type="submit" name="submit_request" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image View Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Proof of Ownership</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="proofImage" src="" class="img-fluid" alt="Proof of Ownership">
                 </div>
             </div>
         </div>
@@ -321,7 +426,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+    function filterTable() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('claimsTable');
+        const tr = table.getElementsByTagName('tr');
+        let noResult = true;
 
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td');
+            let found = false;
+
+            for (let j = 0; j < td.length; j++) {
+                if (td[j]) {
+                    const txtValue = td[j].textContent || td[j].innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        noResult = false;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = found ? '' : 'none';
+        }
+
+        // Show no results message if nothing found
+        const noResultsRow = table.querySelector('.no-results');
+        if (noResult && tr.length > 1) {
+            if (!noResultsRow) {
+                const tbody = table.getElementsByTagName('tbody')[0];
+                const newRow = tbody.insertRow();
+                newRow.className = 'no-results';
+                const cell = newRow.insertCell();
+                cell.colSpan = 11;
+                cell.className = 'text-center';
+                cell.textContent = 'No matching records found';
+            }
+        } else if (noResultsRow) {
+            noResultsRow.remove();
+        }
+    }
+
+    // Add this new function for image viewing
+    function viewImage(imagePath) {
+        document.getElementById('proofImage').src = imagePath;
+        new bootstrap.Modal(document.getElementById('imageModal')).show();
+    }
     </script>
     
 </body>

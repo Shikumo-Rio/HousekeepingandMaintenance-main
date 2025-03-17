@@ -15,36 +15,49 @@ if ($_SESSION['user_type'] !== 'Admin') {
 $successMessage = ""; // Initialize a variable for the success message
 
 if (isset($_POST['request_item'])) {
-    // Get the item details from the form
     $item_id = $_POST['item_id'];
     $quantity = $_POST['quantity'];
 
-    // Fetch the item details from the 'inventory' table
-    $query = "SELECT item_name, category FROM inventory WHERE id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param('i', $item_id); // 'i' means integer
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // API endpoint for submitting requests
+    $apiUrl = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/view_api.php";
 
-    if ($result->num_rows > 0) {
-        $item = $result->fetch_assoc();
-        $item_name = $item['item_name'];
-        $category = $item['category'];
+    // Prepare the request data
+    $requestData = array(
+        'action' => 'create_request',
+        'item_id' => $item_id,
+        'quantity' => $quantity,
+        'requester_name' => $_SESSION['username'], // Use logged in username
+        'department' => 'Housekeeping', // Set your department
+        'contact_number' => '', // Add contact number if available
+        'requester_email' => '' // Add email if available
+    );
 
-        // Insert into 'requested_stocks' table
-        $insertQuery = "INSERT INTO requested_stocks (item_name, quantity, category) VALUES (?, ?, ?)";
-        $insertStmt = $conn->prepare($insertQuery);
-        $insertStmt->bind_param('sis', $item_name, $quantity, $category); // 's' = string, 'i' = integer
-        if ($insertStmt->execute()) {
-            $successMessage = "Stock request for {$quantity} of {$item_name} submitted successfully!";
-        } else {
-            echo "Error submitting stock request: " . $conn->error;
-        }
+    // Initialize cURL session
+    $ch = curl_init($apiUrl);
+    
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
 
-        $insertStmt->close();
+    // Execute cURL request
+    $response = curl_exec($ch);
+    
+    // Check for errors
+    if ($response === false) {
+        $successMessage = "Error submitting request: " . curl_error($ch);
     } else {
-        echo "Item not found.";
+        $result = json_decode($response, true);
+        if (isset($result['success']) && $result['success']) {
+            $successMessage = "Stock request submitted successfully!";
+        } else {
+            $successMessage = "Error: " . ($result['message'] ?? 'Unknown error occurred');
+        }
     }
+    
+    // Close cURL session
+    curl_close($ch);
 }
 
 // Fetch an admin's emp_id
@@ -64,39 +77,16 @@ while ($stockRow = $stockResult->fetch_assoc()) {
         addStockNotification($conn, $stockRow['item_name'], $emp_id, 'low');
     }
 }
-    // Close the database connection
-
-$requestedQuery = "SELECT COUNT(*) AS total_requested FROM requested_stocks";
-$resultRequested = mysqli_query($conn, $requestedQuery);
-$totalRequested = 0; // Initialize variable
-if ($resultRequested && $row = mysqli_fetch_assoc($resultRequested)) {
-    $totalRequested = $row['total_requested'];
-}
-
-// Query to get total unique categories
-$categoryQuery = "SELECT COUNT(DISTINCT category) AS total_categories FROM inventory";
-$resultCategory = mysqli_query($conn, $categoryQuery);
-$totalCategories = 0; // Initialize variable
-if ($resultCategory && $row = mysqli_fetch_assoc($resultCategory)) {
-    $totalCategories = $row['total_categories'];
-}
-
-// Query to get total items
-$itemsQuery = "SELECT COUNT(*) AS total_items FROM inventory";
-$resultItems = mysqli_query($conn, $itemsQuery);
-$totalItems = 0; // Initialize variable
-if ($resultItems && $row = mysqli_fetch_assoc($resultItems)) {
-    $totalItems = $row['total_items'];
-}
-
+    
 
 // Fetch inventory items
 $sql = "SELECT * FROM inventory";
 $result = $conn->query($sql);
 
-// Fetch requested stock items
-$requested_sql = "SELECT * FROM requested_stocks";
-$requested_result = $conn->query($requested_sql);
+// Remove the old requested stocks query
+// $requested_sql = "SELECT * FROM requested_stocks";
+// $requested_result = $conn->query($requested_sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -126,37 +116,37 @@ $requested_result = $conn->query($requested_sql);
                 </div>
             <?php endif; ?>
     <div class="row text-center mb-4 pt-4 m-0"> 
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card">
+                <div class="underline"></div>
+                <div class="card-body">
+                    <h5 class="card-title">Total Categories</h5>
+                    <h3 class="card-text"><i class="fas fa-tags"></i> <span id="totalSupplies">0</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card">
+                <div class="underline"></div>
+                <div class="card-body">
+                    <h5 class="card-title">Available Stock</h5>
+                    <h3 class="card-text"><i class="fas fa-cubes"></i> <span id="availableStock">0</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card">
+                <div class="underline"></div>
+                <div class="card-body">
+                    <h5 class="card-title">Low Stock Items</h5>
+                    <h3 class="card-text"><i class="fas fa-exclamation-triangle"></i> <span id="lowStockItems">0</span></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row text-center mb-4 pt-4 m-0"> 
     <!-- Total Requested Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card">
-            <div class="underline"></div>
-            <div class="card-body">
-                <h5 class="card-title">Total Requested</h5>
-                <h3 class="card-text"><i class="fas fa-list"></i> <?php echo $totalRequested; ?></h3>
-            </div>
-        </div>
-    </div>
-    <!-- Category Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card">
-            <div class="underline"></div>
-            <div class="card-body">
-                <h5 class="card-title">Category</h5>
-                <h3 class="card-text"><i class="fas fa-tags"></i> <?php echo $totalCategories; ?></h3>
-            </div>
-        </div>
-    </div>
-    <!-- Items Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card">
-            <div class="underline"></div>
-            <div class="card-body">
-                <h5 class="card-title">Items</h5>
-                <h3 class="card-text"><i class="fas fa-box"></i> <?php echo $totalItems; ?></h3>
-            </div>
-        </div>
-    </div>
-</div>
+    
 
     <!-- Inventory and Requested Stocks Tables Side by Side -->
     <div class="row m-0">
@@ -182,71 +172,14 @@ $requested_result = $conn->query($requested_sql);
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-
-                                     // Check stock levels and apply different styles and labels
-                                    if ($row['available_stock'] == 0) {
-                                        $lowStockStyle = 'style="color: red;"'; // Danger for 0 stock
-                                        $lowStockLabel = ' (Out of Stock)';     // Label for out of stock
-                                    } elseif ($row['available_stock'] < 10) {
-                                        $lowStockStyle = 'style="color: orange;"'; // Warning for low stock
-                                        $lowStockLabel = ' (Low)';
-                                    } else {
-                                        $lowStockStyle = '';  // Default style if stock is sufficient
-                                        $lowStockLabel = '';  // No label for sufficient stock
-                                    }
-
-                                    echo "<tr>";
-                                    echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['item_name']) . "</td>";
-                                    echo "<td $lowStockStyle>" . htmlspecialchars($row['available_stock']) . "$lowStockLabel </td>";
-                                    echo "<td>" . htmlspecialchars($row['category']) . "</td>";
-                                    echo "<td>
-                                        <button class='btn btn-dark btn-sm' data-toggle='modal' data-target='#requestModal" . $row['id'] . "'>
-                                            <i class='fas fa-hand-paper'></i>
-                                        </button>
-                                    </td>";
-                                    echo "</tr>";
-
-                                    // Request Modal
-                                    echo "
-                                    <div class='modal fade' id='requestModal" . $row['id'] . "' tabindex='-1' role='dialog' aria-labelledby='requestModalLabel' aria-hidden='true'>
-                                        <div class='modal-dialog' role='document'>
-                                            <div class='modal-content'>
-                                                <div class='modal-header'>
-                                                    <h5 class='modal-title' id='requestModalLabel'>Request " . htmlspecialchars($row['item_name']) . "</h5>
-                                                    <button type='button' class='close' data-dismiss='modal' aria-label='Close'>
-                                                        <span aria-hidden='true'>&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class='modal-body'>
-                                                    <form method='POST' action=''>
-                                                        <input type='hidden' name='item_id' value='" . $row['id'] . "'>
-                                                        <div class='form-group'>
-                                                            <label for='quantity'>Quantity</label>
-                                                            <input type='number' name='quantity' class='form-control' min='1' required>
-                                                        </div>
-                                                        <div class='modal-footer'>
-                                                            <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>
-                                                            <button type='submit' name='request_item' class='btn btn-success'>Request</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>";
-                                }
-                            } else {
-                                echo "<tr id='noResultsRow' style='display: none;'>
-                                    <td colspan='5'>No results found</td>
-                                </tr>";
-                            }
-                            ?>
-                        </tbody>
+                        <tbody></tbody>
                     </table>
+                    <div class="d-flex justify-content-center mt-3">
+                        <nav aria-label="Inventory pagination">
+                            <ul class="pagination pagination-sm" id="inventoryPagination">
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,7 +191,7 @@ $requested_result = $conn->query($requested_sql);
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3 class="mb-4"><i class="fas fa-box-open"></i> Requested Stocks</h3>
                     </div>
-                    <table class="table table-hover border table-bordered">
+                    <table class="table table-hover border table-bordered" id="requestedStocksTable">
                         <thead class="striky-top">
                             <tr class="bg-dark text-light">
                                 <th scope="col">ID</th>
@@ -268,22 +201,15 @@ $requested_result = $conn->query($requested_sql);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            if ($requested_result->num_rows > 0) {
-                                while ($row = $requested_result->fetch_assoc()) {
-                                    echo "<tr>";
-                                    echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['item_name']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['quantity']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row["category"]) . "</td>";
-                                    echo "</tr>";
-                                }
-                            } else {
-                                echo "<tr><td colspan='4'>No requested stocks.</td></tr>";
-                            }
-                            ?>
+                            <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
+                    <div class="d-flex justify-content-center mt-3">
+                        <nav aria-label="Requested stocks pagination">
+                            <ul class="pagination pagination-sm" id="requestedPagination">
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -335,6 +261,300 @@ setTimeout(function() {
                 successMessage.style.display = 'none';
             }
         }, 2000);
+
+        const apiEndpoint = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/table.php?api=1&api_key=20054d820a3ba1bae07591397d8cacdf";
+
+        async function fetchData() {
+            try {
+                const response = await fetch(apiEndpoint);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                return { items2: [], item_batches: [] };
+            }
+        }
+
+        function mapBatches(batches) {
+            const map = {};
+            batches.forEach(batch => {
+                if (!map[batch.item_id] && batch.expiration_date) {
+                    map[batch.item_id] = batch.expiration_date;
+                }
+            });
+            return map;
+        }
+
+        // Add pagination variables
+        let currentInventoryPage = 1;
+        let currentRequestedPage = 1;
+        const itemsPerPage = 8;
+
+        async function populateInventoryTable(data) {
+            if (!data.items2) return;
+            
+            const tableBody = document.querySelector("#inventoryTable tbody");
+            tableBody.innerHTML = '';
+            
+            const startIndex = (currentInventoryPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const itemsToShow = data.items2.slice(startIndex, endIndex);
+            
+            itemsToShow.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Add stock level styling
+                let stockStyle = '';
+                let stockLabel = '';
+                if (item.quantity == 0) {
+                    stockStyle = 'color: red;';
+                    stockLabel = ' (Out of Stock)';
+                } else if (item.quantity < 10) {
+                    stockStyle = 'color: orange;';
+                    stockLabel = ' (Low)';
+                }
+                
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.item_name}</td>
+                    <td style="${stockStyle}">${item.quantity}${stockLabel}</td>
+                    <td>${item.category}</td>
+                    <td>
+                        <button class='btn btn-dark btn-sm' data-toggle='modal' data-target='#requestModal${item.id}'>
+                            <i class='fas fa-hand-paper'></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                // Create request modal for each item
+                createRequestModal(item);
+            });
+
+            // Update pagination
+            updatePagination('inventoryPagination', data.items2.length, currentInventoryPage, (page) => {
+                currentInventoryPage = page;
+                populateInventoryTable(data);
+            });
+        }
+
+        function createRequestModal(item) {
+            const modalHtml = `
+                <div class='modal fade' id='requestModal${item.id}' tabindex='-1' role='dialog' aria-labelledby='requestModalLabel' aria-hidden='true'>
+                    <div class='modal-dialog modal-lg' role='document'>
+                        <div class='modal-content'>
+                            <div class='modal-header'>
+                                <h5 class='modal-title' id='requestModalLabel'>Request ${item.item_name}</h5>
+                                <button type='button' class='btn-close' data-dismiss='modal' aria-label='Close'></button>
+                            </div>
+                            <div class='modal-body'>
+                                <div class="mb-4">
+                                    <h6>Requester Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Department</label>
+                                            <input type="text" class="form-control" id="pickup_location${item.id}" value="Housekeeping" required>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Delivery Location</label>
+                                            <input type="text" class="form-control" id="delivery_location${item.id}" value="Housekeeping" required>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Requester Name</label>
+                                            <input type="text" class="form-control" id="requester_name${item.id}" value="<?php echo $_SESSION['username']; ?>" required>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="requester_email${item.id}" required>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Contact Number</label>
+                                            <input type="tel" class="form-control" id="contact_number${item.id}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Item Request Details</h6>
+                                    <div class="form-group">
+                                        <label for="quantity">Quantity</label>
+                                        <input type="number" class="form-control" id="quantity${item.id}" min="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>
+                                <button type='button' class='btn btn-success' onclick="submitRequest(${item.id})">Submit Request</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        async function submitRequest(itemId) {
+            const pickup_location = document.getElementById(`pickup_location${itemId}`).value.trim();
+            const delivery_location = document.getElementById(`delivery_location${itemId}`).value.trim();
+            const requester_name = document.getElementById(`requester_name${itemId}`).value.trim();
+            const requester_email = document.getElementById(`requester_email${itemId}`).value.trim();
+            const contact_number = document.getElementById(`contact_number${itemId}`).value.trim();
+            const quantity = parseInt(document.getElementById(`quantity${itemId}`).value.trim()) || 0;
+
+            if (!pickup_location || !delivery_location || !requester_name || !requester_email || !contact_number || quantity <= 0) {
+                alert("Please complete all required fields.");
+                return;
+            }
+
+            const payload = {
+                pickup_location,
+                delivery_location,
+                requester_name,
+                requester_email,
+                contact_number,
+                item_type: 'general',
+                items: [{
+                    category: 'Housekeeping',
+                    item_name: document.querySelector(`#requestModal${itemId} .modal-title`).textContent.replace('Request ', ''),
+                    sku: '',
+                    quantity: quantity
+                }]
+            };
+
+            try {
+                const response = await fetch("https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/request.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert("Request created successfully!");
+                    $(`#requestModal${itemId}`).modal('hide');
+                    // Refresh the requested stocks table
+                    const requestsData = await fetchRequestsData();
+                    populateRequestedStocksTable(requestsData);
+                } else {
+                    alert("Error: " + (result.message || "Unknown error occurred"));
+                }
+            } catch (error) {
+                console.error("Error submitting request:", error);
+                alert("Error submitting request. Please try again.");
+            }
+        }
+
+        const requestsApiEndpoint = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/view_api.php";
+
+        async function fetchRequestsData() {
+            try {
+                const response = await fetch(requestsApiEndpoint);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching requests data:", error);
+                return { requests: [], request_items: [] };
+            }
+        }
+
+        function populateRequestedStocksTable(data) {
+            const tableBody = document.querySelector("#requestedStocksTable tbody");
+            tableBody.innerHTML = '';
+
+            if (data.request_items && data.request_items.length > 0) {
+                const startIndex = (currentRequestedPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const itemsToShow = data.request_items.slice(startIndex, endIndex);
+                
+                itemsToShow.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.item_name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.category}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Update pagination
+                updatePagination('requestedPagination', data.request_items.length, currentRequestedPage, (page) => {
+                    currentRequestedPage = page;
+                    populateRequestedStocksTable(data);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No requested stocks found.</td></tr>';
+            }
+        }
+
+        // Add pagination update function
+        function updatePagination(paginationId, totalItems, currentPage, onPageChange) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const pagination = document.getElementById(paginationId);
+            pagination.innerHTML = '';
+
+            // Only show pagination if there's more than one page
+            if (totalPages <= 1) return;
+
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span></a>`;
+            prevLi.onclick = () => currentPage > 1 && onPageChange(currentPage - 1);
+            pagination.appendChild(prevLi);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.onclick = () => onPageChange(i);
+                pagination.appendChild(li);
+            }
+
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span></a>`;
+            nextLi.onclick = () => currentPage < totalPages && onPageChange(currentPage + 1);
+            pagination.appendChild(nextLi);
+        }
+
+        // Initialize both tables when document is ready
+        $(document).ready(async function() {
+            const inventoryData = await fetchData();
+            updateDashboard(inventoryData);
+            populateInventoryTable(inventoryData);
+
+            const requestsData = await fetchRequestsData();
+            populateRequestedStocksTable(requestsData);
+        });
+
+        async function updateDashboard(data) {
+            if (!data.items2) return;
+            
+            // Get unique categories count
+            const uniqueCategories = [...new Set(data.items2.map(item => item.category))].length;
+            
+            // Calculate total available stock across all items
+            const totalStock = data.items2.reduce((sum, item) => 
+                sum + (parseInt(item.quantity) || 0), 0
+            );
+            
+            // Count items with low stock
+            const lowStockCount = data.items2.filter(item => 
+                parseInt(item.quantity) < 10
+            ).length;
+
+            // Update dashboard cards
+            document.getElementById('totalSupplies').textContent = uniqueCategories;
+            document.getElementById('availableStock').textContent = totalStock;
+            document.getElementById('lowStockItems').textContent = lowStockCount;
+        }
 
 </script>
 </body>
