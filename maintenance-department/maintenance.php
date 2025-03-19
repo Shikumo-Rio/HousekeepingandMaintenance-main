@@ -20,31 +20,43 @@ $stats_query = "SELECT
     FROM maintenance_requests";
 $stats = $conn->query($stats_query)->fetch_assoc();
 
-// Get maintenance staff
-$staff_query = "SELECT username FROM login_accounts WHERE user_type = 'Maintenance-Staff'";
+// Update staff query to join with employee table
+$staff_query = "SELECT l.username, l.emp_id, e.name 
+                FROM login_accounts l
+                JOIN employee e ON l.emp_id = e.emp_id 
+                WHERE l.user_type = 'Maintenance-Staff'";
 $staff_result = $conn->query($staff_query);
 $maintenance_staff = [];
+$staff_display = [];
 while ($staff = $staff_result->fetch_assoc()) {
-    $maintenance_staff[] = $staff['username'];
+    $maintenance_staff[] = $staff['emp_id'];
+    // Format: Name (Employee ID)
+    $staff_display[$staff['emp_id']] = $staff['name'] . ' (' . $staff['emp_id'] . ')';
 }
 
-// Modify the requests query to include search and filter
-$requests_query = "SELECT * FROM maintenance_requests WHERE 1=1";
+// Modify the requests query to include employee names
+$requests_query = "SELECT mr.*, 
+                    GROUP_CONCAT(DISTINCT e.name, ' (', am.emp_id, ')') as assigned_employees,
+                    GROUP_CONCAT(DISTINCT am.emp_id) as assigned_emp_ids
+                  FROM maintenance_requests mr 
+                  LEFT JOIN assigned_maintenance am ON mr.id = am.maintenance_request_id
+                  LEFT JOIN employee e ON am.emp_id = e.emp_id 
+                  WHERE 1=1";
 if (!empty($search)) {
     $search = $conn->real_escape_string($search);
-    $requests_query .= " AND (request_title LIKE '%$search%' 
-                        OR description LIKE '%$search%' 
-                        OR room_no LIKE '%$search%')";
+    $requests_query .= " AND (mr.request_title LIKE '%$search%' 
+                        OR mr.description LIKE '%$search%' 
+                        OR mr.room_no LIKE '%$search%')";
 }
 if (!empty($priority_filter)) {
     $priority_filter = $conn->real_escape_string($priority_filter);
-    $requests_query .= " AND priority = '$priority_filter'";
+    $requests_query .= " AND mr.priority = '$priority_filter'";
 }
 if (!empty($status_filter)) {
     $status_filter = $conn->real_escape_string($status_filter);
-    $requests_query .= " AND status = '$status_filter'";
+    $requests_query .= " AND mr.status = '$status_filter'";
 }
-$requests_query .= " ORDER BY created_at DESC";
+$requests_query .= " GROUP BY mr.id ORDER BY mr.created_at DESC";
 $requests = $conn->query($requests_query);
 ?>
 
@@ -167,6 +179,12 @@ $requests = $conn->query($requests_query);
                 <?php while ($request = $requests->fetch_assoc()): ?>
                     <div class="card request-card priority-<?php echo $request['priority']; ?>">
                         <div class="card-body">
+                            <?php if ($request['needs_assistance'] == 1): ?>
+                                <div class="alert alert-warning mb-3" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    This task requires assistance!
+                                </div>
+                            <?php endif; ?>
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h5 class="card-title">Request #<?php echo $request['id']; ?></h5>
@@ -174,10 +192,16 @@ $requests = $conn->query($requests_query);
                                     <p class="mb-1"><strong>Title:</strong> <?php echo $request['request_title']; ?></p>
                                     <p class="mb-1"><strong>Description:</strong> <?php echo $request['description']; ?></p>
                                     <p class="mb-1">
-                                        <strong>Being worked by:</strong>
+                                        <strong>Assigned to:</strong>
                                         <?php 
-                                        if ($request['workon']) {
-                                            echo htmlspecialchars($request['workon']);
+                                        $assigned_ids = explode(',', $request['assigned_emp_ids']);
+                                        $assigned_names = explode(',', $request['assigned_employees']);
+                                        if (!empty($assigned_names[0])) {
+                                            echo '<div class="assigned-employees">';
+                                            foreach($assigned_names as $emp) {
+                                                echo '<span class="badge bg-secondary me-1">' . htmlspecialchars($emp) . '</span>';
+                                            }
+                                            echo '</div>';
                                         } else {
                                             echo '<span class="text-muted">Not assigned</span>';
                                         }
@@ -223,33 +247,43 @@ $requests = $conn->query($requests_query);
                             <?php if ($request['status'] !== 'Completed'): ?>
                                 <div class="mt-3 action-buttons">
                                     <div class="dropdown staff-dropdown">
-                                        <button class="btn dropdown-toggle <?php echo $request['workon'] ? 'assigned' : ''; ?>" 
+                                        <button class="btn dropdown-toggle <?php echo !empty($assigned_ids[0]) ? 'assigned' : ''; ?>" 
                                                 type="button" 
                                                 id="staffDropdown_<?php echo $request['id']; ?>" 
                                                 data-bs-toggle="dropdown" 
                                                 aria-expanded="false">
                                             <i class="fas fa-user-plus me-2"></i>
-                                            <?php echo $request['workon'] ? 'Assigned to: ' . htmlspecialchars($request['workon']) : 'Assign to Staff'; ?>
+                                            Assign Staff
                                         </button>
-                                        <ul class="dropdown-menu" aria-labelledby="staffDropdown_<?php echo $request['id']; ?>">
+                                        <div class="dropdown-menu p-2" style="width: 250px;" aria-labelledby="staffDropdown_<?php echo $request['id']; ?>">
+                                            <div class="mb-2">
+                                                <small class="text-muted">Select multiple staff members:</small>
+                                            </div>
                                             <?php foreach ($maintenance_staff as $staff): ?>
-                                                <li>
-                                                    <a class="dropdown-item <?php echo $request['workon'] === $staff ? 'active' : ''; ?>" 
-                                                       href="#" 
-                                                       onclick="assignEmployee(<?php echo $request['id']; ?>, '<?php echo htmlspecialchars($staff, ENT_QUOTES); ?>')">
-                                                        <i class="fas fa-user"></i>
-                                                        <?php echo htmlspecialchars($staff); ?>
-                                                        <?php if ($request['workon'] === $staff): ?>
-                                                            <i class="fas fa-check float-end mt-1"></i>
-                                                        <?php endif; ?>
-                                                    </a>
-                                                </li>
+                                                <div class="form-check">
+                                                    <input class="form-check-input staff-checkbox" 
+                                                           type="checkbox" 
+                                                           value="<?php echo htmlspecialchars($staff); ?>"
+                                                           id="staff_<?php echo $request['id'] . '_' . $staff; ?>"
+                                                           <?php echo in_array($staff, $assigned_ids) ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="staff_<?php echo $request['id'] . '_' . $staff; ?>">
+                                                        <?php echo htmlspecialchars($staff_display[$staff]); ?>
+                                                    </label>
+                                                </div>
                                             <?php endforeach; ?>
-                                        </ul>
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-primary w-100" 
+                                                        onclick="assignMultipleEmployees(<?php echo $request['id']; ?>)">
+                                                    Update Assignments
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button class="btn btn-schedule" onclick="scheduleTask(<?php echo $request['id']; ?>, '<?php echo $request['workon'] ? htmlspecialchars($request['workon']) : ''; ?>')">
+                                    <?php if (!$request['schedule']): ?>
+                                    <button class="btn btn-schedule" onclick="scheduleTask(<?php echo $request['id']; ?>, '<?php echo $request['assigned_employees']; ?>')">
                                         <i class="fas fa-calendar-plus me-2"></i>Schedule
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -432,6 +466,26 @@ $requests = $conn->query($requests_query);
             })
             .catch(error => {
                 alert('Error scheduling task: ' + error);
+            });
+        }
+
+        function assignMultipleEmployees(requestId) {
+            const checkboxes = document.querySelectorAll(`input[id^=staff_${requestId}_]:checked`);
+            const employees = Array.from(checkboxes).map(cb => cb.value);
+            
+            fetch('update_status.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `request_id=${requestId}&employees=${JSON.stringify(employees)}&status=In Progress`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Failed to update assignments');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update assignments');
             });
         }
     </script>

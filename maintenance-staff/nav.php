@@ -61,10 +61,16 @@ $user = $result->fetch_assoc();
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link text-black" href="schedule_work_logs.php">
+            <i class="fas fa-calendar-alt"></i> Schedule & Logs
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link text-black" href="acc_settings.php">
             <i class="fas fa-cogs"></i> Account Settings
           </a>
         </li>
+        
         <li class="nav-item">
         <a class="nav-link text-black" href="../logout.php">
             <i class="fas fa-sign-out-alt"></i> Logout

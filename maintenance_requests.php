@@ -106,7 +106,7 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
                         </thead>
                         <tbody>
                             <?php
-                            $sql = "SELECT request_title, description, room_no, priority, status, workon, schedule FROM maintenance_requests";
+                            $sql = "SELECT request_title, description, room_no, priority, status, emp_id, schedule FROM maintenance_requests";
                             $result = $conn->query($sql);
 
                             if ($result->num_rows > 0) {
@@ -124,7 +124,7 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
                                         ($row['status'] == 'Completed' ? 'success' : 'warning')) .
                                         "'>" . htmlspecialchars($row['status']) . "</span></td>";
                                     echo "<td>" . ($row['schedule'] ? htmlspecialchars($row['schedule']) : '<span class="text-muted">Not scheduled</span>') . "</td>";
-                                    echo "<td>" . ($row['workon'] ? htmlspecialchars($row['workon']) : '<span class="text-muted">Not assigned</span>') . "</td>";
+                                    echo "<td>" . ($row['emp_id'] ? htmlspecialchars($row['emp_id']) : '<span class="text-muted">Not assigned</span>') . "</td>";
                                     
                                     echo "</tr>";
                                 }

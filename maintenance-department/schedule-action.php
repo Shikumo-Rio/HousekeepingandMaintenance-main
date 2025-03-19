@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Update the maintenance request with the schedule
-    $stmt = $conn->prepare("UPDATE maintenance_requests SET schedule = ? WHERE id = ? AND workon = ?");
+    $stmt = $conn->prepare("UPDATE maintenance_requests SET schedule = ? WHERE id = ? AND emp_id = ?");
     $stmt->bind_param("sis", $schedule, $request_id, $employee);
 
     if ($stmt->execute()) {

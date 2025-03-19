@@ -39,6 +39,7 @@ $user_type = $_SESSION['user_type'];
                     <img src="../image/profile.jpg" alt="Profile Picture" class="profile-img mt-4">
                     <h2 class="mt-3"><?php echo htmlspecialchars($username); ?></h2>
                     <p class="text-secondary"><?php echo htmlspecialchars($user_type); ?></p>
+                    <p><strong>Position:</strong> Maintenance Staff</p>
                 </div>
 
                 <!-- Change Password Form -->

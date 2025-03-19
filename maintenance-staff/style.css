@@ -483,6 +483,37 @@ body {
 .created-at {
     font-size: 12px;
 }
+
+.filter-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.filter-container .btn-group {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.filter-container .btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    border: none;
+    background-color: #fff;
+    color: #198754;
+    transition: all 0.3s ease;
+}
+
+.filter-container .btn:hover {
+    background-color: #e9ecef;
+}
+
+.filter-container .btn.btn-primary {
+    background-color: #198754;
+    color: white;
+}
+
 /* the code ends here for staff*/
 
 /* Account Settings*/

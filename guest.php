@@ -147,33 +147,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Statistics Cards -->
         <div class="row mt-4 m-0 mb-4">
-            <!-- Total Notices Card -->
-            <div class="col-md-6">
-                <div class="card-with-line p-3 text-center card">
-                    <h5 class="card-title">Total Notices</h5>
-                    <div class="d-flex justify-content-center align-items-center">
-                        <i class="bi bi-bell-fill text-success fs-4 me-2"></i>
-                        <h4 class="text-success mb-0">
-                            <?php
-                                $countQuery = "SELECT COUNT(*) as total FROM checkout_notices";
-                                $countResult = $conn->query($countQuery);
-                                echo $countResult->fetch_assoc()['total'];
-                            ?>
-                        </h4>
-                    </div>
-                </div>
-            </div>
             <!-- Pending Notices Card -->
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card-with-line p-3 text-center card">
                     <h5 class="card-title">Pending Notices</h5>
                     <div class="d-flex justify-content-center align-items-center">
                         <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
                         <h4 class="text-success mb-0">
                             <?php
-                                $pendingQuery = "SELECT COUNT(*) as pending FROM checkout_notices WHERE status = 'Pending'";
-                                $pendingResult = $conn->query($pendingQuery);
-                                echo $pendingResult->fetch_assoc()['pending'];
+                                $pendingNoticesQuery = "SELECT COUNT(*) as pending FROM checkout_notices WHERE status = 'Pending'";
+                                $pendingNoticesResult = $conn->query($pendingNoticesQuery);
+                                echo $pendingNoticesResult->fetch_assoc()['pending'];
+                            ?>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <!-- Pending Orders Card -->
+            <div class="col-md-4">
+                <div class="card-with-line p-3 text-center card">
+                    <h5 class="card-title">Pending Orders</h5>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
+                        <h4 class="text-success mb-0">
+                            <?php
+                                $pendingOrdersQuery = "SELECT COUNT(*) as pending FROM foodorders WHERE status = 'Pending'";
+                                $pendingOrdersResult = $conn->query($pendingOrdersQuery);
+                                echo $pendingOrdersResult->fetch_assoc()['pending'];
+                            ?>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <!-- Pending Room Service Card -->
+            <div class="col-md-4">
+                <div class="card-with-line p-3 text-center card">
+                    <h5 class="card-title">Pending Room Service</h5>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
+                        <h4 class="text-success mb-0">
+                            <?php
+                                $pendingRoomServiceQuery = "SELECT COUNT(*) as pending FROM customer_messages WHERE status = 'Pending'";
+                                $pendingRoomServiceResult = $conn->query($pendingRoomServiceQuery);
+                                echo $pendingRoomServiceResult->fetch_assoc()['pending'];
                             ?>
                         </h4>
                     </div>

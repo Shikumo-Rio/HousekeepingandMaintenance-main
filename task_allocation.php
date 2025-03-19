@@ -146,19 +146,12 @@ echo "      </ul>
             <input type='date' id='dateFilter' class='form-control'>
         </div>
         <div class='col-md-4'>
-            <input type='text' id='searchInput' class='form-control' placeholder='Search by ID...'>
+            <input type='text' id='searchInput' class='form-control' placeholder='Search...'>
         </div>
       </div>";
 
-// Modify search conditions to include employee filter
+// Remove the search condition from PHP since we'll handle it client-side
 $searchCondition = "";
-if (isset($_GET['search'])) {
-    $search = $conn->real_escape_string($_GET['search']);
-    $searchCondition = " WHERE (log_id LIKE '%$search%' 
-                        OR task_id LIKE '%$search%' 
-                        OR emp_id LIKE '%$search%')";
-}
-
 if (isset($_GET['date'])) {
     $date = $conn->real_escape_string($_GET['date']);
     $searchCondition .= $searchCondition ? " AND" : " WHERE";
@@ -256,13 +249,23 @@ if ($logsResult->num_rows > 0) {
 // Update the JavaScript for maintaining filters
 echo "<script>
 document.getElementById('searchInput').addEventListener('keyup', function() {
-    const searchValue = this.value;
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('search', searchValue);
-    if (currentUrl.searchParams.has('emp_id')) {
-        currentUrl.searchParams.set('emp_id', currentUrl.searchParams.get('emp_id'));
+    const searchValue = this.value.toLowerCase();
+    const table = document.getElementById('logsTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const cells = row.getElementsByTagName('td');
+        let found = false;
+        
+        for (let cell of cells) {
+            if (cell.textContent.toLowerCase().includes(searchValue)) {
+                found = true;
+                break;
+            }
+        }
+        
+        row.style.display = found ? '' : 'none';
     }
-    window.location.href = currentUrl.toString();
 });
 
 document.getElementById('dateFilter').addEventListener('change', function() {

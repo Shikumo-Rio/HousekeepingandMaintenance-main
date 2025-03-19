@@ -175,7 +175,7 @@ if (isset($_POST['login'])) {
             <img src="img/logo.webp" alt="Paradise Logo" class="logo">
             <h3 class="text-center text-light mb-4">Welcome Admin</h3>
             <form method="POST" action="login.php">
-                <div class="mb-3">
+            <div class="mb-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person"></i></span>
                         <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
@@ -187,10 +187,13 @@ if (isset($_POST['login'])) {
                         <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
                     </div>
                 </div>
+                <?php if (!empty($error)): ?>
+                    <div class="text-danger mb-3 text-center"><?php echo $error; ?></div>
+                <?php endif; ?>
                 <button type="submit" name="login" class="btn btn-green text-light w-100">LOGIN</button>
             </form>
 
-            <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="true">
                 <div class="modal-dialog modal-m modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -207,22 +210,24 @@ if (isset($_POST['login'])) {
                         </div>
                     </div>
                 </div>
-<!-- Password toggle functionality -->
-<script>
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('password');
-
-    togglePassword.addEventListener('click', function (e) {
-        // Toggle the type of the password field between text and password
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-
-        // Toggle the eye icon
-        this.querySelector('i').classList.toggle('bi-eye-slash');
-    });
-</script>
+            </div>
         </div>
     </div>
+
+    <!-- Password toggle functionality -->
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordField = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function (e) {
+            // Toggle the type of the password field between text and password
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+
+            // Toggle the eye icon
+            this.querySelector('i').classList.toggle('bi-eye-slash');
+        });
+    </script>
 
     <!-- Bootstrap JS and Icons JS for modal functionality and icon toggle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

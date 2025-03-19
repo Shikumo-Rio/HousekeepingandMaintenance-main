@@ -108,7 +108,7 @@ $result = $conn->query($sql);
 <div class="container">
     
     <div class="p-4 title-heading card">
-        <h3>Inventory Management</h3>
+        <h3>Inventory</h3>
     </div>
     <?php if (!empty($successMessage)):?>
                 <div class="alert alert-success">
@@ -198,6 +198,7 @@ $result = $conn->query($sql);
                                 <th scope="col">Item Name</th>
                                 <th scope="col">Requested Quantity</th>
                                 <th scope="col">Category</th>
+                                <th scope="col">Status</th> <!-- Added Status column -->
                             </tr>
                         </thead>
                         <tbody>
@@ -470,11 +471,18 @@ setTimeout(function() {
                 
                 itemsToShow.forEach(item => {
                     const row = document.createElement('tr');
+                    let statusClass = 'badge bg-secondary'; // Default to Pending
+                    if (item.status === 'Approved') {
+                        statusClass = 'badge bg-success';
+                    } else if (item.status === 'Rejected') {
+                        statusClass = 'badge bg-danger';
+                    }
                     row.innerHTML = `
                         <td>${item.id}</td>
                         <td>${item.item_name}</td>
                         <td>${item.quantity}</td>
                         <td>${item.category}</td>
+                        <td><span class="${statusClass}">${item.status || 'Pending'}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -485,7 +493,7 @@ setTimeout(function() {
                     populateRequestedStocksTable(data);
                 });
             } else {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No requested stocks found.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No requested stocks found.</td></tr>';
             }
         }
 

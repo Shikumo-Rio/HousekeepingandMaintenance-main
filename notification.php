@@ -29,7 +29,7 @@ $sql = "SELECT notifications.message, notifications.link,
                DATE_FORMAT(notifications.created_at, '%Y-%m-%dT%H:%i:%s') as created_at 
         FROM notifications 
         JOIN login_accounts ON notifications.emp_id = login_accounts.emp_id 
-        WHERE login_accounts.user_type IN ('employee', 'maintenance') 
+        WHERE login_accounts.user_type IN ('employee') 
         ORDER BY notifications.created_at DESC";
 
 $stmt = $conn->prepare($sql);

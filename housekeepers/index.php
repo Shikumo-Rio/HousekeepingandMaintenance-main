@@ -154,6 +154,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
     </script>";
 }
 
+// Fetch inventory items from the API
+$api_url = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/table.php?api=1&api_key=20054d820a3ba1bae07591397d8cacdf";
+$inventory_data = file_get_contents($api_url);
+$inventory_items = json_decode($inventory_data, true);
+
+// Ensure $inventory_items is valid and contains the expected structure
+if ($inventory_items === null || !isset($inventory_items['items2']) || !is_array($inventory_items['items2'])) {
+    $inventory_items = ['items2' => []]; // Fallback to an empty array if the API response is invalid
+}
 
 ?>
 <!DOCTYPE html>
@@ -165,6 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="../img/logo.webp">
 
 </head>
 <body>
@@ -235,25 +245,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
                     echo '<div class="alert alert-info text-center">No task available</div>';
                 }
                 ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Complete Modal -->
-    <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold" id="completeModalLabel">Complete Task</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to mark this task as complete?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-closed btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-complete btn-sm">Complete</button>
-                </div>
             </div>
         </div>
     </div>
@@ -391,6 +382,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
             </div>
         </div>
     </div>
+
+    <!-- Complete Task Modal -->
+    <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="completeTaskModalLabel">Complete Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="completeTaskForm">
+                        <div class="row">
+                            <?php
+                            foreach ($inventory_items['items2'] as $item) {
+                                if ($item['type'] === 'hotel') {
+                                    echo "<div class='col-12 col-md-6 mb-3'>";
+                                    echo "<div class='card shadow-sm'>";
+                                    echo "<div class='card-body'>";
+                                    echo "<h6 class='card-title'>" . htmlspecialchars($item['item_name']) . "</h6>";
+                                    echo "<p class='card-text'><strong>Available:</strong> " . htmlspecialchars($item['quantity']) . "</p>";
+                                    echo "<div class='form-check mb-2'>";
+                                    echo "<div class='d-flex align-items-center'>";
+                                    echo "<button type='button' class='btn btn-sm btn-outline-secondary decrement-btn' data-id='" . htmlspecialchars($item['id']) . "'>-</button>";
+                                    echo "<input type='number' class='form-control form-control-sm mx-2 used-quantity' name='used_quantity[" . htmlspecialchars($item['id']) . "]' value='0' min='0' max='" . htmlspecialchars($item['quantity']) . "' readonly>";
+                                    echo "<button type='button' class='btn btn-sm btn-outline-secondary increment-btn' data-id='" . htmlspecialchars($item['id']) . "'>+</button>";
+                                    echo "</div>";
+                                    echo "</div>";
+                                    echo "</div>";
+                                    echo "</div>";
+                                }
+                            }
+                            ?>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 py-2">Complete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle increment and decrement buttons
+            document.querySelectorAll('.increment-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const row = this.closest('.card');
+                    const input = row.querySelector('.used-quantity');
+                    const max = parseInt(input.getAttribute('max'));
+                    let currentValue = parseInt(input.value);
+
+                    if (currentValue < max) {
+                        input.value = currentValue + 1;
+                    }
+                });
+            });
+
+            document.querySelectorAll('.decrement-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const row = this.closest('.card');
+                    const input = row.querySelector('.used-quantity');
+                    let currentValue = parseInt(input.value);
+
+                    if (currentValue > 0) {
+                        input.value = currentValue - 1;
+                    }
+                });
+            });
+
+            // Handle form submission
+            document.getElementById('completeTaskForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const usedQuantities = {};
+                const requestMore = {};
+
+                document.querySelectorAll('.used-quantity').forEach(input => {
+                    const itemId = input.closest('.card').querySelector('.increment-btn').getAttribute('data-id');
+                    const usedValue = parseInt(input.value);
+
+                    if (usedValue > 0) {
+                        usedQuantities[itemId] = usedValue;
+                    }
+                });
+
+                document.querySelectorAll('input[name^="request_more"]:checked').forEach(checkbox => {
+                    const itemId = checkbox.name.match(/\[(\d+)\]/)[1];
+                    requestMore[itemId] = true;
+                });
+
+                // Send data to the API
+                fetch('https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/update.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usedQuantities, requestMore })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Task completed and inventory updated successfully.');
+                        location.reload();
+                    } else {
+                        alert('Error updating inventory: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the inventory.');
+                });
+            });
+        });
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

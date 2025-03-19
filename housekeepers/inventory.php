@@ -31,9 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Fetch inventory items from the database
-$sql = "SELECT * FROM inventory";
-$result = $conn->query($sql);
+// Fetch inventory items from the API
+$api_url = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/table.php?api=1&api_key=20054d820a3ba1bae07591397d8cacdf";
+$inventory_data = file_get_contents($api_url);
+$inventory_items = json_decode($inventory_data, true);
+
+if ($inventory_items === null || !isset($inventory_items['items2'])) {
+    echo "Error fetching inventory data.";
+    $inventory_items = ['items2' => []];
+}
 ?>
 
 <!DOCTYPE html>
@@ -42,84 +48,86 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <style>
+        @media (max-width: 768px) {
+            .table-responsive-stack tr {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+                padding: 0.5rem;
+            }
+            .table-responsive-stack td {
+                display: flex;
+                justify-content: space-between;
+                padding: 0.5rem;
+                border: none;
+            }
+            .table-responsive-stack td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                margin-right: 0.5rem;
+            }
+            .table-responsive-stack thead {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php include 'nav.php'; ?>
-<div class="container mt-5">
-    <h2>Inventory</h2>
-    
-    <!-- Add Inventory Form -->
-    <form method="POST" action="">
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="item_name" name="item_name" placeholder="Item Name" required>
-            <label for="item_name" class="form-label">Enter Item Name</label>
-        </div>
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Quantity" required>
-            <label for="quantity" class="form-label">Enter Quantity</label>
-        </div>
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="category" name="category" placeholder="Category" required>
-            <label for="category" class="form-label">Enter Category</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Request</button>
-    </form>
-
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="successModalLabel">Success</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    New requested stock added successfully!
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Inventory List -->
     <h3 class="mt-5">Inventory Items</h3>
-    <table class="table table-bordered">
-        <thead>
-            <tr class="">
-                <th>ID</th>
-                <th>Item Name</th>
-                <th>Available Stock</th>
-                <th>Category</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php
-        // Fetch inventory items with correct column names
-        $sql = "SELECT id, item_name, available_stock, category FROM inventory";
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['item_name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['available_stock']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['category']) . "</td>";
-                echo "</tr>";
+    <div class="table-responsive">
+        <table id="inventoryTable" class="table table-striped table-bordered table-responsive-stack" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Expiration Date</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            foreach ($inventory_items['items2'] as $item) {
+                if ($item['type'] === 'hotel') { // Filter items by type 'hotel'
+                    echo "<tr>";
+                    echo "<td data-label='ID'>" . htmlspecialchars($item['id'] ?? 'N/A') . "</td>";
+                    echo "<td data-label='Category'>" . htmlspecialchars($item['category'] ?? 'N/A') . "</td>";
+                    echo "<td data-label='Item Name'>" . htmlspecialchars($item['item_name'] ?? 'N/A') . "</td>";
+                    echo "<td data-label='Quantity'>" . htmlspecialchars($item['quantity'] ?? 'N/A') . "</td>";
+                    echo "<td data-label='Expiration Date'>" . htmlspecialchars($item['expiration_date'] ?? 'N/A') . "</td>";
+                    echo "<td data-label='Description'>" . htmlspecialchars($item['description'] ?? 'N/A') . "</td>";
+                    echo "</tr>";
+                }
             }
-        } else {
-            echo "<tr><td colspan='4' class='text-center'>No items found</td></tr>";
-        }
-        ?>
-        </tbody>
-    </table>
+            ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#inventoryTable').DataTable({
+            responsive: true,
+            paging: true,
+            searching: true
+        });
+    });
+</script>
 
 <!-- Trigger the modal only if insertion was successful -->
 <?php if ($showSuccessModal): ?>
