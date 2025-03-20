@@ -5,13 +5,12 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Check if the user is logged in and has admin privileges
+// Set content type for JSON response
+header('Content-Type: application/json');
+
+// Check if the user is logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit;
-}
-if ($_SESSION['user_type'] !== 'Admin') {
-    header("Location: unauthorized.php");
+    echo json_encode(['error' => 'Not logged in']);
     exit;
 }
 
@@ -24,49 +23,55 @@ $adminResult = $conn->query($adminQuery);
 $admin = $adminResult->fetch_assoc();
 $emp_id = $admin['emp_id']; // Use this emp_id for notifications
 
+// Array to hold all notifications
+$notifications = [];
+
 // Query to fetch all notifications for employees and maintenance
 $sql = "SELECT notifications.message, notifications.link, 
                DATE_FORMAT(notifications.created_at, '%Y-%m-%dT%H:%i:%s') as created_at 
         FROM notifications 
         JOIN login_accounts ON notifications.emp_id = login_accounts.emp_id 
-        WHERE login_accounts.user_type IN ('employee') 
-        ORDER BY notifications.created_at DESC";
+        WHERE login_accounts.user_type IN ('employee', 'admin') 
+        ORDER BY notifications.created_at DESC 
+        LIMIT 10";
 
 $stmt = $conn->prepare($sql);
-$stmt->execute();
-$result = $stmt->get_result();
+if ($stmt) {
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-$notifications = [];
-while ($row = $result->fetch_assoc()) {
-    // Log to check the created_at value (optional for debugging)
-    error_log('Created at: ' . $row['created_at']);
-    $notifications[] = $row;
+    while ($row = $result->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+    $stmt->close();
 }
 
-$stmt->close();
-
-// Check stock levels and add notifications for low or zero stock
-$stockCheckSQL = "SELECT id, item_name, available_stock FROM inventory WHERE available_stock < 10";
+// Check stock levels in local inventory and add notifications for low or zero stock
+$stockCheckSQL = "SELECT id, item_name, quantity FROM inventory WHERE quantity < 10";
 $stockResult = $conn->query($stockCheckSQL);
 
-// Add stock notifications to the notifications array
-while ($stockRow = $stockResult->fetch_assoc()) {
-    if ($stockRow['available_stock'] == 0) {
-        // Out of Stock notification
-        array_unshift($notifications, [
-            'message' => 'Out of Stock: ' . $stockRow['item_name'],
-            'link' => 'inventory.php', // Link to inventory management page
-            'created_at' => date('Y-m-d H:i:s') // Current time for this notification
-        ]);
-    } elseif ($stockRow['available_stock'] < 10) {
-        // Low Stock notification
-        array_unshift($notifications, [
-            'message' => 'Low Stock: ' . $stockRow['item_name'] . ' (' . $stockRow['available_stock'] . ' left)',
-            'link' => 'inventory.php', // Link to inventory management page
-            'created_at' => date('Y-m-d H:i:s') // Current time for this notification
-        ]);
+if ($stockResult) {
+    // Add stock notifications to the notifications array
+    while ($stockRow = $stockResult->fetch_assoc()) {
+        if ($stockRow['quantity'] == 0) {
+            // Out of Stock notification
+            array_unshift($notifications, [
+                'message' => 'Out of Stock: ' . $stockRow['item_name'],
+                'link' => 'inventory.php', // Link to inventory management page
+                'created_at' => date('Y-m-d\TH:i:s') // Current time for this notification in ISO format
+            ]);
+        } elseif ($stockRow['quantity'] < 10) {
+            // Low Stock notification
+            array_unshift($notifications, [
+                'message' => 'Low Stock: ' . $stockRow['item_name'] . ' (' . $stockRow['quantity'] . ' left)',
+                'link' => 'inventory.php', // Link to inventory management page
+                'created_at' => date('Y-m-d\TH:i:s') // Current time for this notification in ISO format
+            ]);
+        }
     }
 }
+
+
 
 $conn->close();
 

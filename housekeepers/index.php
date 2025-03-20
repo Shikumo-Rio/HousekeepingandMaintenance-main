@@ -154,15 +154,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_requestlostnfou
     </script>";
 }
 
-// Fetch inventory items from the API
-$api_url = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/table.php?api=1&api_key=20054d820a3ba1bae07591397d8cacdf";
-$inventory_data = file_get_contents($api_url);
-$inventory_items = json_decode($inventory_data, true);
-
-// Ensure $inventory_items is valid and contains the expected structure
-if ($inventory_items === null || !isset($inventory_items['items2']) || !is_array($inventory_items['items2'])) {
-    $inventory_items = ['items2' => []]; // Fallback to an empty array if the API response is invalid
+// Fetch inventory items from the API - replacing with direct database query to get specific columns
+function getInventoryItems() {
+    global $conn;
+    $items = [];
+    
+    $sql = "SELECT id, inventory_id, category, item_name, quantity FROM inventory";
+    $result = $conn->query($sql);
+    
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $items[] = $row;
+        }
+    }
+    
+    return $items;
 }
+
+$inventory_items = getInventoryItems();
 
 ?>
 <!DOCTYPE html>
@@ -385,38 +394,60 @@ if ($inventory_items === null || !isset($inventory_items['items2']) || !is_array
 
     <!-- Complete Task Modal -->
     <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content shadow-lg rounded-4">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold" id="completeTaskModalLabel">Complete Task</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="completeTaskForm">
-                        <div class="row">
-                            <?php
-                            foreach ($inventory_items['items2'] as $item) {
-                                if ($item['type'] === 'hotel') {
-                                    echo "<div class='col-12 col-md-6 mb-3'>";
-                                    echo "<div class='card shadow-sm'>";
-                                    echo "<div class='card-body'>";
-                                    echo "<h6 class='card-title'>" . htmlspecialchars($item['item_name']) . "</h6>";
-                                    echo "<p class='card-text'><strong>Available:</strong> " . htmlspecialchars($item['quantity']) . "</p>";
-                                    echo "<div class='form-check mb-2'>";
-                                    echo "<div class='d-flex align-items-center'>";
-                                    echo "<button type='button' class='btn btn-sm btn-outline-secondary decrement-btn' data-id='" . htmlspecialchars($item['id']) . "'>-</button>";
-                                    echo "<input type='number' class='form-control form-control-sm mx-2 used-quantity' name='used_quantity[" . htmlspecialchars($item['id']) . "]' value='0' min='0' max='" . htmlspecialchars($item['quantity']) . "' readonly>";
-                                    echo "<button type='button' class='btn btn-sm btn-outline-secondary increment-btn' data-id='" . htmlspecialchars($item['id']) . "'>+</button>";
-                                    echo "</div>";
-                                    echo "</div>";
-                                    echo "</div>";
-                                    echo "</div>";
-                                }
-                            }
-                            ?>
+                    <form id="completeTaskForm" action="complete_task.php" method="POST">
+                        <?php if (isset($task['task_id'])): ?>
+                            <input type="hidden" name="task_id" value="<?php echo $task['task_id']; ?>">
+                        <?php endif; ?>
+                        
+                        <h6 class="mb-3">Select items used for this task:</h6>
+                        
+                        <div class="inventory-container" style="max-height: 400px; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="sticky-top bg-light">
+                                        <tr>
+                                            <th>Item Name</th>
+                                            <th>Category</th>
+                                            <th class="text-center">Available</th>
+                                            <th class="text-center">Quantity Used</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($inventory_items as $item): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($item['item_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($item['category']); ?></td>
+                                            <td class="text-center"><?php echo htmlspecialchars($item['quantity']); ?></td>
+                                            <td class="text-center">
+                                                <div class="d-flex justify-content-center">
+                                                    <input type="number" class="form-control form-control-sm text-center used-quantity" 
+                                                        style="max-width: 80px;"
+                                                        name="used_quantity[<?php echo $item['id']; ?>]" 
+                                                        value="0" min="0" max="<?php echo $item['quantity']; ?>">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 py-2">Complete</button>
+                        
+                        <div class="form-floating mb-3 mt-3">
+                            <textarea class="form-control" id="completionNotes" name="completion_notes" rows="3" placeholder="Enter notes (optional)"></textarea>
+                            <label for="completionNotes" class="form-label">Completion Notes (Optional)</label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Mark as Complete</button>
                         </div>
                     </form>
                 </div>
@@ -426,71 +457,76 @@ if ($inventory_items === null || !isset($inventory_items['items2']) || !is_array
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Handle increment and decrement buttons
-            document.querySelectorAll('.increment-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const row = this.closest('.card');
-                    const input = row.querySelector('.used-quantity');
-                    const max = parseInt(input.getAttribute('max'));
-                    let currentValue = parseInt(input.value);
-
-                    if (currentValue < max) {
-                        input.value = currentValue + 1;
-                    }
-                });
-            });
-
-            document.querySelectorAll('.decrement-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const row = this.closest('.card');
-                    const input = row.querySelector('.used-quantity');
-                    let currentValue = parseInt(input.value);
-
-                    if (currentValue > 0) {
-                        input.value = currentValue - 1;
-                    }
-                });
-            });
-
             // Handle form submission
             document.getElementById('completeTaskForm').addEventListener('submit', function (e) {
                 e.preventDefault();
-
-                const usedQuantities = {};
-                const requestMore = {};
-
+                
+                // Check if any item has a quantity greater than available
+                let hasError = false;
                 document.querySelectorAll('.used-quantity').forEach(input => {
-                    const itemId = input.closest('.card').querySelector('.increment-btn').getAttribute('data-id');
-                    const usedValue = parseInt(input.value);
-
-                    if (usedValue > 0) {
-                        usedQuantities[itemId] = usedValue;
+                    const max = parseInt(input.getAttribute('max'));
+                    const value = parseInt(input.value);
+                    
+                    if (value > max) {
+                        hasError = true;
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
                     }
                 });
-
-                document.querySelectorAll('input[name^="request_more"]:checked').forEach(checkbox => {
-                    const itemId = checkbox.name.match(/\[(\d+)\]/)[1];
-                    requestMore[itemId] = true;
-                });
-
-                // Send data to the API
-                fetch('https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/update.php', {
+                
+                if (hasError) {
+                    alert('Some quantities exceed available stock.');
+                    return;
+                }
+                
+                const formData = new FormData(this);
+                
+                fetch('complete_task.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usedQuantities, requestMore })
+                    body: formData
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Task completed and inventory updated successfully.');
-                        location.reload();
+                        // Create a Bootstrap alert
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.role = 'alert';
+                        alertDiv.innerHTML = `
+                            <strong>Success!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `;
+                        
+                        // Insert at the top of the modal body
+                        const modalBody = document.querySelector('#completeModal .modal-body');
+                        modalBody.insertBefore(alertDiv, modalBody.firstChild);
+                        
+                        // Reload after 2 seconds
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
                     } else {
-                        alert('Error updating inventory: ' + data.message);
+                        alert('Error completing task: ' + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while updating the inventory.');
+                    alert('An error occurred while completing the task.');
+                });
+            });
+
+            // Add event listener for input validation
+            document.querySelectorAll('.used-quantity').forEach(input => {
+                input.addEventListener('input', function() {
+                    const max = parseInt(this.getAttribute('max'));
+                    const value = parseInt(this.value);
+                    
+                    if (value > max) {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
                 });
             });
         });

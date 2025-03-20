@@ -54,12 +54,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['requestEmployee'])) {
                 $mail->isHTML(true);
                 $mail->Subject = 'New Employee Request';
                 $mail->Body = "
-                    <h2>New Employee Request Details</h2>
-                    <p><strong>Role:</strong> {$role}</p>
-                    <p><strong>Quantity:</strong> {$quantity}</p>
-                    <p><strong>Shift:</strong> {$preferred_shift}</p>
-                    <p><strong>Urgency Level:</strong> {$urgency_level}</p>
-                    <p><strong>Reason:</strong> {$reason}</p>
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            .email-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                            .header { background-color: #2E8B57; color: white; padding: 20px; text-align: center; }
+                            .content { background-color: #f9f9f9; padding: 20px; border-radius: 5px; }
+                            .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                            .detail-row { margin: 10px 0; border-bottom: 1px solid #eee; padding: 5px 0; }
+                            .label { font-weight: bold; color: #2E8B57; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class='email-container'>
+                            <div class='header'>
+                                <h1>Paradise Hotel</h1>
+                                <p>New Employee Request</p>
+                            </div>
+                            <div class='content'>
+                                <h2>Employee Request Details</h2>
+                                <div class='detail-row'>
+                                    <span class='label'>Role:</span> {$role}
+                                </div>
+                                <div class='detail-row'>
+                                    <span class='label'>Quantity:</span> {$quantity}
+                                </div>
+                                <div class='detail-row'>
+                                    <span class='label'>Shift:</span> {$preferred_shift}
+                                </div>
+                                <div class='detail-row'>
+                                    <span class='label'>Urgency Level:</span> {$urgency_level}
+                                </div>
+                                <div class='detail-row'>
+                                    <span class='label'>Reason:</span> {$reason}
+                                </div>
+                            </div>
+                            <div class='footer'>
+                                <p>This is an automated message from Paradise Hotel Housekeeping Department</p>
+                                <p>© " . date('Y') . " Paradise Hotel. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
                 ";
 
                 $mail->send();
@@ -124,19 +162,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Create HTML message
         $htmlMessage = "
-            <h2>Maintenance Request Details</h2>
-            <p><strong>Request ID:</strong> {$request['id']}</p>
-            <p><strong>Title:</strong> {$request['request_title']}</p>
-            <p><strong>Room:</strong> {$request['room_no']}</p>
-            <p><strong>Description:</strong> {$request['description']}</p>
-            <p><strong>Priority:</strong> {$request['priority']}</p>
-            <p><strong>Status:</strong> {$request['status']}</p>
-            <p><strong>Created At:</strong> {$request['created_at']}</p>
-        ";
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .email-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background-color: #2E8B57; color: white; padding: 20px; text-align: center; }
+                    .content { background-color: #f9f9f9; padding: 20px; border-radius: 5px; }
+                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    .detail-row { margin: 10px 0; border-bottom: 1px solid #eee; padding: 5px 0; }
+                    .label { font-weight: bold; color: #2E8B57; }
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='header'>
+                        <h1>Paradise Hotel</h1>
+                        <p>Maintenance Request Notification</p>
+                    </div>
+                    <div class='content'>
+                        <h2>Maintenance Request #{$request['id']}</h2>
+                        <div class='detail-row'>
+                            <span class='label'>Title:</span> {$request['request_title']}
+                        </div>
+                        <div class='detail-row'>
+                            <span class='label'>Room:</span> {$request['room_no']}
+                        </div>
+                        <div class='detail-row'>
+                            <span class='label'>Description:</span> {$request['description']}
+                        </div>
+                        <div class='detail-row'>
+                            <span class='label'>Priority:</span> {$request['priority']}
+                        </div>
+                        <div class='detail-row'>
+                            <span class='label'>Status:</span> {$request['status']}
+                        </div>
+                        <div class='detail-row'>
+                            <span class='label'>Created At:</span> {$request['created_at']}
+                        </div>";
 
         if (!empty($additionalNotes)) {
-            $htmlMessage .= "<p><strong>Additional Notes:</strong><br>{$additionalNotes}</p>";
+            $htmlMessage .= "
+                        <div class='detail-row'>
+                            <span class='label'>Additional Notes:</span><br>
+                            " . nl2br(htmlspecialchars($additionalNotes)) . "
+                        </div>";
         }
+
+        $htmlMessage .= "
+                    </div>
+                    <div class='footer'>
+                        <p>This is an automated message from Paradise Hotel Housekeeping Department</p>
+                        <p>© " . date('Y') . " Paradise Hotel. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        ";
 
         $mail->Body = $htmlMessage;
         $mail->AltBody = strip_tags(str_replace(['<br>', '</p>'], "\n", $htmlMessage));

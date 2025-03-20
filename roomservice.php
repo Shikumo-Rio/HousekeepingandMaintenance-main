@@ -10,6 +10,45 @@
     <link rel="stylesheet" href="css/roomservice.css">   
     <link rel="icon" href="img/logo.webp">
     <title>Room Service</title>
+    <style>
+        /* Animation for status change */
+        @keyframes statusChangeAnimation {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .status-change-animation {
+            animation: statusChangeAnimation 1.2s ease-in-out;
+        }
+        
+        /* Fade out animation for cards being removed */
+        @keyframes fadeOutAnimation {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+        
+        .fade-out-animation {
+            animation: fadeOutAnimation 0.8s ease-out forwards;
+        }
+        
+        /* Movement animation between columns */
+        @keyframes moveInAnimation {
+            0% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+            70% { transform: translateY(5px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .move-in-animation {
+            animation: moveInAnimation 1.2s ease-in-out;
+        }
+        
+        /* Highlight color based on status */
+        .status-highlight-pending { box-shadow: 0 0 8px 2px rgba(255, 193, 7, 0.7); }
+        .status-highlight-working { box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.7); }
+        .status-highlight-complete { box-shadow: 0 0 8px 2px rgba(40, 167, 69, 0.7); }
+        .status-highlight-invalid { box-shadow: 0 0 8px 2px rgba(220, 53, 69, 0.7); }
+    </style>
 </head>
 <body>
     <?php include('index.php'); ?>
@@ -336,34 +375,187 @@
         toast.show();
     }
 
+    // Variable to store the currently selected task ID
+    let selectedTaskId = null;
+
     // Add event listener to status cards
     document.querySelectorAll('.status-card').forEach(card => {
         card.addEventListener('click', function() {
             document.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
             this.classList.add('selected');
+            selectedTaskId = this.dataset.taskId; // Store the selected task ID
             showDetails(this.dataset.taskId);
-            setCurrentTaskId(this.dataset.taskId); // Make sure to set current task ID here
+            setCurrentTaskId(this.dataset.taskId);
         });
     });
 
-    // Function to refresh task cards
+    // Object to track task statuses
+    let taskStatusMap = {};
+    
+    // Function to build initial status map
+    function buildInitialStatusMap() {
+        document.querySelectorAll('.status-card').forEach(card => {
+            const taskId = card.dataset.taskId;
+            const statusColumn = card.closest('.status-column');
+            if (taskId && statusColumn) {
+                taskStatusMap[taskId] = statusColumn.dataset.status;
+            }
+        });
+        console.log("Initial status map:", taskStatusMap);
+    }
+    
+    // Call this function on initial page load
+    buildInitialStatusMap();
+    
+    // Keep track of whether an animation is in progress
+    let animationInProgress = false;
+    
+    // Modified function to refresh task cards with improved animation control
     function refreshTaskCards() {
-        // Directly fetch updated cards which includes allocation check
+        // If an animation is already in progress, delay this refresh
+        if (animationInProgress) {
+            console.log("Animation in progress, skipping this refresh cycle");
+            return;
+        }
+        
+        // Store current state of cards before refresh
+        const currentCards = {};
+        document.querySelectorAll('.status-card').forEach(card => {
+            const taskId = card.dataset.taskId;
+            const statusColumn = card.closest('.status-column');
+            if (taskId && statusColumn) {
+                currentCards[taskId] = {
+                    status: statusColumn.dataset.status,
+                    element: card
+                };
+            }
+        });
+        
+        // Fetch updated cards
         fetch('func/get_task_cards.php')
             .then(response => response.text())
             .then(html => {
-                document.getElementById('roomServiceCards').innerHTML = html;
-                attachCardEvents();
+                // Create temporary div to parse the new HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Extract new cards data
+                const newCards = {};
+                const movedCards = {};
+                let hasMovedCards = false;
+                
+                tempDiv.querySelectorAll('.status-card').forEach(card => {
+                    const taskId = card.dataset.taskId;
+                    const statusColumn = card.closest('.status-column');
+                    if (taskId && statusColumn) {
+                        newCards[taskId] = {
+                            status: statusColumn.dataset.status,
+                            element: card
+                        };
+                        
+                        // Check if card has moved
+                        if (currentCards[taskId] && currentCards[taskId].status !== newCards[taskId].status) {
+                            movedCards[taskId] = {
+                                from: currentCards[taskId].status,
+                                to: newCards[taskId].status
+                            };
+                            hasMovedCards = true;
+                            
+                            // Add animation class to the new card
+                            card.classList.add('move-in-animation');
+                            card.classList.add(`status-highlight-${newCards[taskId].status}`);
+                            console.log(`Task ${taskId} moved from ${movedCards[taskId].from} to ${movedCards[taskId].to}`);
+                        }
+                    }
+                });
+                
+                // If no cards have moved, just update the DOM and skip animations
+                if (!hasMovedCards) {
+                    updateDOM(tempDiv.innerHTML, newCards);
+                    return;
+                }
+                
+                // Set animation flag
+                animationInProgress = true;
+                
+                // First, apply fade-out animation to cards that are moving
+                let fadeOutApplied = false;
+                for (const taskId in movedCards) {
+                    if (currentCards[taskId] && currentCards[taskId].element) {
+                        currentCards[taskId].element.classList.add('fade-out-animation');
+                        fadeOutApplied = true;
+                    }
+                }
+                
+                // If no fade-out was applied (cards might be new), skip to DOM update
+                if (!fadeOutApplied) {
+                    updateDOM(tempDiv.innerHTML, newCards);
+                    return;
+                }
+                
+                // Wait for fade-out animation to complete before updating the DOM
+                setTimeout(() => {
+                    updateDOM(tempDiv.innerHTML, newCards);
+                    
+                    // Reset animation flag after all animations complete
+                    setTimeout(() => {
+                        animationInProgress = false;
+                    }, 1500); // Match this with the move-in animation duration
+                }, 800); // Match this with the fadeOutAnimation duration
             })
-            .catch(error => console.error('Error refreshing tasks:', error));
+            .catch(error => {
+                console.error('Error refreshing tasks:', error);
+                animationInProgress = false; // Reset flag in case of error
+            });
     }
-
+    
+    // Helper function to update DOM with new content
+    function updateDOM(html, newCards) {
+        // Update the DOM
+        document.getElementById('roomServiceCards').innerHTML = html;
+        
+        // Update our tracking map for the next refresh
+        taskStatusMap = {};
+        Object.keys(newCards).forEach(taskId => {
+            taskStatusMap[taskId] = newCards[taskId].status;
+        });
+        
+        attachCardEvents();
+        
+        // Restore the selected task if it still exists
+        if (selectedTaskId) {
+            const previouslySelectedCard = document.querySelector(`.status-card[data-task-id="${selectedTaskId}"]`);
+            if (previouslySelectedCard) {
+                previouslySelectedCard.classList.add('selected');
+                
+                // If the selected card moved and we're still displaying its details,
+                // highlight it in its new location
+                if (document.getElementById('taskDetailsContent').innerHTML.includes(`ID: ${selectedTaskId}`)) {
+                    previouslySelectedCard.classList.add('status-highlight-' + 
+                        previouslySelectedCard.closest('.status-column').dataset.status);
+                }
+            }
+        }
+        
+        // Remove animation classes after they've played
+        setTimeout(() => {
+            document.querySelectorAll('.move-in-animation, .status-highlight-pending, .status-highlight-working, .status-highlight-complete, .status-highlight-invalid').forEach(card => {
+                card.classList.remove('move-in-animation');
+                card.classList.remove('status-highlight-pending');
+                card.classList.remove('status-highlight-working');
+                card.classList.remove('status-highlight-complete');
+                card.classList.remove('status-highlight-invalid');
+            });
+        }, 1500);
+    }
+    
     // Function to reattach event listeners after refresh
     function attachCardEvents() {
         document.querySelectorAll('.status-card').forEach(card => {
             card.addEventListener('click', function() {
                 document.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
+                selectedTaskId = this.dataset.taskId; // Store the selected task ID
                 showDetails(this.dataset.taskId);
                 setCurrentTaskId(this.dataset.taskId);
             });
