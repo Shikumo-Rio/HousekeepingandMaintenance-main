@@ -107,9 +107,15 @@ $offset = ($page - 1) * $limit;
     <div class="p-4 task-allocation-heading card">
         <div class="d-flex justify-content-between align-items-center">
             <h3>Logs</h3>
-            <button class="btn btn-success" onclick="exportLogs()">
-                <i class="bi bi-download me-2"></i>Export to Excel
-            </button>
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-2"></i>Export
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="#" onclick="exportLogs('excel'); return false;"><i class="bi bi-file-excel me-2"></i>Excel</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportLogs('pdf'); return false;"><i class="bi bi-file-pdf me-2"></i>PDF</a></li>
+                </ul>
+            </div>
         </div>
     </div>
     <div class="container"> <!-- Added container for margin -->
@@ -307,7 +313,6 @@ $conn->close();
                                 <option value="housekeeper3">Housekeeper 3</option>
                             </select>
                         </div>
-
                         <div class="mb-4">
                             <label for="floorSelect" class="form-label">Assign Floor</label>
                             <select class="form-select" id="floorSelect" multiple>
@@ -321,7 +326,6 @@ $conn->close();
                                 Hold down the "Ctrl" (Windows) or "Command" (Mac) key to select multiple floors.
                             </div>
                         </div>
-
                         <div class="mb-4">
                             <label for="shiftTime" class="form-label">Assign Shift Time</label>
                             <input type="time" class="form-control" id="shiftTime" required>
@@ -336,13 +340,68 @@ $conn->close();
         </div>
     </div>
     
-    <script type="text/javascript" src="../js/jquery.min.js"></script>
-    <script type="text/javascript" src="../js/bootstrap.min.js"></script>
-     <script src="js/script.js"></script>
-     <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
-     <script>
-function exportLogs() {
-    window.location.href = 'func/export_logs.php' + window.location.search;
+<!-- Date Range Modal for Export -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateRangeModalLabel">Select Date Range for Export</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm">
+                    <input type="hidden" id="exportFormat" name="format" value="excel">
+                    
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="start" value="<?php echo date('Y-m-d', strtotime('-30 days')); ?>">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="end" value="<?php echo date('Y-m-d'); ?>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmExport">Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script type="text/javascript" src="../js/bootstrap.min.js"></script>
+<script src="js/script.js"></script>
+<script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
+<script>
+function exportLogs(format) {
+    // Set the export format in the hidden field
+    document.getElementById('exportFormat').value = format;
+    
+    // Show the date range modal
+    var dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
+    dateRangeModal.show();
+    
+    // Handle the export confirmation
+    document.getElementById('confirmExport').onclick = function() {
+        const form = document.getElementById('exportForm');
+        const formData = new FormData(form);
+        const searchParams = new URLSearchParams(formData);
+        
+        // Add any existing filters from the current page
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has('emp_id')) {
+            searchParams.set('emp_id', currentUrl.searchParams.get('emp_id'));
+        }
+        
+        // Redirect to the export page
+        window.location.href = 'func/export_logs.php?' + searchParams.toString();
+        
+        // Close the modal
+        dateRangeModal.hide();
+    };
 }
 </script>
 </body>

@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 
 try {
     // Fetch inventory items from local database
-    $sql = "SELECT * FROM inventory ORDER BY id DESC";
+    $sql = "SELECT * FROM inventory ORDER BY id ASC";
     $result = $conn->query($sql);
     
     if (!$result) {

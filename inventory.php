@@ -11,25 +11,33 @@ if ($_SESSION['user_type'] !== 'Admin') {
     exit;
 }
 
-// Handle the request for necessities
-$successMessage = ""; // Initialize a variable for the success message
-
-if (isset($_POST['request_item'])) {
+// Add handling for direct inventory requests
+$successMessage = "";
+if (isset($_POST['request_inventory_item'])) {
     $item_id = $_POST['item_id'];
+    $item_name = $_POST['item_name'];
+    $category = $_POST['category'];
     $quantity = $_POST['quantity'];
-
+    
     // API endpoint for submitting requests
-    $apiUrl = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/view_api.php";
+    $apiUrl = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/request.php";
 
     // Prepare the request data
     $requestData = array(
-        'action' => 'create_request',
-        'item_id' => $item_id,
-        'quantity' => $quantity,
-        'requester_name' => $_SESSION['username'], // Use logged in username
-        'department' => 'Housekeeping', // Set your department
-        'contact_number' => '', // Add contact number if available
-        'requester_email' => 'paradisehotelmaintenance@gmail.com' // Add email if available
+        'pickup_location' => 'Housekeeping',
+        'delivery_location' => 'Housekeeping',
+        'requester_name' => $_SESSION['username'],
+        'requester_email' => 'paradisehotelmaintenance@gmail.com',
+        'contact_number' => '09123456789', // Default contact number 
+        'item_type' => 'general',
+        'items' => [
+            [
+                'category' => $category,
+                'item_name' => $item_name,
+                'sku' => '',
+                'quantity' => $quantity
+            ]
+        ]
     );
 
     // Initialize cURL session
@@ -49,8 +57,8 @@ if (isset($_POST['request_item'])) {
         $successMessage = "Error submitting request: " . curl_error($ch);
     } else {
         $result = json_decode($response, true);
-        if (isset($result['success']) && $result['success']) {
-            $successMessage = "Stock request submitted successfully!";
+        if (isset($result['status']) && $result['status'] === 'success') {
+            $successMessage = "Stock request for {$item_name} submitted successfully!";
         } else {
             $successMessage = "Error: " . ($result['message'] ?? 'Unknown error occurred');
         }
@@ -65,8 +73,6 @@ $adminQuery = "SELECT emp_id FROM login_accounts WHERE user_type = 'admin' LIMIT
 $adminResult = $conn->query($adminQuery);
 $admin = $adminResult->fetch_assoc();
 $emp_id = $admin['emp_id']; // Use this emp_id for notifications
-
-    
 
 // Fetch inventory items from local database
 $sql = "SELECT * FROM inventory";
@@ -93,13 +99,21 @@ $result = $conn->query($sql);
 <div class="container">
     
     <div class="p-4 title-heading card">
-        <h3>Inventory</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Housekeeping Inventory</h3>
+            <button class="btn btn-success" onclick="showExportModal()">
+                <i class="fas fa-file-export"></i> Export
+            </button>
+        </div>
     </div>
-    <?php if (!empty($successMessage)):?>
-                <div class="alert alert-success">
-                    <?php echo $successMessage; ?>
-                </div>
-            <?php endif; ?>
+    
+    <?php if (!empty($successMessage)): ?>
+    <div class="alert alert-success alert-dismissible fade show" id="success-message">
+        <strong>Success!</strong> <?php echo $successMessage; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+    
     <div class="row text-center mb-4 pt-4 m-0"> 
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card">
@@ -129,11 +143,11 @@ $result = $conn->query($sql);
             </div>
         </div>
     </div>
-    <div class="row text-center mb-4 pt-4 m-0"> 
     
-    <!-- Local Inventory Table -->
+    <!-- Modified: Two tables side by side -->
     <div class="row m-0 mb-4">
-        <div class="col-12">
+        <!-- Local Inventory Table -->
+        <div class="col-lg-7 mb-4">
             <div class="card centered-div">
                 <div class="card-body p-5">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -169,72 +183,132 @@ $result = $conn->query($sql);
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Warehouse and Requested Stocks Tables Side by Side -->
-    <div class="row m-0">
-        <div class="col-lg-7 mb-4">
+        <!-- NEW: Inventory Usage Table - Keeping pagination but removing search -->
+        <div class="col-lg-5 mb-4">
             <div class="card centered-div">
                 <div class="card-body p-5">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0"><i class="fas fa-warehouse"></i> Warehouse</h3>
-                        <div class="input-group mb-3">
-                            <input type="text" id="searchInput" placeholder="Search items..." class="form-control small-input" onkeyup="filterTable()">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                        </div>
+                        <h3 class="mb-0"><i class="fas fa-history"></i> Usage History</h3>
                     </div>
-                    <table class="table table-hover border table-bordered" id="inventoryTable">
+                    <table class="table table-hover border table-bordered" id="inventoryUsageTable">
                         <thead class="striky-top">
                             <tr class="bg-dark text-light">
                                 <th scope="col">ID</th>
-                                <th scope="col">Item Name</th>
-                                <th scope="col">Available Stock</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Action</th>
+                                <th scope="col">Task ID</th>
+                                <th scope="col">Item</th>
+                                <th scope="col">Qty</th>
+                                <th scope="col">Used By</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Notes</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <!-- Inventory usage data will be loaded here -->
+                        </tbody>
                     </table>
                     <div class="d-flex justify-content-center mt-3">
-                        <nav aria-label="Inventory pagination">
-                            <ul class="pagination pagination-sm" id="inventoryPagination">
+                        <nav aria-label="Inventory usage pagination">
+                            <ul class="pagination pagination-sm" id="usagePagination">
                             </ul>
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Requested Stocks Table -->
-        <div class="col-lg-5 mx-auto">
-            <div class="card centered-div">
-                <div class="card-body p-5">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-4"><i class="fas fa-box-open"></i> Requested Stocks</h3>
+<!-- Request Modal -->
+<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestModalLabel">Request Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="">
+                <div class="modal-body">
+                    <input type="hidden" id="request_item_id" name="item_id">
+                    <input type="hidden" id="request_item_name" name="item_name">
+                    <input type="hidden" id="request_category" name="category">
+                    
+                    <div class="mb-3">
+                        <label for="requestItemName" class="form-label">Item Name:</label>
+                        <input type="text" class="form-control" id="requestItemName" readonly>
                     </div>
-                    <table class="table table-hover border table-bordered" id="requestedStocksTable">
-                        <thead class="striky-top">
-                            <tr class="bg-dark text-light">
-                                <th scope="col">ID</th>
-                                <th scope="col">Item Name</th>
-                                <th scope="col">Requested Quantity</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Status</th> <!-- Added Status column -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                    <div class="d-flex justify-content-center mt-3">
-                        <nav aria-label="Requested stocks pagination">
-                            <ul class="pagination pagination-sm" id="requestedPagination">
-                            </ul>
-                        </nav>
+                    
+                    <div class="mb-3">
+                        <label for="requestItemCategory" class="form-label">Category:</label>
+                        <input type="text" class="form-control" id="requestItemCategory" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="requestQuantity" class="form-label">Request Quantity:</label>
+                        <input type="number" class="form-control" id="requestQuantity" name="quantity" min="1" required>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" name="request_inventory_item" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">What would you like to export?</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportTypeInventory" value="inventory" checked>
+                        <label class="form-check-label" for="exportTypeInventory">Current Inventory</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportTypeUsage" value="usage">
+                        <label class="form-check-label" for="exportTypeUsage">Usage History</label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Export Format</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                        <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                        <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                    </div>
+                </div>
+                
+                <!-- Date range section (only visible for usage history) -->
+                <div id="dateRangeSection" style="display: none;">
+                    <hr>
+                    <h6 class="mb-3">Date Range</h6>
+                    
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
             </div>
         </div>
     </div>
@@ -245,40 +319,6 @@ $result = $conn->query($sql);
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-   function filterTable() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toLowerCase();
-    const table = document.getElementById('inventoryTable');
-    const tr = table.getElementsByTagName('tr');
-    let noResult = true; // Track if any row is shown
-
-    for (let i = 1; i < tr.length; i++) { // Start from 1 to skip the header row
-        const td = tr[i].getElementsByTagName('td');
-        let found = false;
-
-        for (let j = 1; j < td.length - 1; j++) { // Check item name and category
-            if (td[j]) {
-                const txtValue = td[j].textContent || td[j].innerText;
-                if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                    found = true;
-                    noResult = false; // Found a match
-                    break;
-                }
-            }
-        }
-        
-        tr[i].style.display = found ? '' : 'none'; // Show or hide the row
-    }
-
-    // Handle no results case
-    const noResultsRow = document.getElementById('noResultsRow');
-    if (noResult) {
-        noResultsRow.style.display = ''; // Show the "No results" row
-    } else {
-        noResultsRow.style.display = 'none'; // Hide it if results are found
-    }
-}
-
 function filterLocalTable() {
     const input = document.getElementById('localSearchInput');
     const filter = input.value.toLowerCase();
@@ -311,394 +351,12 @@ function filterLocalTable() {
     }
 }
 
-setTimeout(function() {
-    var successMessage = document.getElementById('success-message');
-    if (successMessage) {
-        successMessage.style.display = 'none';
-    }
-}, 2000);
-
-const apiEndpoint = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/table.php?api=1&api_key=20054d820a3ba1bae07591397d8cacdf";
-
-async function fetchData() {
-    try {
-        const response = await fetch(apiEndpoint);
-        
-        // Check if response is valid before parsing JSON
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        // Check content type to ensure it's JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.warn('Response is not JSON, attempting to parse anyway');
-        }
-        
-        try {
-            const data = await response.json();
-            return data;
-        } catch (parseError) {
-            console.error("Error parsing JSON:", parseError);
-            // Return empty data structure instead of letting the error propagate
-            return { items2: [], item_batches: [] };
-        }
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        return { items2: [], item_batches: [] };
-    }
-}
-
-function mapBatches(batches) {
-    const map = {};
-    batches.forEach(batch => {
-        if (!map[batch.item_id] && batch.expiration_date) {
-            map[batch.item_id] = batch.expiration_date;
-        }
-    });
-    return map;
-}
-
-// Add pagination variables
-let currentInventoryPage = 1;
-let currentRequestedPage = 1;
-const itemsPerPage = 8;
-
-async function populateInventoryTable(data) {
-    if (!data.items2) return;
-    
-    // Filter for items with "hotel" type
-    const hotelItems = data.items2.filter(item => 
-        item.type && item.type.toLowerCase() === 'hotel'
-    );
-    
-    const tableBody = document.querySelector("#inventoryTable tbody");
-    tableBody.innerHTML = '';
-    
-    if (hotelItems.length === 0) {
-        tableBody.innerHTML = '<tr id="noResultsRow"><td colspan="5" class="text-center">No hotel items found.</td></tr>';
-        return;
-    }
-    
-    // Add "No results" row (hidden by default)
-    const noResultsRow = document.createElement('tr');
-    noResultsRow.id = 'noResultsRow';
-    noResultsRow.style.display = 'none';
-    noResultsRow.innerHTML = '<td colspan="5" class="text-center">No results found.</td>';
-    tableBody.appendChild(noResultsRow);
-    
-    const startIndex = (currentInventoryPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const itemsToShow = hotelItems.slice(startIndex, endIndex);
-    
-    itemsToShow.forEach(item => {
-        const row = document.createElement('tr');
-        
-        // Add stock level styling
-        let stockStyle = '';
-        let stockLabel = '';
-        if (item.quantity == 0) {
-            stockStyle = 'color: red;';
-            stockLabel = ' (Out of Stock)';
-        } else if (item.quantity < 10) {
-            stockStyle = 'color: orange;';
-            stockLabel = ' (Low)';
-        }
-        
-        row.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.item_name}</td>
-            <td style="${stockStyle}">${item.quantity}${stockLabel}</td>
-            <td>${item.category}</td>
-            <td>
-                <button class='btn btn-dark btn-sm' data-toggle='modal' data-target='#requestModal${item.id}'>
-                    <i class='fas fa-hand-paper'></i>
-                </button>
-            </td>
-        `;
-        
-        tableBody.appendChild(row);
-        
-        // Create request modal for each item
-        createRequestModal(item);
-    });
-
-    // Update pagination
-    updatePagination('inventoryPagination', hotelItems.length, currentInventoryPage, (page) => {
-        currentInventoryPage = page;
-        populateInventoryTable(data);
-    });
-}
-
-function createRequestModal(item) {
-    const modalHtml = `
-        <div class='modal fade' id='requestModal${item.id}' tabindex='-1' role='dialog' aria-labelledby='requestModalLabel' aria-hidden='true'>
-            <div class='modal-dialog modal-lg' role='document'>
-                <div class='modal-content'>
-                    <div class='modal-header'>
-                        <h5 class='modal-title' id='requestModalLabel'>Request ${item.item_name}</h5>
-                        <button type='button' class='btn-close' data-dismiss='modal' aria-label='Close'></button>
-                    </div>
-                    <div class='modal-body'>
-                        <div class="mb-4">
-                            <h6>Requester Information</h6>
-                            <div class="row">
-                                <div class="col-md-4 mb-2">
-                                    <label class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="pickup_location${item.id}" value="Housekeeping" required>
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <label class="form-label">Delivery Location</label>
-                                    <input type="text" class="form-control" id="delivery_location${item.id}" value="Housekeeping" required>
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <label class="form-label">Requester Name</label>
-                                    <input type="text" class="form-control" id="requester_name${item.id}" value="<?php echo $_SESSION['username']; ?>" required>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="requester_email${item.id}" required>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Contact Number</label>
-                                    <input type="tel" class="form-control" id="contact_number${item.id}" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Item Request Details</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Category</label>
-                                    <input type="text" class="form-control" id="category${item.id}" value="${item.category}" readonly>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="quantity${item.id}" min="1" required>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>
-                        <button type='button' class='btn btn-success' onclick="submitRequest(${item.id})">Submit Request</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-async function submitRequest(itemId) {
-    const pickup_location = document.getElementById(`pickup_location${itemId}`).value.trim();
-    const delivery_location = document.getElementById(`delivery_location${itemId}`).value.trim();
-    const requester_name = document.getElementById(`requester_name${itemId}`).value.trim();
-    const requester_email = document.getElementById(`requester_email${itemId}`).value.trim();
-    const contact_number = document.getElementById(`contact_number${itemId}`).value.trim();
-    const quantity = parseInt(document.getElementById(`quantity${itemId}`).value.trim()) || 0;
-    const category = document.getElementById(`category${itemId}`).value.trim();
-
-    if (!pickup_location || !delivery_location || !requester_name || !requester_email || !contact_number || quantity <= 0) {
-        alert("Please complete all required fields.");
-        return;
-    }
-
-    const payload = {
-        pickup_location,
-        delivery_location,
-        requester_name,
-        requester_email,
-        contact_number,
-        item_type: 'general',
-        items: [{
-            category: category,
-            item_name: document.querySelector(`#requestModal${itemId} .modal-title`).textContent.replace('Request ', ''),
-            sku: '',
-            quantity: quantity
-        }]
-    };
-
-    try {
-        const response = await fetch("https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/request.php", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        if (result.status === "success") {
-            alert("Request created successfully!");
-            $(`#requestModal${itemId}`).modal('hide');
-            // Refresh the requested stocks table
-            fetchRequestsData().then(data => {
-                populateRequestedStocksTable(data);
-            });
-        } else {
-            alert("Error: " + (result.message || "Unknown error occurred"));
-        }
-    } catch (error) {
-        console.error("Error submitting request:", error);
-        alert("Error submitting request. Please try again.");
-    }
-}
-
-const requestsApiEndpoint = "https://logistic1.paradisehoteltomasmorato.com/sub-modules/logistic1/warehouse/view_api.php";
-let fetchedRequestsData = null;
-
-async function fetchRequestsData() {
-    try {
-        const response = await fetch(requestsApiEndpoint);
-        
-        // Check if response is valid before parsing JSON
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        // Check content type to ensure it's JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.warn('Response may not be JSON, attempting to parse anyway');
-        }
-        
-        try {
-            const data = await response.json();
-            fetchedRequestsData = data;
-            return data;
-        } catch (parseError) {
-            console.error("Error parsing JSON response:", parseError);
-            // Return empty data structure instead of letting the error propagate
-            return { requests: [], request_items: [], reservations: [] };
-        }
-    } catch (error) {
-        console.error("Error fetching requests data:", error);
-        return { requests: [], request_items: [], reservations: [] };
-    }
-}
-
-function populateRequestedStocksTable(data) {
-    const tableBody = document.querySelector("#requestedStocksTable tbody");
-    tableBody.innerHTML = '';
-
-    if (!data.requests || !data.request_items) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No requested stocks found.</td></tr>';
-        return;
-    }
-
-    // Filter requests for the Housekeeping department
-    const filteredRequests = data.requests.filter(request => 
-        request.pickup_location && request.pickup_location.trim().toLowerCase() === "housekeeping"
-    );
-
-    if (filteredRequests.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No requested stocks found for Housekeeping.</td></tr>';
-        return;
-    }
-
-    // Get all request items for these requests
-    let allItems = [];
-    filteredRequests.forEach(request => {
-        const requestItems = data.request_items.filter(item => item.request_id == request.id);
-        requestItems.forEach(item => {
-            // Merge request status with item data
-            allItems.push({
-                ...item,
-                requestStatus: request.status || 'Pending',
-                requestId: request.id
-            });
-        });
-    });
-
-    // Check for reservations and update status if needed
-    if (data.reservations) {
-        allItems = allItems.map(item => {
-            const request = filteredRequests.find(r => r.id == item.requestId);
-            
-            // Default to the request status 
-            item.displayStatus = request.status || 'Pending';
-            
-            // If approved, check for more detailed status from reservations
-            if (request && request.status && request.status.trim().toLowerCase() === "approved") {
-                const matchingReservation = data.reservations.find(reservation => 
-                    reservation.contact_number && request.requester_email && 
-                    reservation.contact_number.trim().toLowerCase() === request.requester_email.trim().toLowerCase()
-                );
-                
-                if (matchingReservation && matchingReservation.status) {
-                    const resStatus = Number(matchingReservation.status);
-                    const validStatusCodes = [1, 2, 7, 9, 8, 4];
-                    
-                    if (validStatusCodes.includes(resStatus)) {
-                        switch (resStatus) {
-                            case 1: item.displayStatus = "Pending"; break;
-                            case 2: item.displayStatus = "In Progress"; break;
-                            case 7: item.displayStatus = "In-Transit"; break;
-                            case 9: item.displayStatus = "Completed"; break;
-                            case 8: item.displayStatus = "Delayed"; break;
-                            case 4: item.displayStatus = "Cancelled"; break;
-                            default: item.displayStatus = "Approved";
-                        }
-                    }
-                }
-            }
-            
-            return item;
-        });
-    }
-
-    // Sort items by id (newest first)
-    allItems.sort((a, b) => b.id - a.id);
-
-    // Paginate
-    const startIndex = (currentRequestedPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const itemsToShow = allItems.slice(startIndex, endIndex);
-    
-    itemsToShow.forEach(item => {
-        const row = document.createElement('tr');
-        
-        // Get the appropriate status to display
-        const displayStatus = item.displayStatus || item.requestStatus || 'Pending';
-        let statusClass = 'badge bg-secondary'; // Default
-        
-        // Determine badge color based on status text
-        const statusLower = displayStatus.trim().toLowerCase();
-        if (statusLower === 'approved' || statusLower === 'completed') {
-            statusClass = 'badge bg-success';
-        } else if (statusLower === 'pending') {
-            statusClass = 'badge bg-primary';
-        } else if (statusLower === 'in progress' || statusLower === 'in-transit' || statusLower === 'in-progress') {
-            statusClass = 'badge bg-warning text-dark';
-        } else if (statusLower === 'rejected' || statusLower === 'cancelled' || statusLower === 'delayed') {
-            statusClass = 'badge bg-danger';
-        }
-
-        // Removed the eye icon and viewRequestDetails onclick handler
-        row.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.item_name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.category || 'Housekeeping'}</td>
-            <td><span class="${statusClass}">${displayStatus}</span></td>
-        `;
-        tableBody.appendChild(row);
-    });
-
-    // Update pagination
-    updatePagination('requestedPagination', allItems.length, currentRequestedPage, (page) => {
-        currentRequestedPage = page;
-        populateRequestedStocksTable(data);
-    });
-}
-
 // Add pagination variables for local inventory
 let currentLocalPage = 1;
 const localItemsPerPage = 8;
 
 function updatePagination(paginationId, totalItems, currentPage, callback) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const totalPages = Math.ceil(totalItems / localItemsPerPage);
     const paginationContainer = document.getElementById(paginationId);
     paginationContainer.innerHTML = '';
 
@@ -784,8 +442,8 @@ async function populateLocalInventoryTable() {
                 <td>${item.sku}</td>
                 <td style="${stockStyle}">${item.quantity}${stockLabel}</td>
                 <td>
-                    <button class='btn btn-primary btn-sm' title="Edit inventory" onclick="editInventoryItem(${item.id})">
-                        <i class='fas fa-edit'></i>
+                    <button class='btn btn-success btn-sm' title="Request stock" onclick="requestStock(${item.id}, '${item.item_name}', '${item.category}')">
+                        <i class='fas fa-shopping-cart'></i>
                     </button>
                 </td>
             `;
@@ -805,12 +463,85 @@ async function populateLocalInventoryTable() {
     }
 }
 
-function editInventoryItem(id) {
-    // Implement inventory edit functionality
-    alert(`Edit functionality for item ID: ${id} - To be implemented`);
+// Function to request stock
+function requestStock(id, name, category) {
+    // Set values in the modal
+    document.getElementById('request_item_id').value = id;
+    document.getElementById('request_item_name').value = name;
+    document.getElementById('request_category').value = category;
+    document.getElementById('requestItemName').value = name;
+    document.getElementById('requestItemCategory').value = category;
+    
+    // Calculate suggested request quantity
+    const suggestedQuantity = 20; // Default quantity
+    document.getElementById('requestQuantity').value = suggestedQuantity;
+    
+    // Show the modal using jQuery for Bootstrap 4
+    $('#requestModal').modal('show');
 }
 
-// Initialize both tables when document is ready
+// Add pagination variables for inventory usage
+let currentUsagePage = 1;
+const usageItemsPerPage = 8;
+
+// Function to populate inventory usage table with pagination
+async function populateInventoryUsageTable() {
+    try {
+        const response = await fetch('fetch_inventory_usage.php');
+        const data = await response.json();
+        
+        const tableBody = document.querySelector("#inventoryUsageTable tbody");
+        tableBody.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No usage history found.</td></tr>';
+            return;
+        }
+        
+        // Paginate the data - 8 items per page
+        const startIndex = (currentUsagePage - 1) * usageItemsPerPage;
+        const endIndex = startIndex + usageItemsPerPage;
+        const itemsToShow = data.slice(startIndex, endIndex);
+        
+        itemsToShow.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Format the date for better readability
+            const usedDate = new Date(item.used_at);
+            const formattedDate = usedDate.toLocaleDateString() + ' ' + 
+                                usedDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Truncate notes if too long
+            const notes = item.notes ? 
+                (item.notes.length > 30 ? item.notes.substring(0, 30) + '...' : item.notes) : 
+                '-';
+            
+            row.innerHTML = `
+                <td>${item.id}</td>
+                <td>${item.task_id || '-'}</td>
+                <td>${item.item_name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.used_by}</td>
+                <td>${formattedDate}</td>
+                <td title="${item.notes}">${notes}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Update pagination
+        updatePagination('usagePagination', data.length, currentUsagePage, (page) => {
+            currentUsagePage = page;
+            populateInventoryUsageTable();
+        });
+    } catch (error) {
+        console.error("Error fetching inventory usage:", error);
+        const tableBody = document.querySelector("#inventoryUsageTable tbody");
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading usage data.</td></tr>';
+    }
+}
+
+// Initialize when document is ready
 $(document).ready(async function() {
     try {
         // Load local inventory and update dashboard with it
@@ -823,35 +554,23 @@ $(document).ready(async function() {
             console.error("Error fetching local inventory:", error);
         }
         
-        const inventoryData = await fetchData();
-        populateInventoryTable(inventoryData);
-
-        // Add error handling for requests data
+        // Load inventory usage history
         try {
-            const requestsData = await fetchRequestsData();
-            populateRequestedStocksTable(requestsData);
+            populateInventoryUsageTable();
         } catch (error) {
-            console.error("Failed to load requested stocks:", error);
-            document.querySelector("#requestedStocksTable tbody").innerHTML = 
-                '<tr><td colspan="5" class="text-center">Failed to load requested stocks data.</td></tr>';
+            console.error("Error fetching inventory usage:", error);
         }
         
         // Refresh data every 30 seconds with error handling
         setInterval(async () => {
             try {
-                const newRequestsData = await fetchRequestsData();
-                populateRequestedStocksTable(newRequestsData);
-            } catch (error) {
-                console.error("Failed to refresh requested stocks:", error);
-            }
-            
-            try {
                 const response = await fetch('fetch_local_inventory.php');
                 const localInventoryData = await response.json();
                 updateDashboard(localInventoryData);
                 populateLocalInventoryTable();
+                populateInventoryUsageTable(); // Refresh usage table as well
             } catch (error) {
-                console.error("Failed to refresh local inventory:", error);
+                console.error("Failed to refresh data:", error);
             }
         }, 30000);
     } catch (error) {
@@ -882,11 +601,83 @@ async function updateDashboard(data) {
     document.getElementById('lowStockItems').textContent = lowStockCount;
 }
 
-</script>
+// Set a timeout to hide the success message
+setTimeout(function() {
+    const successMessage = document.getElementById('success-message');
+    if (successMessage) {
+        successMessage.style.display = 'none';
+    }
+}, 5000); // Hide after 5 seconds
 
-<!-- Add a script block to handle any script.js errors -->
-<script>
-// Prevent script.js errors by checking if elements exist before adding event listeners
+// Export functionality
+function showExportModal() {
+    // Set default date range (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    
+    // Show/hide date range section based on initial selection
+    toggleDateRangeVisibility();
+    
+    // Add change event listener for export type
+    document.querySelectorAll('input[name="exportType"]').forEach(radio => {
+        radio.addEventListener('change', toggleDateRangeVisibility);
+    });
+    
+    // Open the modal using jQuery for Bootstrap 4
+    $('#exportModal').modal('show');
+}
+
+function toggleDateRangeVisibility() {
+    const exportType = document.querySelector('input[name="exportType"]:checked').value;
+    const dateRangeSection = document.getElementById('dateRangeSection');
+    
+    if (exportType === 'usage') {
+        dateRangeSection.style.display = 'block';
+    } else {
+        dateRangeSection.style.display = 'none';
+    }
+}
+
+function exportData() {
+    const exportType = document.querySelector('input[name="exportType"]:checked').value;
+    const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+    
+    let url = '';
+    
+    if (exportType === 'inventory') {
+        // Export current inventory
+        url = `export_inventory.php?format=${exportFormat}`;
+    } else {
+        // Export usage history with date range
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        // Validate dates
+        if (!startDate || !endDate) {
+            alert('Please select both start and end dates for usage history export.');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('Start date cannot be after end date.');
+            return;
+        }
+        
+        url = `export_usage.php?format=${exportFormat}&start=${startDate}&end=${endDate}`;
+    }
+    
+    // Open in new window/tab
+    window.open(url, '_blank');
+    
+    // Close the modal using jQuery for Bootstrap 4
+    $('#exportModal').modal('hide');
+}
+
+// Handle potential script.js errors
 document.addEventListener('DOMContentLoaded', function() {
     // Handle potential missing elements that script.js might be trying to access
     const elementsToCheck = [
@@ -903,6 +694,14 @@ document.addEventListener('DOMContentLoaded', function() {
             placeholder.style.display = 'none';
             document.body.appendChild(placeholder);
         }
+    });
+});
+
+// Fix modal close buttons for Bootstrap 4
+$(document).ready(function() {
+    // Make sure close buttons work properly
+    $('.modal .btn-close, .modal .close, .modal .btn-secondary[data-bs-dismiss="modal"]').on('click', function() {
+        $(this).closest('.modal').modal('hide');
     });
 });
 </script>

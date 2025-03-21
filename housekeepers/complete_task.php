@@ -34,7 +34,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['task_id'])) {
             throw new Exception("Failed to update task status");
         }
         
-        // 2. Process used inventory items
+        // 2. Update customer_messages status to complete
+        $updateMessages = $conn->prepare("UPDATE customer_messages SET status = 'complete' WHERE id = ?");
+        $updateMessages->bind_param("i", $task_id);
+        
+        if (!$updateMessages->execute()) {
+            throw new Exception("Failed to update message status");
+        }
+        
+        // 3. Process used inventory items
         if (isset($_POST['used_quantity']) && is_array($_POST['used_quantity'])) {
             foreach ($_POST['used_quantity'] as $item_id => $quantity) {
                 $quantity = intval($quantity);

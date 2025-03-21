@@ -112,10 +112,18 @@ if ($_SESSION['user_type'] !== 'Admin') {
                 </ul>
             </li>     
             <li class="sidebar-item">
-                <a href="inventory.php" class="sidebar-link">
-                <i class="fa fa-warehouse pe-2" aria-hidden="true"></i>
-                     Inventory
+                <a href="#" class="sidebar-link collapsed" data-bs-target="#inventory" data-bs-toggle="collapse" aria-expanded="false">
+                    <i class="fa fa-warehouse pe-2" aria-hidden="true"></i>
+                    Inventory
                 </a>
+                <ul id="inventory" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                    <li class="sidebar-item">
+                        <a href="inventory.php" class="sidebar-link">Housekeeping</a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="request_inventory.php" class="sidebar-link">Request Inventory</a>
+                    </li>
+                </ul>
             </li>
             <!-- <li class="sidebar-header">Settings</li>
             <li class="sidebar-item">

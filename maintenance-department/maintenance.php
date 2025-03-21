@@ -12,10 +12,14 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 $priority_filter = isset($_GET['priority']) ? $_GET['priority'] : '';
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
 
+// Get current date and time for late task calculations
+$current_date = date('Y-m-d H:i:s');
+
 // Get maintenance request statistics
 $stats_query = "SELECT 
     COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed_count,
     COUNT(CASE WHEN status = 'In Progress' THEN 1 END) as working_count,
+    COUNT(CASE WHEN schedule < '$current_date' AND status != 'Completed' THEN 1 END) as late_count,
     COUNT(*) as total_count
     FROM maintenance_requests";
 $stats = $conn->query($stats_query)->fetch_assoc();
@@ -54,7 +58,11 @@ if (!empty($priority_filter)) {
 }
 if (!empty($status_filter)) {
     $status_filter = $conn->real_escape_string($status_filter);
-    $requests_query .= " AND mr.status = '$status_filter'";
+    if ($status_filter === 'Late') {
+        $requests_query .= " AND mr.schedule < '$current_date' AND mr.status != 'Completed'";
+    } else {
+        $requests_query .= " AND mr.status = '$status_filter'";
+    }
 }
 $requests_query .= " GROUP BY mr.id ORDER BY mr.created_at DESC";
 $requests = $conn->query($requests_query);
@@ -82,16 +90,16 @@ $requests = $conn->query($requests_query);
         <!-- Statistics -->
         <div class="stats-container p-0">
             <div class="stats-card">
-                <div class="stats-label fw-semibold">Total Requests</div>
-                <div class="stats-number"><?php echo $stats['total_count']; ?></div>
-            </div>
-            <div class="stats-card">
                 <div class="stats-label fw-semibold">In Progress</div>
                 <div class="stats-number"><?php echo $stats['working_count']; ?></div>
             </div>
             <div class="stats-card">
                 <div class="stats-label fw-semibold">Completed</div>
                 <div class="stats-number"><?php echo $stats['completed_count']; ?></div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-label fw-semibold text-danger">Late Tasks</div>
+                <div class="stats-number text-danger"><?php echo $stats['late_count']; ?></div>
             </div>
         </div>
 
@@ -163,6 +171,10 @@ $requests = $conn->query($requests_query);
                             <input class="form-check-input" type="radio" name="status" id="statusCompleted" value="Completed" <?php echo $status_filter === 'Completed' ? 'checked' : ''; ?>>
                             <label class="form-check-label" for="statusCompleted">Completed</label>
                         </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="status" id="statusLate" value="Late" <?php echo $status_filter === 'Late' ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="statusLate">Late Tasks</label>
+                        </div>
                     </div>
 
                     <div class="mt-4">
@@ -210,9 +222,17 @@ $requests = $conn->query($requests_query);
                                     <?php if ($request['schedule']): ?>
                                     <p class="mb-1">
                                         <strong>Scheduled:</strong>
-                                        <span class="text-success">
-                                            <i class="fas fa-calendar-alt me-1"></i>
+                                        <?php 
+                                        $now = new DateTime();
+                                        $scheduleDate = new DateTime($request['schedule']);
+                                        $isLate = ($scheduleDate < $now && $request['status'] !== 'Completed');
+                                        ?>
+                                        <span class="<?php echo $isLate ? 'text-danger' : 'text-success'; ?>">
+                                            <i class="fas <?php echo $isLate ? 'fa-exclamation-circle' : 'fa-calendar-alt'; ?> me-1"></i>
                                             <?php echo date('M d, Y h:i A', strtotime($request['schedule'])); ?>
+                                            <?php if ($isLate): ?>
+                                                <span class="badge bg-danger ms-2">LATE</span>
+                                            <?php endif; ?>
                                         </span>
                                     </p>
                                     <?php endif; ?>
