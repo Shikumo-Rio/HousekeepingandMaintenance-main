@@ -14,7 +14,7 @@ if ($_SESSION['user_type'] !== 'Admin') {
 
 // Pagination settings
 $limit = 3; // Number of records per page
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['foundPage']) ? (int)$_GET['foundPage'] : 1;
 $offset = ($page - 1) * $limit;
 
 // Fetch 'Found' items with pagination
@@ -108,15 +108,15 @@ $totalPages = ceil($totalRows / $limit);
         <nav class="pagination-container">
             <ul class="pagination custom-pagination">
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=found&page=<?= $page - 1; ?>">Previous</a>
+                    <a class="page-link" href="?tab=found&foundPage=<?= $page - 1; ?>">Previous</a>
                 </li>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <li class="page-item <?= ($i === $page) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?tab=found&page=<?= $i; ?>"><?= $i; ?></a>
+                        <a class="page-link" href="?tab=found&foundPage=<?= $i; ?>"><?= $i; ?></a>
                     </li>
                 <?php endfor; ?>
                 <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=found&page=<?= $page + 1; ?>">Next</a>
+                    <a class="page-link" href="?tab=found&foundPage=<?= $page + 1; ?>">Next</a>
                 </li>
             </ul>
         </nav>

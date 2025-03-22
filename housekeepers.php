@@ -130,18 +130,8 @@ if (isset($_POST['requestEmployee'])) {
                                 </div>
                             </div>
                             
-                            <!-- Work Information -->
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Work Information</h6>
-                                    </div>
-                                    <div class="card-body" id="workInfo">Loading...</div>
-                                </div>
-                            </div>
-                            
                             <!-- Performance Metrics -->
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <div class="card mb-3">
                                     <div class="card-header bg-light">
                                         <h6 class="mb-0">Performance Metrics</h6>
@@ -152,19 +142,10 @@ if (isset($_POST['requestEmployee'])) {
                         </div>
                         
                         <!-- Action Buttons -->
-                        <div class="mt-3 d-flex justify-content-between">
-                            <button class="btn btn-primary" onclick="updateEmployeeDetails(currentEmpId)">
-                                <i class="fas fa-edit"></i> Update Details
-                            </button>
-                            <button class="btn btn-warning" onclick="toggleEmployeeStatus(currentEmpId)">
-                                <i class="fas fa-user-lock"></i> Toggle Status
-                            </button>
+                        <div class="mt-3 d-flex justify-content-end">
                             <button class="btn btn-danger" onclick="removeEmployee(currentEmpId)">
-                                <i class="fas fa-trash"></i> Remove
+                                <i class="fas fa-trash"></i> Remove Employee
                             </button>
-                        </div>
-                        
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -218,12 +199,9 @@ if (isset($_POST['requestEmployee'])) {
                             <p><strong>Employee ID:</strong> ${data.emp_id}</p>
                             <p><strong>Name:</strong> ${data.name}</p>
                             <p><strong>Role:</strong> ${data.role}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-${data.status === 'Active' ? 'success' : 'secondary'}">${data.status}</span></p>
                         </div>
                     `;
-
-                    // Remove work information as it's not needed
-                    document.getElementById('workInfo').innerHTML = '';
-                    document.getElementById('workInfo').parentElement.style.display = 'none';
 
                     // Performance Metrics section - only total tasks and average completion time
                     document.getElementById('performanceInfo').innerHTML = `
@@ -269,7 +247,7 @@ if (isset($_POST['requestEmployee'])) {
         }
 
         function removeEmployee(empId) {
-            if(confirm('Are you sure you want to remove this employee? This action cannot be undone.')) {
+            if(confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
                 fetch('remove_employee.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -278,9 +256,22 @@ if (isset($_POST['requestEmployee'])) {
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        alert('Employee removed successfully');
+                        // Close the modal first
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('employeeDetailsModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        // Show success message and reload
+                        alert('Employee successfully removed.');
                         location.reload();
+                    } else {
+                        alert(data.message || 'Failed to remove employee.');
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while removing the employee.');
                 });
             }
         }
@@ -347,16 +338,47 @@ if (isset($_POST['requestEmployee'])) {
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
                 if (data.success) {
-                    const modalElement = document.getElementById('requestEmployeeModal');
-                    const modal = bootstrap.Modal.getInstance(modalElement);
-                    if (modal) {
-                        modal.dispose(); // Completely dispose of the modal
-                    }
-                    cleanupModal(); // Clean up modal artifacts
+                    // Get selected role and quantity for display
+                    const roleSelect = document.getElementById('role');
+                    const roleText = roleSelect.options[roleSelect.selectedIndex].text;
+                    const quantity = document.getElementById('quantity').value;
+                    
+                    // Set details in success modal
+                    document.getElementById('requestDetails').textContent = `${quantity} ${roleText}(s)`;
+                    
+                    // Set content in the email response message
+                    document.getElementById('emailResponseMessage').innerHTML = `
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <p class="mb-0">Request has been successfully added!</p>
+                        <p class="fw-bold fs-5 mb-0">${quantity} ${roleText}(s)</p>
+                    `;
+                    
+                    // Hide request modal
+                    const requestModal = bootstrap.Modal.getInstance(document.getElementById('requestEmployeeModal'));
+                    requestModal.hide();
+                    
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                    
+                    // Set timeout to auto-close the success modal after 2 seconds
+                    setTimeout(() => {
+                        successModal.hide();
+                        // Ensure proper cleanup after modal is hidden
+                        document.body.classList.remove('modal-open');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.parentNode.removeChild(backdrop);
+                        }
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    }, 2000);
+                    
                     form.reset();
                     loadRequestHistory();
+                } else {
+                    alert(data.message || 'An error occurred while submitting the request.');
                 }
             })
             .catch(error => {
@@ -365,15 +387,37 @@ if (isset($_POST['requestEmployee'])) {
             });
         }
 
-        // Add event listener for modal hidden event
-        document.getElementById('requestEmployeeModal').addEventListener('hidden.bs.modal', function () {
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
+        function cleanupModal() {
+            // More robust cleanup function
+            setTimeout(() => {
+                document.body.classList.remove('modal-open');
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    if (backdrop && backdrop.parentNode) {
+                        backdrop.parentNode.removeChild(backdrop);
+                    }
+                });
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }, 100); // Short delay to ensure modal has finished transition
+        }
+
+        // Update modal event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalElement = document.getElementById('requestEmployeeModal');
+            modalElement.addEventListener('hidden.bs.modal', cleanupModal);
+            
+            // Fix success modal cleanup
+            const successModalElement = document.getElementById('successModal');
+            successModalElement.addEventListener('hidden.bs.modal', cleanupModal);
+            
+            // Global handler to ensure backdrop is removed if it persists
+            document.addEventListener('click', function() {
+                const body = document.body;
+                if (!document.querySelector('.modal.show') && body.classList.contains('modal-open')) {
+                    cleanupModal();
+                }
+            });
         });
 
         // Add this new function for loading request history
@@ -463,6 +507,10 @@ if (isset($_POST['requestEmployee'])) {
             const modalElement = document.getElementById('requestEmployeeModal');
             modalElement.addEventListener('hidden.bs.modal', cleanupModal);
             modalElement.addEventListener('hide.bs.modal', cleanupModal);
+            
+            // Add success modal cleanup
+            const successModalElement = document.getElementById('successModal');
+            successModalElement.addEventListener('hidden.bs.modal', cleanupModal);
         });
         </script>
 
@@ -599,6 +647,356 @@ if (isset($_POST['requestEmployee'])) {
             </div>
         </div>
     </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="successModalLabel">Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="emailResponseMessage">
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <p class="mb-0">Request has been successfully added!</p>
+                        <p class="fw-bold fs-5 mb-0" id="requestDetails"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEmpId = null;
+
+        function showEmployeeDetails(empId) {
+            currentEmpId = empId;
+            const modal = new bootstrap.Modal(document.getElementById('employeeDetailsModal'));
+            
+            fetch(`get_employee_details.php?emp_id=${empId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Basic Information section - only name, role, and ID
+                    document.getElementById('basicInfo').innerHTML = `
+                        <div class="mb-3">
+                            <p><strong>Employee ID:</strong> ${data.emp_id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Role:</strong> ${data.role}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-${data.status === 'Active' ? 'success' : 'secondary'}">${data.status}</span></p>
+                        </div>
+                    `;
+
+                    // Performance Metrics section - only total tasks and average completion time
+                    document.getElementById('performanceInfo').innerHTML = `
+                        <div class="row text-center">
+                            <div class="col-md-6">
+                                <h4>${data.total_tasks || 0}</h4>
+                                <small>Total Tasks</small>
+                            </div>
+                            <div class="col-md-6">
+                                <h4>${formatTime(data.avg_completion_time || 0)}</h4>
+                                <small>Average Completion Time</small>
+                            </div>
+                        </div>
+                    `;
+
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading employee details');
+                });
+        }
+
+        function updateEmployeeDetails(empId) {
+            // Implementation for updating employee details
+        }
+
+        function toggleEmployeeStatus(empId) {
+            if(confirm('Are you sure you want to change this employee\'s status?')) {
+                fetch('toggle_employee_status.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({emp_id: empId})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Status updated successfully');
+                        showEmployeeDetails(empId); // Refresh the modal
+                    }
+                });
+            }
+        }
+
+        function removeEmployee(empId) {
+            if(confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
+                fetch('remove_employee.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({emp_id: empId})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        // Close the modal first
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('employeeDetailsModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        // Show success message and reload
+                        alert('Employee successfully removed.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to remove employee.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while removing the employee.');
+                });
+            }
+        }
+
+        // Add this helper function for time formatting
+        function formatTime(minutes) {
+            minutes = parseFloat(minutes);
+            if (!minutes || isNaN(minutes)) return 'N/A';
+            if (minutes < 60) return `${Math.round(minutes)}m`;
+            const hours = Math.floor(minutes / 60);
+            const mins = Math.round(minutes % 60);
+            return `${hours}h ${mins}m`;
+        }
+
+        // Add this function after your existing functions
+        function showAuditTrail(empId) {
+            fetch(`get_audit_trail.php?emp_id=${empId}&limit=10`)  // Added limit parameter
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('auditTrailBody');
+                    tbody.innerHTML = '';
+                    
+                    // Only process up to 10 records
+                    data.slice(0, 10).forEach(request => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${request.request_id}</td>
+                                <td>${request.role}</td>
+                                <td>${request.request_date}</td>
+                                <td><span class="badge bg-${getStatusColor(request.status)}">${request.status}</span></td>
+                                <td>${request.response_notes || '-'}</td>
+                                <td>${request.response_date || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    const auditModal = new bootstrap.Modal(document.getElementById('auditTrailModal'));
+                    auditModal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading audit trail');
+                });
+        }
+
+        function getStatusColor(status) {
+            switch(status.toLowerCase()) {
+                case 'pending': return 'warning';
+                case 'approved': return 'success';
+                case 'denied': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function submitEmployeeRequest(event) {
+            event.preventDefault();
+            const form = document.getElementById('requestEmployeeForm');
+            const formData = new FormData(form);
+            formData.append('requestEmployee', '1');
+
+            fetch('email_request.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Get selected role and quantity for display
+                    const roleSelect = document.getElementById('role');
+                    const roleText = roleSelect.options[roleSelect.selectedIndex].text;
+                    const quantity = document.getElementById('quantity').value;
+                    
+                    // Set details in success modal
+                    document.getElementById('requestDetails').textContent = `${quantity} ${roleText}(s)`;
+                    
+                    // Set content in the email response message
+                    document.getElementById('emailResponseMessage').innerHTML = `
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <p class="mb-0">Request has been successfully added!</p>
+                        <p class="fw-bold fs-5 mb-0">${quantity} ${roleText}(s)</p>
+                    `;
+                    
+                    // Hide request modal
+                    const requestModal = bootstrap.Modal.getInstance(document.getElementById('requestEmployeeModal'));
+                    requestModal.hide();
+                    
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                    
+                    // Set timeout to auto-close the success modal after 2 seconds
+                    setTimeout(() => {
+                        successModal.hide();
+                        // Ensure proper cleanup after modal is hidden
+                        document.body.classList.remove('modal-open');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.parentNode.removeChild(backdrop);
+                        }
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    }, 2000);
+                    
+                    form.reset();
+                    loadRequestHistory();
+                } else {
+                    alert(data.message || 'An error occurred while submitting the request.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the request.');
+            });
+        }
+
+        function cleanupModal() {
+            // More robust cleanup function
+            setTimeout(() => {
+                document.body.classList.remove('modal-open');
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    if (backdrop && backdrop.parentNode) {
+                        backdrop.parentNode.removeChild(backdrop);
+                    }
+                });
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }, 100); // Short delay to ensure modal has finished transition
+        }
+
+        // Update modal event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalElement = document.getElementById('requestEmployeeModal');
+            modalElement.addEventListener('hidden.bs.modal', cleanupModal);
+            
+            // Fix success modal cleanup
+            const successModalElement = document.getElementById('successModal');
+            successModalElement.addEventListener('hidden.bs.modal', cleanupModal);
+            
+            // Global handler to ensure backdrop is removed if it persists
+            document.addEventListener('click', function() {
+                const body = document.body;
+                if (!document.querySelector('.modal.show') && body.classList.contains('modal-open')) {
+                    cleanupModal();
+                }
+            });
+        });
+
+        // Add this new function for loading request history
+        function loadRequestHistory(page = 1) {
+            fetch(`get_request_history.php?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('requestHistoryBody');
+                    const paginationControls = document.getElementById('paginationControls');
+                    tbody.innerHTML = '';
+                    
+                    data.requests.forEach(request => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>#${request.request_id}</td>
+                                <td>${request.role}</td>
+                                <td>${request.quantity}</td>
+                                <td><span class="badge bg-${getStatusColor(request.status)}">${request.status}</span></td>
+                                <td>${request.request_date}</td>
+                                <td>${request.response_notes || '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    // Generate pagination controls
+                    paginationControls.innerHTML = '';
+                    if (data.totalPages > 1) {
+                        // Previous button
+                        if (data.currentPage > 1) {
+                            paginationControls.innerHTML += `
+                                <button class="btn btn-sm btn-outline-secondary" onclick="loadRequestHistory(${data.currentPage - 1})">
+                                    Previous
+                                </button>
+                            `;
+                        }
+
+                        // Page numbers
+                        for (let i = 1; i <= data.totalPages; i++) {
+                            if (i === data.currentPage) {
+                                paginationControls.innerHTML += `
+                                    <button class="btn btn-sm btn-secondary">${i}</button>
+                                `;
+                            } else {
+                                paginationControls.innerHTML += `
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadRequestHistory(${i})">${i}</button>
+                                `;
+                            }
+                        }
+
+                        // Next button
+                        if (data.currentPage < data.totalPages) {
+                            paginationControls.innerHTML += `
+                                <button class="btn btn-sm btn-outline-secondary" onclick="loadRequestHistory(${data.currentPage + 1})">
+                                    Next
+                                </button>
+                            `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading request history');
+                });
+        }
+
+        function getStatusColor(status) {
+            switch(status.toLowerCase()) {
+                case 'pending': return 'warning';
+                case 'approved': return 'success';
+                case 'denied': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function cleanupModal() {
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.parentNode.removeChild(backdrop);
+            }
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
+        // Update modal event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalElement = document.getElementById('requestEmployeeModal');
+            modalElement.addEventListener('hidden.bs.modal', cleanupModal);
+            modalElement.addEventListener('hide.bs.modal', cleanupModal);
+            
+            // Add success modal cleanup
+            const successModalElement = document.getElementById('successModal');
+            successModalElement.addEventListener('hidden.bs.modal', cleanupModal);
+        });
+        </script>
 
     <script>
         function editHousekeeper(empId) {

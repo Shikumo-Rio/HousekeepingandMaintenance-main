@@ -38,10 +38,10 @@ while ($staff = $staff_result->fetch_assoc()) {
     $staff_display[$staff['emp_id']] = $staff['name'] . ' (' . $staff['emp_id'] . ')';
 }
 
-// Modify the requests query to include employee names
+// Modify the requests query to include employee names - PHP 8.0 compatible
 $requests_query = "SELECT mr.*, 
-                    GROUP_CONCAT(DISTINCT e.name, ' (', am.emp_id, ')') as assigned_employees,
-                    GROUP_CONCAT(DISTINCT am.emp_id) as assigned_emp_ids
+                    IFNULL(GROUP_CONCAT(DISTINCT CONCAT(e.name, ' (', am.emp_id, ')') SEPARATOR ','), '') as assigned_employees,
+                    IFNULL(GROUP_CONCAT(DISTINCT am.emp_id SEPARATOR ','), '') as assigned_emp_ids
                   FROM maintenance_requests mr 
                   LEFT JOIN assigned_maintenance am ON mr.id = am.maintenance_request_id
                   LEFT JOIN employee e ON am.emp_id = e.emp_id 

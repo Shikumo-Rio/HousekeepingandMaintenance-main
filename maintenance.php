@@ -95,12 +95,21 @@ $conn->close();
         <div class="row m-0 justify-content-center">
             <div class="card-body p-2 m-0">
                 <div class="d-flex justify-content-between align-items-center mb-5">
-                    <!-- Display Success Message -->
-                    <?php if (isset($message)): ?>
-                        <div id="successMessage" class="alert alert-success">
-                            <?php echo $message; ?>
+                    <!-- Notification Modal (Replaces Success Message) -->
+                    <div class="modal fade" id="emailResponseModal" tabindex="-1" aria-labelledby="emailResponseModalLabel" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content shadow-lg rounded-4">
+                                <div class="modal-header border-0">
+                                    <h5 class="modal-title fw-bold" id="emailResponseModalLabel">Notification</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                                    <div id="emailResponseMessage"></div>
+                                </div>
+                            </div>
                         </div>
-                    <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Modal for Submitting Maintenance Request -->
@@ -316,21 +325,32 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Optional: Automatically hide success message after a few seconds
-        setTimeout(function() {
-            let messageBox = document.getElementById('successMessage');
-            if (messageBox) {
-                messageBox.style.display = 'none';
-            }
-        }, 3000);
+        // Show notification modal if there's a message
+        <?php if (isset($message)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set the message text
+            document.getElementById('emailResponseMessage').innerHTML = "<?php echo $message; ?>";
+            
+            // Create and show the modal without dimming background
+            var notificationModal = new bootstrap.Modal(document.getElementById('emailResponseModal'), {
+                backdrop: false
+            });
+            notificationModal.show();
+            
+            // Hide the modal after 2 seconds
+            setTimeout(function() {
+                notificationModal.hide();
+            }, 2000);
+        });
+        <?php endif; ?>
 
         function openUpdateModal(id, status, requestTitle, description, roomNo, priority) {
-        document.getElementById('id').value = id;
-        document.getElementById('status').value = status;
+            document.getElementById('id').value = id;
+            document.getElementById('status').value = status;
 
-        var updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
-        updateModal.show(); // Show modal when data is set
-    }
+            var updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+            updateModal.show(); // Show modal when data is set
+        }
     </script>
 </body>
 </html>

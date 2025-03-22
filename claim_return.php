@@ -92,7 +92,7 @@ if (isset($_POST['update_status'])) {
 
 // Pagination settings
 $limit = 3; // Number of records per page
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['claimedPage']) ? (int)$_GET['claimedPage'] : 1;
 $offset = ($page - 1) * $limit;
 
 // Fetch all 'Claimed' items with pagination (type can be anything, remove 'claimed')
@@ -172,15 +172,15 @@ $totalPages = ceil($totalRows / $limit);
         <nav class="pagination-container">
             <ul class="pagination custom-pagination">
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=claimed&page=<?= $page - 1; ?>">Previous</a>
+                    <a class="page-link" href="?tab=claimed&claimedPage=<?= $page - 1; ?>">Previous</a>
                 </li>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <li class="page-item <?= ($i === $page) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?tab=claimed&page=<?= $i; ?>"><?= $i; ?></a>
+                        <a class="page-link" href="?tab=claimed&claimedPage=<?= $i; ?>"><?= $i; ?></a>
                     </li>
                 <?php endfor; ?>
                 <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=claimed&page=<?= $page + 1; ?>">Next</a>
+                    <a class="page-link" href="?tab=claimed&claimedPage=<?= $page + 1; ?>">Next</a>
                 </li>
             </ul>
         </nav>
@@ -189,10 +189,10 @@ $totalPages = ceil($totalRows / $limit);
     <!-- Claim Validation Modal -->
     <div class="modal fade" id="claimValidationModal" tabindex="-1" aria-labelledby="claimValidationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4">
+            <div class="modal-content shadow-lg rounded-4 modal-dark">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold" id="claimValidationModalLabel">Claim Validation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <?php if (!empty($message)): ?>
@@ -204,48 +204,48 @@ $totalPages = ceil($totalRows / $limit);
                         <input type="hidden" name="id" id="modalItemId">
                         <input type="hidden" name="status" value="claimed">
                         
-                        <div class="item-details mb-3 p-3 bg-light rounded">
+                        <div class="item-details mb-3 p-3 bg-light rounded item-details-dark">
                             <h6>Item Details:</h6>
                             <p id="modalItemDetails" class="mb-0"></p>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="guest_name" name="guest_name" required>
+                            <input type="text" class="form-control form-control-dark" id="guest_name" name="guest_name" required>
                             <label>Guest Name</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="room_no" name="room_no" required>
+                            <input type="text" class="form-control form-control-dark" id="room_no" name="room_no" required>
                             <label>Room Number</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="contact_info" name="contact_info" required>
+                            <input type="text" class="form-control form-control-dark" id="contact_info" name="contact_info" required>
                             <label>Contact Information</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="area_lost" name="area_lost" required>
+                            <input type="text" class="form-control form-control-dark" id="area_lost" name="area_lost" required>
                             <label>Area Where Lost</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <textarea class="form-control" id="item_description" name="item_description" style="height: 100px" required></textarea>
+                            <textarea class="form-control form-control-dark" id="item_description" name="item_description" style="height: 100px" required></textarea>
                             <label>Description of the Item</label>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Proof of Ownership (Optional)</label>
-                            <input type="file" class="form-control" name="proof_ownership" accept="image/*">
+                            <input type="file" class="form-control form-control-dark" name="proof_ownership" accept="image/*">
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="proof_id" name="proof_id" required>
+                            <input type="text" class="form-control form-control-dark" id="proof_id" name="proof_id" required>
                             <label>ID Number/Proof Reference</label>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input type="date" class="form-control" id="date_lost" name="date_lost" required>
+                            <input type="date" class="form-control form-control-dark" id="date_lost" name="date_lost" required>
                             <label>Date Lost</label>
                         </div>
 
@@ -258,6 +258,23 @@ $totalPages = ceil($totalRows / $limit);
             </div>
         </div>
     </div>
+
+    <style>
+    /* Dark mode styles for claim validation modal */
+    body.dark-mode .item-details-dark {
+        background-color: #2a2a2a !important;
+        color: #f8f9fa !important;
+    }
+    
+    body.dark-mode .item-details-dark h6 {
+        color: #f8f9fa !important;
+    }
+    
+    /* Form label in dark mode */
+    body.dark-mode .form-label {
+        color: #f8f9fa !important;
+    }
+    </style>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {

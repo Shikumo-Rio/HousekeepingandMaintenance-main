@@ -39,7 +39,12 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
     <div class="container">
         <!-- Title Heading -->
         <div class="p-4 mb-4 title-heading card">
-            <h3>Maintenance Requests</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Maintenance Requests</h3>
+                <button class="btn btn-success" onclick="showExportModal()">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+            </div>
         </div>
 
         <div class="row m-0 text-center mb-4">
@@ -106,7 +111,13 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
                         </thead>
                         <tbody>
                             <?php
-                            $sql = "SELECT request_title, description, room_no, priority, status, emp_id, schedule FROM maintenance_requests";
+                            $sql = "SELECT mr.*, 
+                                    GROUP_CONCAT(DISTINCT e.name, ' (', am.emp_id, ')') as assigned_employees,
+                                    GROUP_CONCAT(DISTINCT am.emp_id) as assigned_emp_ids
+                                  FROM maintenance_requests mr 
+                                  LEFT JOIN assigned_maintenance am ON mr.id = am.maintenance_request_id
+                                  LEFT JOIN employee e ON am.emp_id = e.emp_id 
+                                  GROUP BY mr.id";
                             $result = $conn->query($sql);
 
                             if ($result->num_rows > 0) {
@@ -124,7 +135,7 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
                                         ($row['status'] == 'Completed' ? 'success' : 'warning')) .
                                         "'>" . htmlspecialchars($row['status']) . "</span></td>";
                                     echo "<td>" . ($row['schedule'] ? htmlspecialchars($row['schedule']) : '<span class="text-muted">Not scheduled</span>') . "</td>";
-                                    echo "<td>" . ($row['emp_id'] ? htmlspecialchars($row['emp_id']) : '<span class="text-muted">Not assigned</span>') . "</td>";
+                                    echo "<td>" . ($row['assigned_employees'] ? htmlspecialchars($row['assigned_employees']) : '<span class="text-muted">Not assigned</span>') . "</td>";
                                     
                                     echo "</tr>";
                                 }
@@ -244,6 +255,51 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
         </div>
     </div>
 
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">What would you like to export?</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeMaintenance" value="maintenance_requests" checked>
+                            <label class="form-check-label" for="exportTypeMaintenance">Maintenance Requests</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeGuest" value="guest_maintenance">
+                            <label class="form-check-label" for="exportTypeGuest">Guest Maintenance Requests</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeBoth" value="both">
+                            <label class="form-check-label" for="exportTypeBoth">Both Tables</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                            <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                            <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
      <!-- Include Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/script.js"></script>
@@ -310,6 +366,29 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
         });
     }
 
+    // Export functionality
+    function showExportModal() {
+        // Show the modal using Bootstrap 5
+        const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+        exportModal.show();
+    }
+
+    function exportData() {
+        const exportType = document.querySelector('input[name="exportType"]:checked').value;
+        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+        
+        // Build the URL with parameters
+        const url = `export_maintenance.php?type=${exportType}&format=${exportFormat}`;
+        
+        // Open in new window/tab
+        window.open(url, '_blank');
+        
+        // Close the modal
+        const exportModalEl = document.getElementById('exportModal');
+        const exportModal = bootstrap.Modal.getInstance(exportModalEl);
+        exportModal.hide();
+    }
+
     // Initialize email form submission
     document.addEventListener('DOMContentLoaded', function() {
         const emailForm = document.getElementById('emailForm');
@@ -318,8 +397,5 @@ $emailed_requests = $conn->query("SELECT COUNT(*) as count FROM maintenance_requ
         }
     });
     </script>
-</body>
-</html>
-
 </body>
 </html>

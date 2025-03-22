@@ -175,7 +175,6 @@ body {
 /* Modal Styles*/
 .modal-content {
     border-radius: 16px;
-    background-color: #f8f9fa;
     padding: 20px;
 }
 
@@ -196,7 +195,6 @@ body {
 }
 
 .form-control { 
-    background-color: #fff;
     border: 1px solid #ced4da;
     padding: 0.75rem 1rem;
     font-size: 12px;

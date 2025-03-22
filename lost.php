@@ -17,7 +17,7 @@ $result = $conn->query($sql);
 
 // Pagination settings
 $limit = 5; // Number of records per page
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['lostPage']) ? (int)$_GET['lostPage'] : 1;
 $offset = ($page - 1) * $limit;
 
 // Fetch 'Lost' items with pagination
@@ -110,15 +110,15 @@ $totalPages = ceil($totalRows / $limit);
         <nav class="pagination-container">
             <ul class="pagination custom-pagination">
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=lost&page=<?= $page - 1; ?>">Previous</a>
+                    <a class="page-link" href="?tab=lost&lostPage=<?= $page - 1; ?>">Previous</a>
                 </li>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <li class="page-item <?= ($i === $page) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?tab=lost&page=<?= $i; ?>"><?= $i; ?></a>
+                        <a class="page-link" href="?tab=lost&lostPage=<?= $i; ?>"><?= $i; ?></a>
                     </li>
                 <?php endfor; ?>
                 <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?tab=lost&page=<?= $page + 1; ?>">Next</a>
+                    <a class="page-link" href="?tab=lost&lostPage=<?= $page + 1; ?>">Next</a>
                 </li>
             </ul>
         </nav>

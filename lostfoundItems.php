@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/lostfoundItems.css">
+    <link rel="stylesheet" href="css/lostfounditems.css">
     <link rel="icon" href="img/logo.webp">
     <title>Lost and Found Management</title>
 </head>
@@ -110,10 +110,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <!-- Message Modal -->
     <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4">
+            <div class="modal-content shadow-lg rounded-4 modal-dark">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold" id="messageModalLabel">Notification</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center" id="messageBody">
                     <!-- Message will be inserted here -->
@@ -126,10 +126,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
 
     <div class="container p-4">
         <div class="p-4 mt-0 lostfound-heading card">
-            <h3>Lost and Found Management</h3>
-            <button class="btn btn-success add-btn" data-bs-toggle="modal" data-bs-target="#createModal">
-                <i class="fa-solid fa-plus"></i>Create
-            </button>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Lost and Found</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-success add-btn" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <i class="fa-solid fa-plus"></i> Create
+                    </button>
+                    <button class="btn btn-success export-btn" onclick="showExportModal()" title="Export Data">
+                        <i class="fas fa-file-export"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         <ul class="nav nav-tabs mt-4">
             <li class="nav-item">
@@ -251,19 +258,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <!-- Modal for Submitting Lost/Found Item -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4">
+            <div class="modal-content shadow-lg rounded-4 modal-dark">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold" id="registerModalLabel">Submit Lost/Found</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST" enctype="multipart/form-data"> <!-- Add enctype -->
                         <div class="form-floating form-floating-sm mb-3">
-                            <input type="text" class="form-control" id="found_by" name="found_by" placeholder="Found by" required>
+                            <input type="text" class="form-control form-control-dark" id="found_by" name="found_by" placeholder="Found by" required>
                             <label for="found_by">Found by</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <select class="form-select" id="type" name="type" placeholder="Select type" required>
+                            <select class="form-select form-control-dark" id="type" name="type" placeholder="Select type" required>
                                 <option value="">Select Type</option>
                                 <option value="Lost">Lost</option>
                                 <option value="Found">Found</option>
@@ -271,23 +278,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                             <label for="type">Type</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="room" name="room" placeholder="Enter room" required>
+                            <input type="text" class="form-control form-control-dark" id="room" name="room" placeholder="Enter room" required>
                             <label for="room">Room/Area</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="date" class="form-control" id="date" name="date" placeholder="Date" required>
+                            <input type="date" class="form-control form-control-dark" id="date" name="date" placeholder="Date" required>
                             <label for="date">Date</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="item" name="item" placeholder="Item" required>
+                            <input type="text" class="form-control form-control-dark" id="item" name="item" placeholder="Item" required>
                             <label for="item">Item</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="description" name="description" placeholder="Description" required>
+                            <input type="text" class="form-control form-control-dark" id="description" name="description" placeholder="Description" required>
                             <label for="description">Description</label>
                         </div>
                         <div class="mb-3">
-                            <input type="file" class="form-control" id="picture" name="picture" accept="image/*" required>
+                            <input type="file" class="form-control form-control-dark" id="picture" name="picture" accept="image/*" required>
                         </div>
                         <div class="d-flex justify-content-end">
                             <button type="submit" name="submit_request" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
@@ -301,13 +308,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <!-- Image View Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content modal-dark">
                 <div class="modal-header">
                     <h5 class="modal-title" id="imageModalLabel">Proof of Ownership</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
                     <img id="proofImage" src="" class="img-fluid" alt="Proof of Ownership">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content modal-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">What would you like to export?</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeLost" value="lost_and_found" checked>
+                            <label class="form-check-label" for="exportTypeLost">Lost & Found Items</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeClaims" value="claims">
+                            <label class="form-check-label" for="exportTypeClaims">Claims History</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                            <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                            <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Date range section -->
+                    <div id="dateRangeSection">
+                        <hr>
+                        <h6 class="mb-3">Date Range</h6>
+                        
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control form-control-dark" id="startDate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control form-control-dark" id="endDate">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
                 </div>
             </div>
         </div>
@@ -338,6 +402,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
             if (navLink) {
                 navLink.classList.add('active');
             }
+
+            // Update URL with tab but preserve other parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('tab', target.substring(1)); // Remove the # character
+            
+            // Don't change page parameters when switching tabs
+            history.replaceState(null, '', '?' + urlParams.toString() + location.hash);
         };
 
         // Handle clicks on sidebar items
@@ -346,7 +417,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                 e.preventDefault(); // Prevent default anchor behavior
                 const target = this.getAttribute('data-target'); // Get the target tab
                 activateTab(target); // Activate the corresponding tab
-                window.location.hash = target; // Update the URL hash
             });
         });
 
@@ -356,14 +426,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                 e.preventDefault(); // Prevent default anchor behavior
                 const target = this.getAttribute('href'); // Get the target tab
                 activateTab(target); // Activate the corresponding tab
-                window.location.hash = target; // Update the URL hash
             });
         });
 
-        // Check for initial hash on page load
-        const currentHash = window.location.hash;
-        if (currentHash) {
-            activateTab(currentHash); // Activate the tab based on the hash
+        // Check for initial tab parameter on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentTab = urlParams.get('tab');
+        if (currentTab) {
+            activateTab('#' + currentTab); // Activate the tab based on URL parameter
         } else {
             activateTab('#lost'); // Default to 'Lost' tab
         }
@@ -472,7 +542,190 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('proofImage').src = imagePath;
         new bootstrap.Modal(document.getElementById('imageModal')).show();
     }
+
+    // Export functionality
+    function showExportModal() {
+        // Set default date range (last 30 days)
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('exportModal')).show();
+    }
+
+    function exportData() {
+        const exportType = document.querySelector('input[name="exportType"]:checked').value;
+        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+        
+        // Get date range
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        // Validate dates
+        if (!startDate || !endDate) {
+            alert('Please select both start and end dates.');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('Start date cannot be after end date.');
+            return;
+        }
+        
+        // Set the appropriate title
+        let title = '';
+        if (exportType === 'lost_and_found') {
+            title = 'Lost and Found Items';
+        } else if (exportType === 'claims') {
+            title = 'Claims History';
+        }
+        
+        // Construct URL
+        const url = `export_data.php?table=${exportType}&format=${exportFormat}&start=${startDate}&end=${endDate}&title=${encodeURIComponent(title)}`;
+        
+        // Open in new window/tab
+        window.open(url, '_blank');
+        
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+    }
+
+    // Check if export button is visible on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, checking export button...');
+        
+        // Force all Font Awesome icons to be visible
+        document.querySelectorAll('.fas, .fa-solid').forEach(icon => {
+            icon.style.display = 'inline-block';
+        });
+    });
     </script>
-    
+
+    <style>
+    /* Dark mode styles for modals */
+    .modal-dark {
+        background-color: #2c2c2c;
+        color: #fff;
+    }
+    .modal-dark .modal-header {
+        border-bottom: 1px solid #444;
+    }
+    .modal-dark .modal-footer {
+        border-top: 1px solid #444;
+    }
+    .modal-dark .form-control-dark {
+        background-color: #444;
+        color: #fff;
+        border: 1px solid #555;
+    }
+    .modal-dark .form-control-dark::placeholder {
+        color: #bbb;
+    }
+    .modal-dark .form-control-dark:focus {
+        background-color: #555;
+        border-color: #666;
+    }
+    .modal-dark .btn-close {
+        background-color: #fff;
+    }
+    .modal-dark .btn-close:hover {
+        background-color: #ddd;
+    }
+    .modal-dark .modal-close-btn {
+        background-color: #444;
+        color: #fff;
+    }
+    .modal-dark .modal-close-btn:hover {
+        background-color: #555;
+    }
+
+    /* Export button styling */
+    .export-btn {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .export-btn i {
+        font-size: 16px;
+    }
+
+    /* Ensure Font Awesome icons display properly */
+    .fas, .fa-solid {
+        display: inline-block !important;
+    }
+
+    body.dark-mode .export-btn {
+        background-color: #0d6efd;
+        border-color: #0a58ca;
+    }
+
+    /* Add pulse animation to draw attention to the export button */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .export-btn:hover {
+        animation: pulse 1s infinite;
+    }
+
+    /* Additional styles to ensure the buttons work correctly */
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .add-btn {
+        position: relative !important;
+        right: auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    .btn-success.add-btn {
+        background-color: #198754;
+    }
+
+    .btn-success.add-btn:hover {
+        background-color: #157347;
+    }
+
+    .btn-primary.export-btn {
+        background-color: #0d6efd;
+        border-color: #0a58ca;
+    }
+
+    .export-btn i, .add-btn i {
+        display: inline-block !important;
+    }
+
+    /* Responsive fixes */
+    @media (max-width: 576px) {
+        .action-buttons {
+            flex-direction: row;
+            gap: 5px;
+        }
+        
+        .add-btn {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+        
+        .export-btn {
+            width: 32px;
+            height: 32px;
+        }
+    }
+    </style>
 </body>
 </html>

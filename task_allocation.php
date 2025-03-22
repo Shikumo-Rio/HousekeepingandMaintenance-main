@@ -109,7 +109,7 @@ $offset = ($page - 1) * $limit;
             <h3>Logs</h3>
             <div class="dropdown">
                 <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-download me-2"></i>Export
+                    <i class="fas fa-file-export"></i>Export
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="exportDropdown">
                     <li><a class="dropdown-item" href="#" onclick="exportLogs('excel'); return false;"><i class="bi bi-file-excel me-2"></i>Excel</a></li>

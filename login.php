@@ -173,7 +173,7 @@ if (isset($_POST['login'])) {
     <div class="login-container">
         <div class="form-container">
             <img src="img/logo.webp" alt="Paradise Logo" class="logo">
-            <h3 class="text-center text-light mb-4">Welcome Admin</h3>
+            <h3 class="text-center text-light mb-4">Welcome</h3>
             <form method="POST" action="login.php">
             <div class="mb-3">
                     <div class="input-group">

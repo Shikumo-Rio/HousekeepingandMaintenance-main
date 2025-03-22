@@ -34,6 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <!-- Updated Font Awesome CDN that works in housekeepers.php -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="css/housekeepertasks.css">
     <link rel="icon" href="img/logo.webp">
     <style>
@@ -142,6 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="p-4 mb-4 task-allocation-heading card">
             <div class="d-flex justify-content-between align-items-center">
                 <h3>Guest Requests</h3>
+                <button class="btn btn-success" onclick="showExportModal()">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
             </div>
         </div>
 
@@ -231,7 +236,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['checkout_time']}</td>";
                                         echo "<td>{$row['request']}</td>";
                                         echo "<td>{$row['special_request']}</td>";
-                                        echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                        echo "<td><span class='badge " . 
+                                            (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
+                                            (strtolower($row['status']) == 'working' ? 'bg-info' : 
+                                            (strtolower($row['status']) == 'complete' ? 'bg-success' : 
+                                            (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                            "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "<td>";
                                         if ($row['status'] == 'Pending') {
@@ -283,7 +294,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['customer_name']}</td>";
                                         echo "<td>{$row['food_item']}</td>";
                                         echo "<td>{$row['quantity']}</td>";
-                                        echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                        echo "<td><span class='badge " . 
+                                            (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
+                                            (strtolower($row['status']) == 'working' ? 'bg-info' : 
+                                            (strtolower($row['status']) == 'complete' ? 'bg-success' : 
+                                            (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                            "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "</tr>";
                                     }
@@ -298,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Customer Messages -->
         <div class="p-4 task-allocation-heading card mb-4 mt-4">
-            <h3>Customer Messages</h3>
+            <h3>Guest Messages</h3>
         </div>
         <div class="card shadow-sm border-0">
             <div class="card-body">
@@ -327,7 +344,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 echo "<td>{$row['request']}</td>";
                                 echo "<td>{$row['details']}</td>";
                                 echo "<td>{$row['room']}</td>";
-                                echo "<td><span class='badge " . ($row['status'] == 'Pending' ? 'bg-secondary' : 'bg-success') . "'>{$row['status']}</span></td>";
+                                echo "<td><span class='badge " . 
+                                    (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
+                                    (strtolower($row['status']) == 'working' ? 'bg-info' : 
+                                    (strtolower($row['status']) == 'complete' ? 'bg-success' : 
+                                    (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
+                                    (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                    "'>{$row['status']}</span></td>";
                                 echo "<td>{$row['priority']}</td>";
                                 echo "<td>{$row['created_at']}</td>";
                                 echo "</tr>";
@@ -350,11 +373,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="modal-body">
                         <div class="d-grid gap-2">
                             <button class="btn btn-outline-secondary filter-btn" data-status="">All Status</button>
-                            <button class="btn btn-outline-warning filter-btn" data-status="Pending">Pending</button>
+                            <button class="btn btn-outline-warning filter-btn" data-status="Preparing">Preparing</button>
+                            <button class="btn btn-outline-secondary filter-btn" data-status="Pending">Pending</button>
                             <button class="btn btn-outline-info filter-btn" data-status="Working">Working</button>
                             <button class="btn btn-outline-success filter-btn" data-status="Complete">Complete</button>
                             <button class="btn btn-outline-danger filter-btn" data-status="Invalid">Invalid</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">What would you like to export?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeCheckout" value="checkout" checked>
+                                <label class="form-check-label" for="exportTypeCheckout">Checkout Notices</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeFoodOrders" value="foodorders">
+                                <label class="form-check-label" for="exportTypeFoodOrders">Food Orders</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeMessages" value="messages">
+                                <label class="form-check-label" for="exportTypeMessages">Customer Messages</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Export Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                                <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                                <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
                     </div>
                 </div>
             </div>
@@ -393,10 +462,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Add Popper JS for Bootstrap dropdowns -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Add this script to fix notification issues BEFORE loading script.js -->
+    <script>
+        // Create safe fallbacks for elements script.js might expect
+        document.addEventListener('DOMContentLoaded', function() {
+            // Safely get elements with null check handling
+            function safeGetElement(id) {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.log(`Element with ID '${id}' not found, creating placeholder`);
+                    const placeholder = document.createElement('div');
+                    placeholder.id = id;
+                    placeholder.style.display = 'none';
+                    document.body.appendChild(placeholder);
+                    return placeholder;
+                }
+                return element;
+            }
+            
+            // Create safe versions of elements script.js depends on
+            const elementsToCheck = ['searchForm', 'searchInput', 'notificationBell', 'toggleSidebar'];
+            elementsToCheck.forEach(safeGetElement);
+            
+            // Add robust modal cleanup function
+            window.cleanupModal = function() {
+                setTimeout(() => {
+                    document.body.classList.remove('modal-open');
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        if (backdrop && backdrop.parentNode) {
+                            backdrop.parentNode.removeChild(backdrop);
+                        }
+                    });
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }, 100);
+            };
+            
+            // Ensure modal close buttons work properly
+            const closeButtons = document.querySelectorAll('.modal .btn-close, .modal [data-bs-dismiss="modal"]');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', window.cleanupModal);
+            });
+        });
+    </script>
+    
+    <!-- Load script.js after the fallbacks are created -->
     <script src="js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -529,6 +646,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
             });
         });
+        
+        // Export functionality
+        function showExportModal() {
+            // Open the modal
+            $('#exportModal').modal('show');
+        }
+        
+        function exportData() {
+            const exportType = document.querySelector('input[name="exportType"]:checked').value;
+            const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+            
+            let url = '';
+            
+            if (exportType === 'checkout') {
+                // Export checkout notices
+                url = `export_guest_data.php?type=checkout&format=${exportFormat}`;
+            } else if (exportType === 'foodorders') {
+                // Export food orders
+                url = `export_guest_data.php?type=foodorders&format=${exportFormat}`;
+            } else if (exportType === 'messages') {
+                // Export customer messages
+                url = `export_guest_data.php?type=messages&format=${exportFormat}`;
+            }
+            
+            // Open in new window/tab
+            window.open(url, '_blank');
+            
+            // Close the modal
+            $('#exportModal').modal('hide');
+            window.cleanupModal();
+        }
     </script>
 </body>
 </html>

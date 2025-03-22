@@ -130,6 +130,11 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    position: relative; /* Change from absolute to relative */
+    display: inline-flex; /* Change to inline-flex */
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px; /* Add margin for spacing from export button */
 }
 
 .add-btn:hover {
@@ -140,32 +145,44 @@ body {
     margin-right: 5px;
 }
 
-.add-btn {
-    position: absolute;
-    right: 30px;
+/* New styles for the export button */
+.export-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
     display: flex;
-    justify-content: flex-start;
     align-items: center;
-    margin-bottom: 10px;
-    margin-bottom: 20px;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: 50%;
 }
 
-.add-btn .btn {
-    background-color: green;
-    color: white;
-    border-radius: 20px;
-    padding: 5px 15px;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+.export-btn i {
+    font-size: 16px;
 }
 
-.add-btn .btn:hover {
-    background-color: rgba(0, 128, 0, 0.719);
-    color: white;
+/* Ensure Font Awesome icons display properly */
+.fas, .fa-solid {
+    display: inline-block !important;
 }
 
+/* Container for the buttons */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Add pulse animation to draw attention to the export button */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.export-btn:hover {
+    animation: pulse 1s infinite;
+}
 
 /* Modal Styling*/
 .modal-content {
@@ -195,8 +212,56 @@ body {
 /* Modal Styles*/
 .modal-content {
     border-radius: 16px;
-    background-color: #f8f9fa;
     padding: 20px;
+}
+
+/* Dark mode overrides for modals */
+body.dark-mode .modal-content {
+    background-color: #232323 !important;
+    color: #f8f9fa !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer,
+body.dark-mode .modal-body {
+    background-color: #232323 !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode input[type="file"].form-control {
+    background-color: #333 !important;
+    color: #f8f9fa !important;
+    border-color: #555 !important;
+}
+
+body.dark-mode .form-floating {
+    background-color: transparent !important;
+}
+
+body.dark-mode .form-floating > .form-control ~ label,
+body.dark-mode .form-floating > .form-select ~ label {
+    color: #ccc !important;
+}
+
+body.dark-mode .form-floating > .form-control:focus ~ label,
+body.dark-mode .form-floating > .form-control:not(:placeholder-shown) ~ label,
+body.dark-mode .form-floating > .form-select ~ label {
+    background-color: #232323 !important;
+    color: #adb5bd !important;
+    padding: 0 5px;
+}
+
+body.dark-mode .item-details,
+body.dark-mode .bg-light {
+    background-color: #333 !important;
+    color: #f8f9fa !important;
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
 }
 
 .modal-header {
@@ -216,7 +281,7 @@ body {
 }
 
 .form-control { 
-    background-color: #fff;
+
     border: 1px solid #ced4da;
     padding: 0.75rem 1rem;
     font-size: 12px;

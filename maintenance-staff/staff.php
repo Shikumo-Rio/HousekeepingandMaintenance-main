@@ -21,7 +21,8 @@ $stats_query = "SELECT
 $stmt = $conn->prepare($stats_query);
 $stmt->bind_param("s", $emp_id);
 $stmt->execute();
-$stats = $stmt->get_result()->fetch_assoc();
+$result = $stmt->get_result();
+$stats = $result ? $result->fetch_assoc() : ['completed_count' => 0, 'working_count' => 0, 'total_count' => 0];
 
 // Modify the tasks query to include status filter
 $tasks_query = "SELECT 
@@ -67,15 +68,15 @@ $tasks = $stmt->get_result();
         <!-- Statistics Cards -->
         <div class="stats-container">
             <div class="stats-card">
-                <div class="stats-number"><?php echo $stats['total_count']; ?></div>
+                <div class="stats-number"><?php echo htmlspecialchars($stats['total_count'] ?? 0); ?></div>
                 <div class="stats-label">Total Tasks</div>
             </div>
             <div class="stats-card">
-                <div class="stats-number"><?php echo $stats['working_count']; ?></div>
+                <div class="stats-number"><?php echo htmlspecialchars($stats['working_count'] ?? 0); ?></div>
                 <div class="stats-label">In Progress</div>
             </div>
             <div class="stats-card">
-                <div class="stats-number"><?php echo $stats['completed_count']; ?></div>
+                <div class="stats-number"><?php echo htmlspecialchars($stats['completed_count'] ?? 0); ?></div>
                 <div class="stats-label">Completed</div>
             </div>
         </div>
@@ -92,15 +93,15 @@ $tasks = $stmt->get_result();
         function renderTaskButtons($task) {
             $buttons = '';
             if ($task['current_status'] === 'Pending') {
-                $buttons .= '<button class="btn btn-warning btn-sm me-2" title="Start Task" onclick="updateTaskStatus(' . $task['id'] . ', \'In Progress\')">
+                $buttons .= '<button class="btn btn-warning btn-sm me-2" title="Start Task" onclick="updateTaskStatus(' . htmlspecialchars($task['id']) . ', \'In Progress\')">
                                 <i class="fas fa-play"></i>
                              </button>';
             }
             if ($task['current_status'] !== 'Completed') {
-                $buttons .= '<button class="btn btn-success btn-sm me-2" title="Upload Proof" onclick="uploadProof(' . $task['id'] . ')">
+                $buttons .= '<button class="btn btn-success btn-sm me-2" title="Upload Proof" onclick="uploadProof(' . htmlspecialchars($task['id']) . ')">
                                 <i class="fas fa-upload"></i>
                              </button>';
-                $buttons .= '<button class="btn btn-danger btn-sm" title="Request Assistance" onclick="requestAssistance(' . $task['id'] . ')">
+                $buttons .= '<button class="btn btn-danger btn-sm" title="Request Assistance" onclick="requestAssistance(' . htmlspecialchars($task['id']) . ')">
                                 <i class="fas fa-hands-helping"></i>
                              </button>';
             }
@@ -112,17 +113,17 @@ $tasks = $stmt->get_result();
         <div class="tasks-list">
             <?php if ($tasks && $tasks->num_rows > 0): ?>
                 <?php while ($task = $tasks->fetch_assoc()): ?>
-                    <div class="card request-card priority-<?php echo $task['priority']; ?>">
+                    <div class="card request-card priority-<?php echo htmlspecialchars($task['priority']); ?>">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h5 class="card-title">Request #<?php echo $task['id']; ?></h5>
-                                    <p class="mb-1"><strong>Room:</strong> <?php echo $task['room_no']; ?></p>
-                                    <p class="mb-1"><strong>Title:</strong> <?php echo $task['request_title']; ?></p>
-                                    <p class="mb-1"><strong>Description:</strong> <?php echo $task['description']; ?></p>
+                                    <h5 class="card-title">Request #<?php echo htmlspecialchars($task['id']); ?></h5>
+                                    <p class="mb-1"><strong>Room:</strong> <?php echo htmlspecialchars($task['room_no']); ?></p>
+                                    <p class="mb-1"><strong>Title:</strong> <?php echo htmlspecialchars($task['request_title']); ?></p>
+                                    <p class="mb-1"><strong>Description:</strong> <?php echo htmlspecialchars($task['description']); ?></p>
                                     <p class="mb-1"><strong>Schedule:</strong> 
                                         <span class="badge bg-info text-dark">
-                                            <?php echo $task['schedule'] ? date('M d, Y h:i A', strtotime($task['schedule'])) : 'Not scheduled'; ?>
+                                            <?php echo $task['schedule'] ? htmlspecialchars(date('M d, Y h:i A', strtotime($task['schedule']))) : 'Not scheduled'; ?>
                                         </span>
                                     </p>
                                     <p class="mb-1">
@@ -135,7 +136,7 @@ $tasks = $stmt->get_result();
                                         }
                                         ?>
                                     </p>
-                                    <small class="text-muted created-at">Created: <?php echo date('M d, Y h:i A', strtotime($task['created_at'])); ?></small>
+                                    <small class="text-muted created-at">Created: <?php echo htmlspecialchars(date('M d, Y h:i A', strtotime($task['created_at']))); ?></small>
                                 </div>
                                 <div class="d-flex flex-column align-items-end">
                                     <span class="badge bg-<?php 
@@ -158,7 +159,7 @@ $tasks = $stmt->get_result();
                                             echo 'success';
                                         }
                                     ?>">
-                                        Priority: <?php echo $task['priority']; ?>
+                                        Priority: <?php echo htmlspecialchars($task['priority']); ?>
                                     </span>
                                 </div>
                             </div>

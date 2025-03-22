@@ -81,11 +81,17 @@
     ?>
 
     <div class="container mt-2">
-    <div class="card p-4 room-service-heading d-flex justify-content-between">
-        <h3>Housekeeping Monitoring Panel</h3>
+    <div class="card p-4 room-service-heading">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Housekeeping Monitoring Panel</h3>
+            <button class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
+                    style="width: 40px; height: 40px; border-radius: 50%; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" 
+                    data-bs-toggle="modal" data-bs-target="#requestModal">
+                <i class="bi bi-plus fs-4 text-white mb-2"></i>
+            </button>
+        </div>
     </div>
     <div class="row m-0">
-    <!-- Left Sections for Room Service Status Cards -->
     <div class="col-md-8">
         <div class="row mt-4" id="roomServiceCards">
 
@@ -248,10 +254,134 @@
         </div>
     </div>
 
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="successModalLabel">Success!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <p class="mb-0">Request has been successfully added!</p>
+                    <p class="fw-bold fs-5 mb-0" id="requestDetails"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Request Modal -->
+    <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestModalLabel">New Service Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="requestForm" method="POST" action="func/add_service_request.php">
+                        <div class="mb-3">
+                            <label for="uname" class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" id="uname" name="uname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="room" class="form-label">Room Number</label>
+                            <input type="text" class="form-control" id="room" name="room" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="requestType" class="form-label">Request Type</label>
+                            <select class="form-select mb-2" id="requestType" onchange="handleRequestTypeChange()">
+                                <option value="predefined" selected>Select from common types</option>
+                                <option value="custom">Enter custom request type</option>
+                            </select>
+                            
+                            <!-- Predefined request types -->
+                            <select class="form-select" id="predefinedRequest" name="request" required>
+                                <option value="" selected disabled>Select request type</option>
+                                <option value="Room Cleaning">Room Cleaning</option>
+                                <option value="Towel Service">Towel Service</option>
+                                <option value="Bed Making">Bed Making</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            
+                            <!-- Custom request type (initially hidden) -->
+                            <input type="text" class="form-control" id="customRequest" name="custom_request" 
+                                   placeholder="Enter custom request type" style="display: none;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="details" class="form-label">Details</label>
+                            <textarea class="form-control" id="details" name="details" rows="3" required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
- let currentTaskId; // Global variable to hold the current task ID// 
+    // Add this to check for success parameter in URL and show modal
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        const message = urlParams.get('message');
+        
+        // If there's a success status in the URL
+        if (status === 'success') {
+            // Set request details message
+            document.getElementById('requestDetails').textContent = message || 'Request added successfully';
+            
+            // Show the success modal
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            
+            // Hide the modal after 2 seconds
+            setTimeout(() => {
+                successModal.hide();
+            }, 2000);
+            
+            // Clean the URL without refreshing the page
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    });
+    
+    // Function to handle switching between predefined and custom request types
+    function handleRequestTypeChange() {
+        const requestType = document.getElementById('requestType').value;
+        const predefinedRequestField = document.getElementById('predefinedRequest');
+        const customRequestField = document.getElementById('customRequest');
+        
+        if (requestType === 'predefined') {
+            predefinedRequestField.style.display = 'block';
+            customRequestField.style.display = 'none';
+            predefinedRequestField.name = 'request';
+            customRequestField.name = 'custom_request';
+            predefinedRequestField.required = true;
+            customRequestField.required = false;
+        } else {
+            predefinedRequestField.style.display = 'none';
+            customRequestField.style.display = 'block';
+            predefinedRequestField.name = 'predefined_request';
+            customRequestField.name = 'request';
+            predefinedRequestField.required = false;
+            customRequestField.required = true;
+        }
+    }
+    
+    let currentTaskId; // Global variable to hold the current task ID// 
     // Function to show task details
     function showDetails(taskId) {
     // Fetch task details using AJAX
@@ -313,21 +443,21 @@
     })
     .then(data => {
         if (data.success) {
-            showToast(`Task successfully assigned to ${empName}.`);
+            // Show toast notification with success styling
+            showToast(`Task #${taskId} successfully assigned to ${empName}.`, 'bg-success');
             
-            location.reload();
+            // Use a timeout to allow the toast to be seen before reload
+            
         } else {
-            showToast(`Error: ${data.error}`);
+            // Show error toast
+            showToast(`Error: ${data.error}`, 'bg-danger');
         }
     })
     .catch(error => {
         console.error("Error during task assignment:", error);
-        showToast("An error occurred during task assignment.");
+        showToast("An error occurred during task assignment.", 'bg-danger');
     });
 }
-
-
-
 
     // Function to change task status
     function changeStatus(newStatus) {
@@ -353,43 +483,47 @@
         console.log("Server Response:", data); // Debugging: See what the server is returning
 
         if (data.success) {
-            showToast(`Task ${taskId} status changed to ${newStatus}.`);
-            location.reload(); // Reload the page to reflect changes
+            // Show toast notification with animation for better visibility
+            showToast(`Task ${taskId} status changed to ${newStatus}.`, 'bg-success');
+            
+            // Use a timeout to allow the toast to be seen before reload
+            setTimeout(() => {
+                location.reload(); // Reload the page to reflect changes
+            }, 1000);
         } else {
-            alert('Failed to change status: ' + (data.error || 'Unknown error'));
+            showToast(`Failed to change status: ${data.error || 'Unknown error'}`, 'bg-danger');
         }
     })
     .catch(error => {
         console.error('Error changing task status:', error);
-        alert('An error occurred while changing status. Please try again later.');
+        showToast("An error occurred while changing status. Please try again later.", 'bg-danger');
     });
 }
 
 
     // Function to show toast notifications
-    function showToast(message) {
+    function showToast(message, bgClass = '') {
         const toastMessage = document.getElementById('toastMessage');
         toastMessage.innerHTML = message;
-
-        const toast = new bootstrap.Toast(document.getElementById('assignmentToast'));
-        toast.show();
+        
+        const toast = document.getElementById('assignmentToast');
+        
+        // Apply background class if provided
+        if (bgClass) {
+            toast.classList.add(bgClass);
+        }
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        // Remove background class after toast is hidden
+        toast.addEventListener('hidden.bs.toast', function () {
+            if (bgClass) {
+                toast.classList.remove(bgClass);
+            }
+        }, { once: true });
     }
 
-    // Variable to store the currently selected task ID
-    let selectedTaskId = null;
-
-    // Add event listener to status cards
-    document.querySelectorAll('.status-card').forEach(card => {
-        card.addEventListener('click', function() {
-            document.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            selectedTaskId = this.dataset.taskId; // Store the selected task ID
-            showDetails(this.dataset.taskId);
-            setCurrentTaskId(this.dataset.taskId);
-        });
-    });
-
-    // Object to track task statuses
     let taskStatusMap = {};
     
     // Function to build initial status map
