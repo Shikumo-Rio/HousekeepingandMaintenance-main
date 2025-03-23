@@ -84,11 +84,16 @@
     <div class="card p-4 room-service-heading">
         <div class="d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Housekeeping Monitoring Panel</h3>
-            <button class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
-                    style="width: 40px; height: 40px; border-radius: 50%; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" 
-                    data-bs-toggle="modal" data-bs-target="#requestModal">
-                <i class="bi bi-plus fs-4 text-white mb-2"></i>
-            </button>
+            <div class="d-flex">
+                <button id="viewToggle" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-table"></i>
+                </button>
+                <button class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
+                        style="width: 40px; height: 40px; border-radius: 50%; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" 
+                        data-bs-toggle="modal" data-bs-target="#requestModal">
+                    <i class="bi bi-plus fs-4 text-white mb-2"></i>
+                </button>
+            </div>
         </div>
     </div>
     <div class="row m-0">
@@ -197,7 +202,47 @@
     </div>
 </div>
 
-    <!-- Right Section for Task Details -->
+<!-- Table View (initially hidden) -->
+<div id="tableView" class="col-md-8" style="display: none;">
+    <div class="card mt-4">
+        <div class="card-body table-view">
+            <!-- Add search input -->
+            <div class="mb-3">
+                <input type="text" id="searchTable" class="form-control" placeholder="Search tasks...">
+            </div>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Request</th>
+                        <th>Room</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $allTasks = $conn->query("SELECT * FROM customer_messages ORDER BY created_at DESC");
+                    while ($task = $allTasks->fetch_assoc()):
+                    ?>
+                    <tr class="task-row" data-task-id="<?php echo $task['id']; ?>" onclick="showDetails(<?php echo $task['id']; ?>)">
+                        <td><?php echo $task['id']; ?></td>
+                        <td><?php echo htmlspecialchars($task['uname']); ?></td>
+                        <td><?php echo htmlspecialchars($task['request']); ?></td>
+                        <td><?php echo htmlspecialchars($task['room']); ?></td>
+                        <td><span class="badge bg-<?php echo getStatusColor($task['status']); ?>"><?php echo ucfirst($task['status']); ?></span></td>
+                        <td><?php echo $task['created_at']; ?></td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+        <div id="pagination" class="d-flex justify-content-center p-2"></div>
+    </div>
+</div>
+
+<!-- Right Section for Task Details -->
     <div class="col-md-4 mt-4">
         <div class="card">
             <div class="card-header text-dark">
@@ -701,6 +746,243 @@
 
     // Initial attachment of event listeners
     attachCardEvents();
+
+<?php
+// Helper function for status colors
+function getStatusColor($status) {
+    switch($status) {
+        case 'pending': return 'warning';
+        case 'working': return 'primary';
+        case 'complete': return 'success';
+        case 'invalid': return 'danger';
+        default: return 'secondary';
+    }
+}
+?>
+
+// View toggle functionality
+document.getElementById('viewToggle').addEventListener('click', function() {
+    const cardView = document.getElementById('roomServiceCards').parentElement;
+    const tableView = document.getElementById('tableView');
+    const icon = this.querySelector('i');
+
+    if (cardView.style.display !== 'none') {
+        cardView.style.display = 'none';
+        tableView.style.display = 'block';
+        icon.classList.replace('bi-table', 'bi-grid');
+    } else {
+        cardView.style.display = 'block';
+        tableView.style.display = 'none';
+        icon.classList.replace('bi-grid', 'bi-table');
+    }
+});
+
+// Modified click handler for both views
+function initializeClickHandlers() {
+    const cards = document.querySelectorAll('.status-card');
+    const rows = document.querySelectorAll('.task-row');
+    
+    const handleClick = (element) => {
+        document.querySelectorAll('.status-card, .task-row').forEach(el => 
+            el.classList.remove('selected'));
+        element.classList.add('selected');
+        showDetails(element.dataset.taskId);
+        setCurrentTaskId(element.dataset.taskId);
+    };
+
+    cards.forEach(card => card.addEventListener('click', () => handleClick(card)));
+    rows.forEach(row => row.addEventListener('click', () => handleClick(row)));
+}
+
+// Initialize handlers when document loads
+document.addEventListener('DOMContentLoaded', initializeClickHandlers);
+
+// Search functionality
+document.getElementById('searchTable')?.addEventListener('keyup', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#tableView tbody tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+
+// Table pagination variables and functions
+let currentPage = 1;
+const rowsPerPage = 10;
+let taskData = [];
+
+function updateTableView(data) {
+    taskData = data; // Store full dataset
+    renderTablePage(currentPage);
+    renderPaginationControls();
+}
+
+function renderTablePage(page) {
+    const tableBody = document.querySelector('#tableView tbody');
+    if (!tableBody) return;
+
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const paginatedData = taskData.slice(start, end);
+
+    tableBody.innerHTML = paginatedData.map(task => `
+        <tr class="task-row" data-task-id="${task.id}" onclick="showDetails(${task.id})">
+            <td>${task.id}</td>
+            <td>${escapeHtml(task.uname)}</td>
+            <td>${escapeHtml(task.request)}</td>
+            <td>${escapeHtml(task.room)}</td>
+            <td><span class="badge bg-${getStatusColorClass(task.status)}">${capitalize(task.status)}</span></td>
+            <td>${task.created_at}</td>
+        </tr>
+    `).join('');
+}
+
+function renderPaginationControls() {
+    const paginationContainer = document.querySelector('#pagination');
+    if (!paginationContainer) return;
+
+    const totalPages = Math.ceil(taskData.length / rowsPerPage);
+    paginationContainer.innerHTML = '';
+
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.innerText = 'Previous';
+    prevButton.className = 'btn btn-sm btn-outline-secondary me-1';
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTablePage(currentPage);
+            renderPaginationControls();
+        }
+    };
+    paginationContainer.appendChild(prevButton);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const button = document.createElement('button');
+        button.innerText = i;
+        button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-secondary'} me-1`;
+        button.onclick = () => {
+            currentPage = i;
+            renderTablePage(currentPage);
+            renderPaginationControls();
+        };
+        paginationContainer.appendChild(button);
+    }
+
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.innerText = 'Next';
+    nextButton.className = 'btn btn-sm btn-outline-secondary';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTablePage(currentPage);
+            renderPaginationControls();
+        }
+    };
+    paginationContainer.appendChild(nextButton);
+}
+
+// Helper functions for table view
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function getStatusColorClass(status) {
+    const colors = {
+        pending: 'warning',
+        working: 'primary',
+        complete: 'success',
+        invalid: 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+// When you refresh data, update both card and table views
+function refreshData() {
+    fetch('func/get_all_tasks.php', {
+        headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(async response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Raw server response:', text);
+            throw new Error('Invalid JSON response');
+        }
+    })
+    .then(data => {
+        if (!Array.isArray(data)) {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            throw new Error('Invalid data structure');
+        }
+
+        // Update table view
+        updateTableView(data);
+
+        // Reinitialize click handlers
+        initializeClickHandlers();
+    })
+    .catch(error => {
+        console.error('Refresh error:', error);
+        showToast(`Error: ${error.message}`);
+    });
+
+    // Refresh current task details if one is selected
+    if (currentTaskId) {
+        showDetails(currentTaskId);
+    }
+}
+
+// Modify refreshTaskCards to also update the table view
+const originalRefreshTaskCards = refreshTaskCards;
+refreshTaskCards = function() {
+    originalRefreshTaskCards();
+    
+    // Also refresh the table data
+    fetch('func/get_all_tasks.php')
+        .then(response => response.json())
+        .then(data => {
+            updateTableView(data);
+        })
+        .catch(error => {
+            console.error('Error refreshing table:', error);
+        });
+};
+
+// Initialize the table view on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('func/get_all_tasks.php')
+        .then(response => response.json())
+        .then(data => {
+            updateTableView(data);
+        })
+        .catch(error => {
+            console.error('Error loading table data:', error);
+        });
+});
     </script>
 </body>
 </html>

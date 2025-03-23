@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 require '../database.php';
@@ -121,6 +121,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     http_response_code(201);
     echo json_encode($responses);
     exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    // Read JSON input
+    $json_input = file_get_contents("php://input");
+    $input = json_decode($json_input, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid JSON input"]);
+        exit;
+    }
+
+    // Get request_id from URL parameter
+    $request_id = $_GET['request_id'] ?? null;
+    
+    if (!$request_id) {
+        http_response_code(400);
+        echo json_encode(["error" => "Missing request_id parameter"]);
+        exit;
+    }
+
+    // Validate required fields
+    $required_fields = ['role', 'quantity', 'reason', 'preferred_shift', 'urgency_level', 'requested_by'];
+    foreach ($required_fields as $field) {
+        if (!isset($input[$field]) || $input[$field] === "") {
+            http_response_code(400);
+            echo json_encode(["error" => "Missing field: $field"]);
+            exit;
+        }
+    }
+    
+    try {
+        // Check if request with the ID exists
+        $checkStmt = $pdo->prepare("SELECT id FROM employee_requests WHERE request_id = :request_id");
+        $checkStmt->execute([
+            ':request_id' => $request_id
+        ]);
+        $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$existing) {
+            http_response_code(404);
+            echo json_encode(["error" => "Request not found"]);
+            exit;
+        }
+        
+        // Update existing request
+        $updateStmt = $pdo->prepare("UPDATE employee_requests SET 
+            role = :role, 
+            quantity = :quantity, 
+            reason = :reason, 
+            preferred_shift = :preferred_shift, 
+            urgency_level = :urgency_level, 
+            status = :status, 
+            requested_by = :requested_by,
+            request_date = NOW() 
+            WHERE id = :id");
+            
+        $updateStmt->execute([
+            ':role' => $input['role'],
+            ':quantity' => $input['quantity'],
+            ':reason' => $input['reason'],
+            ':preferred_shift' => $input['preferred_shift'],
+            ':urgency_level' => $input['urgency_level'],
+            ':status' => $input['status'] ?? 'Pending',
+            ':requested_by' => $input['requested_by'],
+            ':id' => $existing['id']
+        ]);
+        
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "message" => "Request updated successfully.",
+            "id" => $existing['id']
+        ]);
+        exit;
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Database Error", "message" => $e->getMessage()]);
+        exit;
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {

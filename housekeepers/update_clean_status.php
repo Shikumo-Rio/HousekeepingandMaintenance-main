@@ -51,14 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $cleaningLogId = $conn->insert_id;
             
-            // 2. Now make the simple API call to just update the room status
-            $apiUrl = "https://core2.paradisehoteltomasmorato.com/integ/update_room.php";
+            // 2. Now make the API call to update the room status using the new endpoint
+            $apiUrl = "https://core2.paradisehoteltomasmorato.com/integ/cleanrm.php";
             
-            // Only send essential data to update status
+            // Prepare data for the new API structure
             $apiData = [
                 'api_key' => 'b5fb3418cb1a7e88903d64e55373c48e48f9c53aabdcba0357f0107233d9dbda',
                 'room_id' => $roomId,
-                'status' => 'Available'
+                'room_no' => $roomNumber,
+                'status' => 'Available',
+                'clean_status' => 'Clean' // Set the clean_status to Clean
             ];
             
             $ch = curl_init($apiUrl);

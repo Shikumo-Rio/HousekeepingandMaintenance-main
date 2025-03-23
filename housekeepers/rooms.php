@@ -12,7 +12,7 @@ if ($_SESSION['user_type'] !== 'Employee') {
 }
 
 // API endpoint for room availability
-$apiUrl = "https://core2.paradisehoteltomasmorato.com/integ/avroom.php?api_key=b5fb3418cb1a7e88903d64e55373c48e48f9c53aabdcba0357f0107233d9dbda";
+$apiUrl = "https://core2.paradisehoteltomasmorato.com/integ/cleanrm.php?api_key=b5fb3418cb1a7e88903d64e55373c48e48f9c53aabdcba0357f0107233d9dbda";
 
 // Initialize variables
 $rooms = [];
@@ -227,12 +227,26 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
             background-color: var(--secondary-color);
         }
         
-        .card.available::before {
-            background-color: var(--available-color);
+        .card.available::before, .card.not-available::before {
+            background-color: #fd7e14; /* Orange for both available and not available */
         }
         
-        .card.not-available::before {
-            background-color: var(--not-available-color);
+        .card.clean::before {
+            background-color: var(--available-color); /* Green for clean */
+        }
+        
+        .card.uncleaned::before {
+            background-color: var(--not-available-color); /* Red for uncleaned */
+        }
+        
+        /* Add styles for clean status badge */
+        .clean-status-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-left: 3px;
         }
         
         .room-content {
@@ -261,6 +275,7 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
             align-items: center;
             gap: 3px; /* Smaller gap */
             margin-top: auto;
+            flex-wrap: wrap; /* Allow badges to wrap on very small screens */
         }
         
         .status-badge {
@@ -449,7 +464,7 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
                 font-size: 1.1rem;
             }
             
-            .status-badge {
+            .status-badge, .clean-status-badge {
                 font-size: 0.65rem;
                 padding: 2px 6px;
             }
@@ -457,7 +472,7 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
         
         @media (max-width: 576px) {
             .room-card {
-                height: 95px; /* Smallest on mobile phones */
+                height: 105px; /* Slightly taller to accommodate wrapped badges */
             }
             
             .room-number {
@@ -473,11 +488,43 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
                 font-size: 1.6rem;
             }
             
+            /* Improved badge responsiveness for mobile */
+            .status-badge, .clean-status-badge {
+                font-size: 0.6rem;
+                padding: 2px 5px;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            
+            .status-indicator {
+                gap: 2px;
+            }
+            
             /* Ensure 3 cards per row on mobile */
             .room-item {
                 width: 33.333% !important; /* Force 3 cards per row */
                 padding-left: 3px;
                 padding-right: 3px;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 400px) {
+            .room-card {
+                height: 115px; /* Even taller for very small devices */
+            }
+            
+            .status-indicator {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1px;
+            }
+            
+            .clean-status-badge {
+                margin-left: 0;
             }
         }
         
@@ -631,13 +678,19 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
                 </div>
                 <div class="row room-container g-1"> <!-- Added g-1 for smaller gutters -->
                     <?php foreach ($floorData['rooms'] as $room): ?>
+                        <?php 
+                            // Determine clean status
+                            $cleanStatus = isset($room['clean_status']) ? $room['clean_status'] : 'Uncleaned';
+                            $cleanClass = ($cleanStatus === 'Clean') ? 'clean' : 'uncleaned';
+                        ?>
                         <div class="col-4 col-md-4 col-lg-4 mb-2 room-item" data-room-number="<?php echo $room['room_no']; ?>">
-                            <div class="card room-card <?php echo $room['status'] === 'Available' ? 'available' : 'not-available'; ?>"
+                            <div class="card room-card <?php echo $room['status'] === 'Available' ? 'available' : 'not-available'; ?> <?php echo $cleanClass; ?>"
                                 data-bs-toggle="modal"
                                 data-bs-target="#roomModal"
                                 data-room-id="<?php echo $room['room_id']; ?>"
                                 data-room-number="<?php echo $room['room_no']; ?>"
                                 data-room-status="<?php echo $room['status']; ?>"
+                                data-clean-status="<?php echo $cleanStatus; ?>"
                             >
                                 <div class="room-content">
                                     <div>
@@ -645,15 +698,14 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
                                         <div class="room-id">ID: <?php echo $room['room_id']; ?></div>
                                     </div>
                                     <div class="status-indicator">
-                                        <?php if ($room['status'] === 'Available'): ?>
-                                            <span class="status-badge bg-success">
-                                                <i class="fas fa-check-circle me-1"></i> Available
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="status-badge bg-danger">
-                                                <i class="fas fa-times-circle me-1"></i> Not Available
-                                            </span>
-                                        <?php endif; ?>
+                                        <span class="status-badge <?php echo $room['status'] === 'Available' ? 'bg-success' : 'bg-warning'; ?>">
+                                            <i class="fas <?php echo $room['status'] === 'Available' ? 'fa-check-circle' : 'fa-times-circle'; ?> me-1"></i> 
+                                            <?php echo $room['status']; ?>
+                                        </span>
+                                        <span class="clean-status-badge <?php echo $cleanStatus === 'Clean' ? 'bg-success' : 'bg-danger'; ?>">
+                                            <i class="fas <?php echo $cleanStatus === 'Clean' ? 'fa-check' : 'fa-times'; ?> me-1"></i>
+                                            <?php echo $cleanStatus; ?>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -738,8 +790,11 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-12">
-                            <p><strong><i class="fas fa-info-circle me-2"></i>Current Status:</strong> <span id="modal-room-status"></span></p>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-info-circle me-2"></i>Status:</strong> <span id="modal-room-status"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-broom me-2"></i>Clean Status:</strong> <span id="modal-clean-status"></span></p>
                         </div>
                     </div>
                 </div>
@@ -802,6 +857,7 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
         const roomId = button.getAttribute('data-room-id');
         const roomNumber = button.getAttribute('data-room-number');
         const roomStatus = button.getAttribute('data-room-status');
+        const cleanStatus = button.getAttribute('data-clean-status');
 
         // Update modal content
         roomModal.querySelector('#modal-room-id').textContent = roomId;
@@ -809,11 +865,15 @@ $uncleanedPercentage = $availableCount > 0 ? round(($uncleanedCount / $available
         
         const statusElement = roomModal.querySelector('#modal-room-status');
         statusElement.textContent = roomStatus;
+        statusElement.className = roomStatus === 'Available' ? 'badge bg-success' : 'badge bg-warning';
         
-        if (roomStatus === 'Available') {
-            statusElement.className = 'badge bg-success';
+        const cleanStatusElement = roomModal.querySelector('#modal-clean-status');
+        cleanStatusElement.textContent = cleanStatus;
+        
+        if (cleanStatus === 'Clean') {
+            cleanStatusElement.className = 'badge bg-success';
         } else {
-            statusElement.className = 'badge bg-danger';
+            cleanStatusElement.className = 'badge bg-danger';
         }
         
         // Update form values
