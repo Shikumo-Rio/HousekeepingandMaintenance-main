@@ -72,7 +72,7 @@ function allocateTasks($dbConnection) {
             if ($employee = mysqli_fetch_assoc($staffResult)) {
                 // Insert into assigntasks table
                 $insertQuery = "INSERT INTO assigntasks 
-                              (task_id, request, details, room, emp_name, emp_id, status)
+                              (task_id, request, details, room, emp_name, emp_id, status, uname)
                               VALUES (
                                   '{$task['id']}',
                                   '{$task['request']}',
@@ -80,7 +80,8 @@ function allocateTasks($dbConnection) {
                                   '{$task['room']}',
                                   '{$employee['name']}',
                                   '{$employee['emp_id']}',
-                                  'Working'
+                                  'Working',
+                                  '{$task['uname']}'
                               )";
                 mysqli_query($dbConnection, $insertQuery);
                 
