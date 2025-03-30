@@ -1,16 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #f8f9fa;
 }
 
-.title-heading  {
+.title-heading {
     font-size: 20px;
     text-align: left;
-    margin: 10px; 
-    padding: 10px; 
-    border-radius: 8px; 
+    margin: 10px;
+    padding: 10px;
+    border-radius: 8px;
     border: 1px;
 }
+
 .title-heading h3 {
     display: inline-block;
     margin: 0;
@@ -55,8 +58,7 @@ body {
 
 .card h5 {
     font-weight: 600;
-    font-size: 15px;
-    font-size: medium;
+    font-size: 14px;
 }
 
 .card h3 {
@@ -220,7 +222,8 @@ button.btn-close:focus {
 }
 
 .input-group .input-group-text {
-    border-left: none; /* Remove left border for a cleaner look */
+    border-left: none;
+    /* Remove left border for a cleaner look */
     border-radius: 15px;
 }
 
@@ -229,3 +232,138 @@ button.btn-close:focus {
 }
 
 
+/* The code starts here for pagination*/
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 8px;
+}
+
+/* Pagination Buttons */
+.pagination .page-item {
+    list-style: none;
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pagination .page-link {
+    color: white !important;
+    border: none;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hover Effect */
+.pagination .page-item:hover {
+    background: linear-gradient(135deg, #388E3C, #2E7D32);
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Button */
+.pagination .page-item.active {
+    background: #2E7D32 !important;
+    font-weight: bold;
+    transform: scale(1.05);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Disabled Buttons */
+.pagination .page-item.disabled {
+    background: #A5D6A7;
+    color: #fff;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Override Bootstrap DataTable Pagination Icons */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous i,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next i {
+    font-size: 10px !important;
+    /* Adjusts arrow size */
+}
+
+.pagination {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Remove Bootstrap default button styles */
+.page-link {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: none !important;
+    font-size: none !important;
+}
+
+.task-table {
+    min-height: 260px;
+    /* Set a minimum height for the card */
+    display: flex;
+    flex-direction: column;
+}
+
+.task-table .table-responsive {
+    flex: 1;
+}
+
+.pagination {
+    margin-top: 10px;
+    /* Ensure pagination stays at the bottom */
+    margin-bottom: 0px;
+}
+
+/* Export button*/
+
+.btn-success-export {
+    font-size: 12px !important;
+    background-color: green !important;
+    color: white !important;
+}
+
+/* Local Inventory styling */
+.inventory-table, .usage-table {
+    min-height: 510px;
+    /* Set a minimum height for the card */
+}
+
+.local-table {
+    min-height: 435px;
+    font-size: 12px !important;
+}
+
+#inventoryUsageTable {
+    min-height: 435px !important;
+    font-size: 12px !important;
+}
+
+localInventoryTable {
+    min-height: 435px !important;
+    font-size: 12px !important;
+}
+
+inventoryTable {
+    min-height: 435px !important;
+    font-size: 12px !important;
+}
+
+.warehouse-table {
+    min-height: 435px;
+    /* Set a minimum height for the card */
+}

@@ -114,6 +114,7 @@ $tasks = executeQuery(
     <title>Daily Tasks - <?php echo date('F d, Y', strtotime($selected_date)); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="daily-task.css">
+    <link rel="icon" href="img/logo.webp">
 
 </head>
 <body>

@@ -118,11 +118,31 @@ if ($_SESSION['user_type'] !== 'Admin') {
             font-size: 0.95rem;   /* Adjust the font size */
         }
 
+        /* Add styles for the sidebar toggle button */
+        #sidebar-toggle {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+        
+        #sidebar-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Style the toggle icon */
+        #sidebar-toggle .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        [data-bs-theme="dark"] #sidebar-toggle .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <nav class="navbar navbar-expand px-3 border-bottom">
-        <button class="btn" id="sidebar-toggle" type="button">
+        <button class="btn" id="sidebar-toggle" type="button" title="Toggle Sidebar">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="navbar-collapse navbar">

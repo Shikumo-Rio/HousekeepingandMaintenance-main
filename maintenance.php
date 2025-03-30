@@ -82,29 +82,29 @@ $conn->close();
 <body>
     <?php include('index.php'); ?>
 
-    <div class="container my-5 px-4 mt-2">
-        <div class="p-4 m-0 title-heading card">
+    <div class="container my-5 px-4 mt-4">
+        <div class="p-4 nt-4 m-0 title-heading card">
             <h3 class="flex-grow-1">Maintenance Management</h3>
-            <!-- Buttons for Submitting and Updating Requests -->
-        <div class="submit">
+        </div>
+        <!-- Buttons for Submitting and Updating Requests -->
+        <div class="submit mt-4 mb- 4 me-2">
             <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#registerModal">
                  Submit Request
             </button>
-         </div>
         </div>
         <div class="row m-0 justify-content-center">
             <div class="card-body p-2 m-0">
                 <div class="d-flex justify-content-between align-items-center mb-5">
+
                     <!-- Notification Modal (Replaces Success Message) -->
                     <div class="modal fade" id="emailResponseModal" tabindex="-1" aria-labelledby="emailResponseModalLabel" aria-hidden="true" data-bs-backdrop="static">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content shadow-lg rounded-4">
-                                <div class="modal-header border-0">
-                                    <h5 class="modal-title fw-bold" id="emailResponseModalLabel">Notification</h5>
+                        <div class="modal-dialog modal-dialog-centered p-0 w-25">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="d-flex justify-content-end border-0">
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
-                                <div class="modal-body text-center">
-                                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                                <div class="modal-body text-center p-0">
+                                    <i class="fas fa-check-circle text-success fa-3x mb-3" style="font-size: 3rem;"></i>
                                     <div id="emailResponseMessage"></div>
                                 </div>
                             </div>
@@ -117,25 +117,25 @@ $conn->close();
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content shadow-lg rounded-4">
                             <div class="modal-header border-0">
-                                <h5 class="modal-title fw-bold" id="registerModalLabel">Submit Maintenance Request</h5>
+                                <h5 class="modal-title fw-semibold" id="registerModalLabel">Submit Maintenance Request</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body p-4">
+                            <div class="modal-body p-0">
                                 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control" id="request_title" name="request_title" placeholder="Enter request title" required>
+                                        <input type="text" class="form-control" style="font-size: 12px;" id="request_title" name="request_title" placeholder="Enter request title" required>
                                         <label for="request_title">Request Title</label>
                                     </div>
                                     <div class="form-floating mb-3">
-                                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
+                                        <textarea class="form-control" style="font-size: 12px;" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
                                          <label for="description">Description</label>
                                     </div>
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control" id="room_no" name="room_no" placeholder="Enter room number" required>
+                                        <input type="text" class="form-control" style="font-size: 12px;" id="room_no" name="room_no" placeholder="Enter room number" required>
                                         <label for="room_no">Room Number</label>
                                     </div>
                                     <div class="form-floating mb-3">
-                                        <select class="form-select" id="priority" name="priority" required>
+                                        <select class="form-select" style="font-size: 12px;" id="priority" name="priority" required>
                                             <option value="Low">Low</option>
                                             <option value="Medium">Medium</option>
                                             <option value="High">High</option>
@@ -143,7 +143,9 @@ $conn->close();
                                         <label for="priority">Priority</label>
                                     </div>
                                     <div class="d-flex justify-content-end">
-                                        <button type="submit" name="submit_request" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
+                                        <button type="submit" name="submit_request" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">
+                                            <i class="bx bx-send me-1"></i>Submit
+                                        </button>
                                     </div>
                                 </form>
                             </div>
@@ -156,9 +158,7 @@ $conn->close();
                 <div class="row gx-6 justify-content-start">
                     <!-- High Priority Requests -->
                     <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="p-3 m-0 mb-4 priority-heading">
-                            <h3>High Priority</h3>
-                        </div>
+                        <h6 class="mb-4 fw-semibold">High Priority</h6>
                         <div class="row g-3 justify-content-start">
                             <?php foreach ($requests as $request): ?>
                                 <?php if ($request['priority'] === 'High'): ?>
@@ -167,7 +167,7 @@ $conn->close();
                                             <div class="request-id">#<?php echo $request['id']; ?></div>
                                             <div class="request-title"><?php echo $request['request_title']; ?></div>
                                             <p class="text-muted"><?php echo $request['description']; ?></p>
-                                            <div>Room #: <?php echo $request['room_no']; ?></div>
+                                            <div>Room # <?php echo $request['room_no']; ?></div>
                                             <div class="request-priority">
                                                 <span style="font-weight: bold; color: red;">
                                                     <?php echo $request['priority']; ?>
@@ -200,9 +200,7 @@ $conn->close();
                     <div class="row g-3 justify-content-start">
                     <!-- Medium Priority Requests -->
                     <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="p-3 m-0 mb-4 priority-heading">
-                            <h3>Medium Priority</h3>
-                        </div>
+                        <h6 class="mb-4 fw-semibold">Medium Priority</h6>
                         <div class="row g-3 justify-content-start">
                             <?php foreach ($requests as $request): ?>
                                 <?php if ($request['priority'] === 'Medium'): ?>
@@ -211,7 +209,7 @@ $conn->close();
                                             <div class="request-id">#<?php echo $request['id']; ?></div>
                                             <div class="request-title"><?php echo $request['request_title']; ?></div>
                                             <p class="text-muted"><?php echo $request['description']; ?></p>
-                                            <div>Room #: <?php echo $request['room_no']; ?></div>
+                                            <div>Room # <?php echo $request['room_no']; ?></div>
                                             <div class="request-priority">
                                                 <span style="font-weight: bold; color: orange;">
                                                     <?php echo $request['priority']; ?>
@@ -243,9 +241,7 @@ $conn->close();
                     <div class="row g-3 justify-content-start">
                     <!-- Low Priority Requests -->
                     <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="p-3 m-0 mb-4 priority-heading">
-                            <h3>Low Priority</h3>
-                        </div>
+                        <h6 class="mb-4 fw-semibold">Low Priority</h6>
                         <div class="row g-3 p-0 justify-content-start">
                             <?php foreach ($requests as $request): ?>
                                 <?php if ($request['priority'] === 'Low'): ?>
@@ -254,7 +250,7 @@ $conn->close();
                                             <div class="request-id">#<?php echo $request['id']; ?></div>
                                             <div class="request-title"><?php echo $request['request_title']; ?></div>
                                             <p class="text-muted"><?php echo $request['description']; ?></p>
-                                            <div>Room #: <?php echo $request['room_no']; ?></div>
+                                            <div>Room # <?php echo $request['room_no']; ?></div>
                                             <div class="request-priority">
                                                 <span style="font-weight: bold; color: green;">
                                                     <?php echo $request['priority']; ?>
@@ -293,17 +289,17 @@ $conn->close();
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content shadow-lg rounded-4">
                     <div class="modal-header border-0">
-                        <h5 class="modal-title fw-bold" id="updateModalLabel">Update Maintenance Request</h5>
+                        <h5 class="modal-title fw-semibold" id="updateModalLabel">Update Maintenance Request</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
                         <form action="" method="POST" >
                             <div class="form-floating mb-3">
-                                <input type="text" class="form-control rounded-2" id="id" name="id" placeholder="Enter request ID" required>
+                                <input type="text" class="form-control rounded-2" style="font-size: 12px;" id="id" name="id" placeholder="Enter request ID" required>
                                 <label for="id">Request ID</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <select class="form-select rounded-3" id="status" name="status" required>
+                                <select class="form-select rounded-3" style="font-size: 12px;" id="status" name="status" required>
                                     <option value="Pending">Pending</option>
                                     <option value="In Progress">In Progress</option>
                                     <option value="Completed">Completed</option>
@@ -311,7 +307,9 @@ $conn->close();
                                 <label for="status">Status</label>
                             </div>
                             <div class="d-flex justify-content-end">
-                                <button type="submit" name="update_status" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
+                                <button type="submit" name="update_status" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">
+                                    <i class="bx bx-send me-1"></i>Submit
+                                </button>
                             </div>
                         </form>
                     </div>

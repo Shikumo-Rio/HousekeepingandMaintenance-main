@@ -81,17 +81,17 @@
     ?>
 
     <div class="container mt-2">
-    <div class="card p-4 room-service-heading">
+    <div class="card p-3 room-service-heading mt-4">
         <div class="d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">Housekeeping Monitoring Panel</h3>
+            <h3 class="mb-0 ms-2">Housekeeping Monitoring Panel</h3>
             <div class="d-flex">
-                <button id="viewToggle" class="btn btn-outline-primary btn-sm me-2">
-                    <i class="bi bi-table"></i>
+                <button id="viewToggle" class="btn btn-table btn-sm d-flex align-items-center justify-content-center me-2 mt-0">
+                    <i class="bi bi-table mb-2"></i>
                 </button>
-                <button class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
-                        style="width: 40px; height: 40px; border-radius: 50%; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" 
+                <button class="btn btn-add btn-sm d-flex align-items-center justify-content-center mt-0" 
+                        style="width: 40px; height: 40px; border-radius: 50%; border: none; " 
                         data-bs-toggle="modal" data-bs-target="#requestModal">
-                    <i class="bi bi-plus fs-4 text-white mb-2"></i>
+                    <i class="bx bx-plus-circle fs-3 mb-0 mt-0 "></i>
                 </button>
             </div>
         </div>
@@ -245,8 +245,8 @@
 <!-- Right Section for Task Details -->
     <div class="col-md-4 mt-4">
         <div class="card">
-            <div class="card-header text-dark">
-                <h5>Task Details</h5>
+            <div class="card-header bg-transparent">
+                <h6 class="mt-2 fw-semibold">Task Details</h6>
             </div>
             <div class="card-body m-0" id="taskDetailsContent">
                 <p>Select a task to see details.</p>
@@ -259,7 +259,7 @@
                     <button class="btn dropdown-toggle" type="button" id="changeStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         Change Status
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="changeStatusDropdown">
+                    <ul class="dropdown-menu" style="font-size: 12px;" aria-labelledby="changeStatusDropdown">
                         <li><a class="dropdown-item" href="#" onclick="changeStatus('complete')">Complete</a></li>
                         <li><a class="dropdown-item" href="#" onclick="changeStatus('invalid')">Invalid</a></li>
                     </ul>
@@ -270,7 +270,7 @@
                     <button class="btn dropdown-toggle" type="button" id="assignEmployeeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         Assign Employee
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="assignEmployeeDropdown">
+                    <ul class="dropdown-menu" style="font-size: 12px;" aria-labelledby="assignEmployeeDropdown">
                         <?php
                         // Fetch employees for assignment
                         $employeeQuery = "SELECT emp_id, name FROM employee";
@@ -301,19 +301,16 @@
 
     <!-- Success Modal -->
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="successModalLabel">Success!</h5>
+        <div class="modal-dialog modal-dialog-centered p-0 w-25">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="successModalLabel">Success!</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center py-4">
+                <div class="modal-body text-center p-0">
                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                     <p class="mb-0">Request has been successfully added!</p>
-                    <p class="fw-bold fs-5 mb-0" id="requestDetails"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <p class="fw-semibold fs-6 mb-4" id="requestDetails"></p>
                 </div>
             </div>
         </div>
@@ -324,31 +321,42 @@
     
     <!-- Request Modal -->
     <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="requestModalLabel">New Service Request</h5>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="requestModalLabel">
+                        <i class="bx bx-edit-alt me-2"></i> New Service Request
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+
+                <div class="modal-body px-3">
                     <form id="requestForm" method="POST" action="func/add_service_request.php">
-                        <div class="mb-3">
-                            <label for="uname" class="form-label">Guest Name</label>
-                            <input type="text" class="form-control" id="uname" name="uname" required>
+                        
+                        <!-- Guest Name -->
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded-3 shadow-sm" style="font-size: 12px;" id="uname" name="uname" required>
+                            <label for="uname">Guest Name</label>
                         </div>
-                        <div class="mb-3">
-                            <label for="room" class="form-label">Room Number</label>
-                            <input type="text" class="form-control" id="room" name="room" required>
+
+                        <!-- Room Number -->
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded-3 shadow-sm" style="font-size: 12px;" id="room" name="room" required>
+                            <label for="room">Room Number</label>
                         </div>
-                        <div class="mb-3">
-                            <label for="requestType" class="form-label">Request Type</label>
-                            <select class="form-select mb-2" id="requestType" onchange="handleRequestTypeChange()">
+
+                        <!-- Request Type Selection -->
+                        <div class="form-floating mb-3">
+                            <select class="form-select rounded-3 shadow-sm" style="font-size: 12px;" id="requestType" onchange="handleRequestTypeChange()">
                                 <option value="predefined" selected>Select from common types</option>
                                 <option value="custom">Enter custom request type</option>
                             </select>
-                            
-                            <!-- Predefined request types -->
-                            <select class="form-select" id="predefinedRequest" name="request" required>
+                            <label for="requestType">Request Type</label>
+                        </div>
+
+                        <!-- Predefined Request Dropdown -->
+                        <div class="form-floating mb-3" id="predefinedRequestContainer">
+                            <select class="form-select rounded-3 shadow-sm" style="font-size: 12px;" id="predefinedRequest" name="request" required>
                                 <option value="" selected disabled>Select request type</option>
                                 <option value="Room Cleaning">Room Cleaning</option>
                                 <option value="Towel Service">Towel Service</option>
@@ -356,24 +364,36 @@
                                 <option value="Maintenance">Maintenance</option>
                                 <option value="Other">Other</option>
                             </select>
-                            
-                            <!-- Custom request type (initially hidden) -->
-                            <input type="text" class="form-control" id="customRequest" name="custom_request" 
-                                   placeholder="Enter custom request type" style="display: none;">
+                            <label for="predefinedRequest">Select Request</label>
                         </div>
-                        <div class="mb-3">
-                            <label for="details" class="form-label">Details</label>
-                            <textarea class="form-control" id="details" name="details" rows="3" required></textarea>
+
+                        <!-- Custom Request Input (Initially Hidden) -->
+                        <div class="form-floating mb-3" id="customRequestContainer" style="display: none;">
+                            <input type="text" class="form-control rounded-3 shadow-sm" style="font-size: 12px;" id="customRequest" name="custom_request">
+                            <label for="customRequest">Enter Custom Request</label>
                         </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Submit Request</button>
+
+                        <!-- Details -->
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control rounded-3 shadow-sm" style="font-size: 12px;" id="details" name="details" style="height: 100px;" required></textarea>
+                            <label for="details">Details</label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                                <i class="bx bx-x-circle me-1"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success px-2 rounded-3" style="font-size: 12px;">
+                                <i class="bx bx-send me-1"></i> Submit
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
     
     <script>
     // Add this to check for success parameter in URL and show modal
@@ -395,7 +415,7 @@
             // Hide the modal after 2 seconds
             setTimeout(() => {
                 successModal.hide();
-            }, 2000);
+            }, 5000);
             
             // Clean the URL without refreshing the page
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -491,8 +511,13 @@
             // Show toast notification with success styling
             showToast(`Task #${taskId} successfully assigned to ${empName}.`, 'bg-success');
             
-            // Use a timeout to allow the toast to be seen before reload
+            // Create notification for the assigned employee
+            createAssignmentNotification(empId, taskId, taskDetails.request, empName, taskDetails.uname, taskDetails.room);
             
+            // Use a timeout to allow the toast to be seen before reload
+            setTimeout(() => {
+                location.reload(); // Reload the page to reflect changes
+            }, 1500);
         } else {
             // Show error toast
             showToast(`Error: ${data.error}`, 'bg-danger');
@@ -503,6 +528,43 @@
         showToast("An error occurred during task assignment.", 'bg-danger');
     });
 }
+
+    // Function to create a notification entry in the database
+    function createAssignmentNotification(empId, taskId, requestType, empName, guestName, roomNumber) {
+        // Create message for notification
+        const message = `New task assigned: ${requestType} for room ${roomNumber}`;
+        
+        // Create notification data object
+        const notificationData = {
+            emp_id: empId,
+            message: message,
+            link: `roomservice.php?task_id=${taskId}`,
+            item_name: requestType,
+            notif_type: 'task_assignment',
+            is_read: 0,
+            task_id: taskId
+        };
+        
+        // Send notification data to server
+        fetch('func/create_notification.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(notificationData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Notification created successfully');
+            } else {
+                console.error('Failed to create notification:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error creating notification:', error);
+        });
+    }
 
     // Function to change task status
     function changeStatus(newStatus) {
@@ -747,146 +809,145 @@
     // Initial attachment of event listeners
     attachCardEvents();
 
-<?php
-// Helper function for status colors
-function getStatusColor($status) {
-    switch($status) {
-        case 'pending': return 'warning';
-        case 'working': return 'primary';
-        case 'complete': return 'success';
-        case 'invalid': return 'danger';
-        default: return 'secondary';
+    <?php
+    // Helper function for status colors
+    function getStatusColor($status) {
+        switch($status) {
+            case 'pending': return 'warning';
+            case 'working': return 'primary';
+            case 'complete': return 'success';
+            case 'invalid': return 'danger';
+            default: return 'secondary';
+        }
     }
-}
-?>
+    ?>
 
-// View toggle functionality
-document.getElementById('viewToggle').addEventListener('click', function() {
-    const cardView = document.getElementById('roomServiceCards').parentElement;
-    const tableView = document.getElementById('tableView');
-    const icon = this.querySelector('i');
+    // View toggle functionality
+    document.getElementById('viewToggle').addEventListener('click', function() {
+        const cardView = document.getElementById('roomServiceCards').parentElement;
+        const tableView = document.getElementById('tableView');
+        const icon = this.querySelector('i');
 
-    if (cardView.style.display !== 'none') {
-        cardView.style.display = 'none';
-        tableView.style.display = 'block';
-        icon.classList.replace('bi-table', 'bi-grid');
-    } else {
-        cardView.style.display = 'block';
-        tableView.style.display = 'none';
-        icon.classList.replace('bi-grid', 'bi-table');
-    }
-});
-
-// Modified click handler for both views
-function initializeClickHandlers() {
-    const cards = document.querySelectorAll('.status-card');
-    const rows = document.querySelectorAll('.task-row');
-    
-    const handleClick = (element) => {
-        document.querySelectorAll('.status-card, .task-row').forEach(el => 
-            el.classList.remove('selected'));
-        element.classList.add('selected');
-        showDetails(element.dataset.taskId);
-        setCurrentTaskId(element.dataset.taskId);
-    };
-
-    cards.forEach(card => card.addEventListener('click', () => handleClick(card)));
-    rows.forEach(row => row.addEventListener('click', () => handleClick(row)));
-}
-
-// Initialize handlers when document loads
-document.addEventListener('DOMContentLoaded', initializeClickHandlers);
-
-// Search functionality
-document.getElementById('searchTable')?.addEventListener('keyup', function() {
-    const searchValue = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#tableView tbody tr');
-
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchValue) ? '' : 'none';
+        if (cardView.style.display !== 'none') {
+            cardView.style.display = 'none';
+            tableView.style.display = 'block';
+            icon.classList.replace('bi-table', 'bi-grid');
+        } else {
+            cardView.style.display = 'block';
+            tableView.style.display = 'none';
+            icon.classList.replace('bi-grid', 'bi-table');
+        }
     });
-});
 
-// Table pagination variables and functions
-let currentPage = 1;
-const rowsPerPage = 10;
-let taskData = [];
-
-function updateTableView(data) {
-    taskData = data; // Store full dataset
-    renderTablePage(currentPage);
-    renderPaginationControls();
-}
-
-function renderTablePage(page) {
-    const tableBody = document.querySelector('#tableView tbody');
-    if (!tableBody) return;
-
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const paginatedData = taskData.slice(start, end);
-
-    tableBody.innerHTML = paginatedData.map(task => `
-        <tr class="task-row" data-task-id="${task.id}" onclick="showDetails(${task.id})">
-            <td>${task.id}</td>
-            <td>${escapeHtml(task.uname)}</td>
-            <td>${escapeHtml(task.request)}</td>
-            <td>${escapeHtml(task.room)}</td>
-            <td><span class="badge bg-${getStatusColorClass(task.status)}">${capitalize(task.status)}</span></td>
-            <td>${task.created_at}</td>
-        </tr>
-    `).join('');
-}
-
-function renderPaginationControls() {
-    const paginationContainer = document.querySelector('#pagination');
-    if (!paginationContainer) return;
-
-    const totalPages = Math.ceil(taskData.length / rowsPerPage);
-    paginationContainer.innerHTML = '';
-
-    // Previous button
-    const prevButton = document.createElement('button');
-    prevButton.innerText = 'Previous';
-    prevButton.className = 'btn btn-sm btn-outline-secondary me-1';
-    prevButton.disabled = currentPage === 1;
-    prevButton.onclick = () => {
-        if (currentPage > 1) {
-            currentPage--;
-            renderTablePage(currentPage);
-            renderPaginationControls();
-        }
-    };
-    paginationContainer.appendChild(prevButton);
-
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        const button = document.createElement('button');
-        button.innerText = i;
-        button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-secondary'} me-1`;
-        button.onclick = () => {
-            currentPage = i;
-            renderTablePage(currentPage);
-            renderPaginationControls();
+    // Modified click handler for both views
+    function initializeClickHandlers() {
+        const cards = document.querySelectorAll('.status-card');
+        const rows = document.querySelectorAll('.task-row');
+        
+        const handleClick = (element) => {
+            document.querySelectorAll('.status-card, .task-row').forEach(el => 
+                el.classList.remove('selected'));
+            element.classList.add('selected');
+            showDetails(element.dataset.taskId);
+            setCurrentTaskId(element.dataset.taskId);
         };
-        paginationContainer.appendChild(button);
+
+        cards.forEach(card => card.addEventListener('click', () => handleClick(card)));
+        rows.forEach(row => row.addEventListener('click', () => handleClick(row)));
     }
 
-    // Next button
-    const nextButton = document.createElement('button');
-    nextButton.innerText = 'Next';
-    nextButton.className = 'btn btn-sm btn-outline-secondary';
-    nextButton.disabled = currentPage === totalPages;
-    nextButton.onclick = () => {
-        if (currentPage < totalPages) {
-            currentPage++;
+    // Initialize handlers when document loads
+    document.addEventListener('DOMContentLoaded', initializeClickHandlers);
+
+    // Search functionality
+    document.getElementById('searchTable')?.addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#tableView tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        });
+    });
+
+        // Table pagination variables and functions
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let taskData = [];
+
+        function updateTableView(data) {
+            taskData = data; // Store full dataset
             renderTablePage(currentPage);
             renderPaginationControls();
         }
-    };
-    paginationContainer.appendChild(nextButton);
-}
+
+        function renderTablePage(page) {
+            const tableBody = document.querySelector('#tableView tbody');
+            if (!tableBody) return;
+
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = taskData.slice(start, end);
+
+            tableBody.innerHTML = paginatedData.map(task => `
+                <tr class="task-row" data-task-id="${task.id}" onclick="showDetails(${task.id})">
+                    <td>${task.id}</td>
+                    <td>${escapeHtml(task.uname)}</td>
+                    <td>${escapeHtml(task.request)}</td>
+                    <td>${escapeHtml(task.room)}</td>
+                    <td><span class="badge bg-${getStatusColorClass(task.status)}">${capitalize(task.status)}</span></td>
+                    <td>${task.created_at}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPaginationControls() {
+            const paginationContainer = document.querySelector('#pagination');
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(taskData.length / rowsPerPage);
+            paginationContainer.innerHTML = '';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.innerText = 'Previous';
+            prevButton.className = 'pagination-btn';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage(currentPage);
+                    renderPaginationControls();
+                }
+            };
+            paginationContainer.appendChild(prevButton);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.innerText = i;
+                button.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                button.onclick = () => {
+                    currentPage = i;
+                    renderTablePage(currentPage);
+                    renderPaginationControls();
+                };
+                paginationContainer.appendChild(button);
+            }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.innerText = 'Next';
+            nextButton.className = 'pagination-btn';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage(currentPage);
+                    renderPaginationControls();
+                }
+            };
+            paginationContainer.appendChild(nextButton);
+        }
 
 // Helper functions for table view
 function escapeHtml(str) {

@@ -45,10 +45,10 @@ $totalPages = ceil($totalRows / $limit);
     <title>Found Items</title>
 </head>
 <body>
-    <div class="container mt-3">
+    <div class="container mt-0">
         <h5>Lost Items</h5>
         <div class="table-responsive">
-            <table class="table table-hover border table-bordered">
+            <table class="table table-hover border-0 table-bordered">
                 <thead class="striky-top">
                     <tr>
                         <th>ID</th>
@@ -71,7 +71,24 @@ $totalPages = ceil($totalRows / $limit);
                                 <td><?= htmlspecialchars($row['date']); ?></td>
                                 <td><?= htmlspecialchars($row['item']); ?></td>
                                 <td><?= htmlspecialchars($row['description']); ?></td>
-                                <td><span class="badge text-bg-<?= ($row['status'] == 'pending') ? 'secondary' : 'success'; ?>"><?= htmlspecialchars($row['status']); ?></span></td>
+                                <td>
+                                    <?php
+                                    switch ($row['status']) {
+                                        case 'pending':
+                                            echo "<span class='status-badge status-pending'>Pending</span>";
+                                            break;
+                                        case 'claimed':
+                                            echo "<span class='status-badge status-claimed'>Claimed</span>";
+                                            break;
+                                        case 'lost':
+                                            echo "<span class='status-badge status-lost'>Lost</span>";
+                                            break;
+                                        case 'found':
+                                            echo "<span class='status-badge status-found'>Found</span>";
+                                            break;
+                                    }
+                                    ?>
+                                </td>
                                 <td>
                                     <?php if (!empty($row['picture'])): ?>
                                         <img src="<?= htmlspecialchars($row['picture']); ?>" 
@@ -94,8 +111,8 @@ $totalPages = ceil($totalRows / $limit);
         <!-- Modal for Image Preview -->
         <div class="modal fade" id="imageModalLost" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content-pic">
-                    <div class="modal-header">
+                <div class="modal-content-pic border-0">
+                    <div class="modal-header border-0">
                         <div class="position-relative">
                             <img src="" id="modalImageLost" class="img-fluid w-100" alt="Lost Item Image">
                             <button type="button" class="btn-close position-absolute top-0 end-0 m-2 p-2 rounded-circle bg-light" data-bs-dismiss="modal" aria-label="Close"></button>

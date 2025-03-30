@@ -98,10 +98,10 @@ $result = $conn->query($sql);
 <?php include 'index.php'; ?>
 <div class="container">
     
-    <div class="p-4 title-heading card">
+    <div class="p-3 title-heading card mt-4">
         <div class="d-flex justify-content-between align-items-center">
-            <h3>Housekeeping Inventory</h3>
-            <button class="btn btn-success" onclick="showExportModal()">
+            <h3 class="ms-2">Housekeeping Inventory</h3>
+            <button class="btn btn-success-export" onclick="showExportModal()">
                 <i class="fas fa-file-export"></i> Export
             </button>
         </div>
@@ -120,7 +120,7 @@ $result = $conn->query($sql);
                 <div class="underline"></div>
                 <div class="card-body">
                     <h5 class="card-title">Total Categories</h5>
-                    <h3 class="card-text"><i class="fas fa-tags"></i> <span id="totalSupplies">0</span></h3>
+                    <h3 class="card-text"><span id="totalSupplies">0</span></h3>
                 </div>
             </div>
         </div>
@@ -129,7 +129,7 @@ $result = $conn->query($sql);
                 <div class="underline"></div>
                 <div class="card-body">
                     <h5 class="card-title">Available Stock</h5>
-                    <h3 class="card-text"><i class="fas fa-cubes"></i> <span id="availableStock">0</span></h3>
+                    <h3 class="card-text"><span id="availableStock">0</span></h3>
                 </div>
             </div>
         </div>
@@ -138,7 +138,7 @@ $result = $conn->query($sql);
                 <div class="underline"></div>
                 <div class="card-body">
                     <h5 class="card-title">Low Stock Items</h5>
-                    <h3 class="card-text"><i class="fas fa-exclamation-triangle"></i> <span id="lowStockItems">0</span></h3>
+                    <h3 class="card-text"> <span id="lowStockItems">0</span></h3>
                 </div>
             </div>
         </div>
@@ -148,32 +148,34 @@ $result = $conn->query($sql);
     <div class="row m-0 mb-4">
         <!-- Local Inventory Table -->
         <div class="col-lg-7 mb-4">
-            <div class="card centered-div">
-                <div class="card-body p-5">
+            <div class="card centered-div inventory-table">
+                <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0"><i class="fas fa-boxes"></i> Inventory</h3>
-                        <div class="input-group mb-3">
+                        <h3 class="mt-3"><i class="fas fa-boxes"></i> Inventory</h3>
+                        <div class="input-group mt-3">
                             <input type="text" id="localSearchInput" placeholder="Search local inventory..." class="form-control small-input" onkeyup="filterLocalTable()">
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
                             </span>
                         </div>
                     </div>
-                    <table class="table table-hover border table-bordered" id="localInventoryTable">
-                        <thead class="striky-top">
-                            <tr class="bg-dark text-light">
-                                <th scope="col">ID</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Item Name</th>
-                                <th scope="col">SKU</th>
-                                <th scope="col">Quantity</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Local inventory data will be loaded here -->
-                        </tbody>
-                    </table>
+                    <div class="local-table">
+                        <table class="table table-hover border table-bordered" id="localInventoryTable">
+                            <thead class="striky-top">
+                                <tr class="bg-dark text-light">
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">SKU</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Local inventory data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="d-flex justify-content-center mt-3">
                         <nav aria-label="Local inventory pagination">
                             <ul class="pagination pagination-sm" id="localInventoryPagination">
@@ -186,28 +188,30 @@ $result = $conn->query($sql);
 
         <!-- NEW: Inventory Usage Table - Keeping pagination but removing search -->
         <div class="col-lg-5 mb-4">
-            <div class="card centered-div">
-                <div class="card-body p-5">
+            <div class="card centered-div usage-table">
+                <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0"><i class="fas fa-history"></i> Usage History</h3>
+                        <h3 class="mb-2 mt-3"><i class="fas fa-history"></i> Usage History</h3>
                     </div>
-                    <table class="table table-hover border table-bordered" id="inventoryUsageTable">
-                        <thead class="striky-top">
-                            <tr class="bg-dark text-light">
-                                <th scope="col">ID</th>
-                                <th scope="col">Task ID</th>
-                                <th scope="col">Item</th>
-                                <th scope="col">Qty</th>
-                                <th scope="col">Used By</th>
-                                <th scope="col">Date</th>
-                                <th scope="col">Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Inventory usage data will be loaded here -->
-                        </tbody>
-                    </table>
-                    <div class="d-flex justify-content-center mt-3">
+                    <div class="local-table">
+                        <table class="table table-hover border table-bordered" id="inventoryUsageTable">
+                            <thead class="striky-top">
+                                <tr class="bg-dark text-light">
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Task ID</th>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">Qty</th>
+                                    <th scope="col">Used By</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Inventory usage data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-center mt-0">
                         <nav aria-label="Inventory usage pagination">
                             <ul class="pagination pagination-sm" id="usagePagination">
                             </ul>
@@ -221,9 +225,9 @@ $result = $conn->query($sql);
 
 <!-- Request Modal -->
 <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header border-0">
                 <h5 class="modal-title" id="requestModalLabel">Request Stock</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -234,23 +238,28 @@ $result = $conn->query($sql);
                     <input type="hidden" id="request_category" name="category">
                     
                     <div class="mb-3">
-                        <label for="requestItemName" class="form-label">Item Name:</label>
-                        <input type="text" class="form-control" id="requestItemName" readonly>
+                        <label for="requestItemName" class="form-label">Item Name</label>
+                        <input type="text" class="form-control" style="font-size: 12px;" id="requestItemName" readonly>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="requestItemCategory" class="form-label">Category:</label>
-                        <input type="text" class="form-control" id="requestItemCategory" readonly>
+                        <label for="requestItemCategory" class="form-label">Category</label>
+                        <input type="text" class="form-control" style="font-size: 12px;" id="requestItemCategory" readonly>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="requestQuantity" class="form-label">Request Quantity:</label>
-                        <input type="number" class="form-control" id="requestQuantity" name="quantity" min="1" required>
+                        <label for="requestQuantity" class="form-label">Request Quantity</label>
+                        <input type="number" class="form-control" style="font-size: 12px;" id="requestQuantity" name="quantity" min="1" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" name="request_inventory_item" class="btn btn-primary">Submit Request</button>
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success px-2 rounded-3" style="font-size: 12px;">
+                        <i class="bx bx-send me-1"></i> Submit
+                    </button>
                 </div>
             </form>
         </div>

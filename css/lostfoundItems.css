@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
 }
+
 /* Container */
 .container {
     padding: 10px;
@@ -44,7 +47,7 @@ body {
 
 .nav-tabs .nav-link.active {
     color: #fff;
-    background-color: rgba(0, 255, 106, 0.9);   
+    background-color: rgba(0, 255, 106, 0.9);
     border-color: rgba(0, 123, 255, 0.9);
     font-weight: 700;
     transition: background-color 0.3s, color 0.3s;
@@ -83,7 +86,7 @@ body {
     background-color: white;
 }
 
-/* Responsive design */ 
+/* Responsive design */
 @media (max-width: 768px) {
     .nav-tabs {
         flex-direction: row;
@@ -122,67 +125,57 @@ body {
     transform: translateY(-50%);
 }
 
-.add-btn {
-    background-color: #198754; /* Bootstrap's success green */
+.add-btn ,.export-btn {
+    background-color: #28a745 !important;
+    /* Bootstrap's success green */
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    position: relative; /* Change from absolute to relative */
-    display: inline-flex; /* Change to inline-flex */
-    justify-content: center;
-    align-items: center;
-    margin-right: 10px; /* Add margin for spacing from export button */
+    font-size: 14px !important;
 }
 
 .add-btn:hover {
-    background-color: #157347; /* Darker shade for hover */
+    background-color: #157347;
+    /* Darker shade for hover */
+}
+
+.export-btn {
+    font-size: 12px;
 }
 
 .add-btn i {
     margin-right: 5px;
 }
 
-/* New styles for the export button */
-.export-btn {
-    width: 38px;
-    height: 38px;
-    padding: 0;
+.add-btn {
+    position: absolute;
+    right: 30px;
     display: flex;
+    justify-content: flex-start;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    border-radius: 50%;
+    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
-.export-btn i {
-    font-size: 16px;
+.add-btn .btn {
+    background-color: green;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-/* Ensure Font Awesome icons display properly */
-.fas, .fa-solid {
-    display: inline-block !important;
+.add-btn .btn:hover {
+    background-color: rgba(0, 128, 0, 0.719);
+    color: white;
 }
 
-/* Container for the buttons */
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Add pulse animation to draw attention to the export button */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.export-btn:hover {
-    animation: pulse 1s infinite;
-}
 
 /* Modal Styling*/
 .modal-content {
@@ -201,6 +194,16 @@ body {
     padding: 1.1rem;
 }
 
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.2);
+    /* Lighter background */
+}
+
+.modal-content {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Soft shadow */
+}
+
 .form-label {
     font-weight: 500;
 }
@@ -212,56 +215,8 @@ body {
 /* Modal Styles*/
 .modal-content {
     border-radius: 16px;
+    background-color: #f8f9fa;
     padding: 20px;
-}
-
-/* Dark mode overrides for modals */
-body.dark-mode .modal-content {
-    background-color: #232323 !important;
-    color: #f8f9fa !important;
-    border-color: #444 !important;
-}
-
-body.dark-mode .modal-header,
-body.dark-mode .modal-footer,
-body.dark-mode .modal-body {
-    background-color: #232323 !important;
-    border-color: #444 !important;
-}
-
-body.dark-mode .form-control,
-body.dark-mode .form-select,
-body.dark-mode input[type="file"].form-control {
-    background-color: #333 !important;
-    color: #f8f9fa !important;
-    border-color: #555 !important;
-}
-
-body.dark-mode .form-floating {
-    background-color: transparent !important;
-}
-
-body.dark-mode .form-floating > .form-control ~ label,
-body.dark-mode .form-floating > .form-select ~ label {
-    color: #ccc !important;
-}
-
-body.dark-mode .form-floating > .form-control:focus ~ label,
-body.dark-mode .form-floating > .form-control:not(:placeholder-shown) ~ label,
-body.dark-mode .form-floating > .form-select ~ label {
-    background-color: #232323 !important;
-    color: #adb5bd !important;
-    padding: 0 5px;
-}
-
-body.dark-mode .item-details,
-body.dark-mode .bg-light {
-    background-color: #333 !important;
-    color: #f8f9fa !important;
-}
-
-body.dark-mode .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%) !important;
 }
 
 .modal-header {
@@ -280,8 +235,8 @@ body.dark-mode .btn-close {
     font-size: 14px;
 }
 
-.form-control { 
-
+.form-control {
+    background-color: #fff;
     border: 1px solid #ced4da;
     padding: 0.75rem 1rem;
     font-size: 12px;
@@ -334,4 +289,145 @@ button.btn-close {
 
 button.btn-close:focus {
     box-shadow: none;
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 8px;
+}
+
+/* Pagination Buttons */
+.pagination .page-item {
+    list-style: none;
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pagination .page-link {
+    color: white !important;
+    border: none;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hover Effect */
+.pagination .page-item:hover {
+    background: linear-gradient(135deg, #388E3C, #2E7D32);
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Button */
+.pagination .page-item.active {
+    background: #2E7D32 !important;
+    font-weight: bold;
+    transform: scale(1.05);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Disabled Buttons */
+.pagination .page-item.disabled {
+    background: #A5D6A7;
+    color: #fff;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Override Bootstrap DataTable Pagination Icons */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous i,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next i {
+    font-size: 10px !important;
+    /* Adjusts arrow size */
+}
+
+.pagination {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Remove Bootstrap default button styles */
+.page-link {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: none !important;
+    font-size: none !important;
+}
+
+.task-table {
+    min-height: 260px;
+    /* Set a minimum height for the card */
+    display: flex;
+    flex-direction: column;
+}
+
+.task-table .table-responsive {
+    flex: 1;
+}
+
+.pagination {
+    margin-top: 10px;
+    /* Ensure pagination stays at the bottom */
+    margin-bottom: 0px;
+}
+
+#searchInput {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease-in-out;
+    font-size: 12px;
+    justify-content: left;
+}
+
+#searchInput:focus {
+    border-color: #28a745;
+    box-shadow: 0px 0px 5px rgba(40, 167, 69, 0.5);
+}
+
+
+/* Modern Scrollbar for WebKit (Chrome, Edge, Safari) */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: #ced4da;
+    border-radius: 10px;
+}
+
+
+.image-overlay {
+    position: absolute;
+    top: 5%;
+    left: 20%;
+    transform: translateX(-50%);
+    border-radius: 5px;
+    font-size: 1.2rem;
+    width: auto;
+    color: white;   
+}
+
+#proofImage {
+    max-height: 450px;
+    justify-content: center;
+    align-items: center;
 }

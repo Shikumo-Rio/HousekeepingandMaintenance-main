@@ -124,7 +124,7 @@ $totalPages = ceil($totalRows / $limit);
 
     <div class="container mt-0">
         <h5>Claimed/Return Items</h5>
-        <table class="table table-hover border table-bordered">
+        <table class="table table-hover border-0 table-bordered">
            <thead class="striky-top">
                  <tr>
                     <th>ID</th>
@@ -148,9 +148,25 @@ $totalPages = ceil($totalRows / $limit);
                         <td><?= htmlspecialchars($row['item']); ?></td>
                         <td><?= htmlspecialchars($row['description']); ?></td>
                         <td>
-                            <span class='badge status-badge bg-<?= ($row['status'] == 'pending') ? 'secondary' : 'success'; ?>'>
-                                <?= htmlspecialchars($row['status']); ?>
-                            </span>
+                            <?php
+                            switch ($row['status']) {
+                                case 'pending':
+                                    echo "<span class='status-badge status-pending'>Pending</span>";
+                                    break;
+                                case 'claimed':
+                                    echo "<span class='status-badge status-claimed'>Claimed</span>";
+                                    break;
+                                case 'lost':
+                                    echo "<span class='status-badge status-lost'>Lost</span>";
+                                    break;
+                                case 'found':
+                                    echo "<span class='status-badge status-found'>Found</span>";
+                                    break;
+                                default:
+                                    echo "<span class='status-badge status-unknown'>Unknown</span>";
+                                    break;
+                            }
+                            ?>
                         </td>
                         <td>
                             <button class="btn btn-update" data-bs-toggle="modal" data-bs-target="#claimValidationModal" 

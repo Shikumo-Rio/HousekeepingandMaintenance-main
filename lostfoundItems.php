@@ -105,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <link rel="icon" href="img/logo.webp">
     <title>Lost and Found Management</title>
 </head>
-<body>
+<body onload="window.scrollTo(0, 0);"> <!-- Add onload attribute to body tag -->
 
     <!-- Message Modal -->
     <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
@@ -125,15 +125,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <?php include 'index.php'; ?>
 
     <div class="container p-4">
-        <div class="p-4 mt-0 lostfound-heading card">
+        <div class="p-3 mt-0 lostfound-heading card">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Lost and Found</h3>
+                <h3 class="ms-2">Lost and Found</h3>
                 <div class="action-buttons">
                     <button class="btn btn-success add-btn" data-bs-toggle="modal" data-bs-target="#createModal">
                         <i class="fa-solid fa-plus"></i> Create
                     </button>
                     <button class="btn btn-success export-btn" onclick="showExportModal()" title="Export Data">
-                        <i class="fas fa-file-export"></i>
+                        <i class="fas fa-file-export fs-6"></i>
                     </button>
                 </div>
             </div>
@@ -164,10 +164,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
 
         <!-- Claims Table Section -->
         <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Claims History</h5>
+            <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-0">
+                <h5 class="mb-0 mt-4">Claims History</h5>
                 <div class="d-flex gap-2">
-                    <input type="text" id="searchInput" class="form-control form-control-sm" 
+                    <input type="text" id="searchInput" class="form-control form-control-sm mt-4" 
                            placeholder="Search claims..." onkeyup="filterTable()">
                 </div>
             </div>
@@ -193,9 +193,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                         <tbody>
                             <?php
                             // Get the current page number
-                            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                            $page2 = isset($_GET['page2']) ? (int)$_GET['page2'] : 1;
                             $limit = 5; // Items per page
-                            $offset = ($page - 1) * $limit;
+                            $offset = ($page2 - 1) * $limit;
 
                             // Get search term if any
                             $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
@@ -251,6 +251,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                         </tbody>
                     </table>
                 </div>
+                <?php
+                // Define how many page numbers to show
+                $claimLimit = 5;
+                $claimStart = max(1, $page2 - floor($claimLimit / 2));
+                $claimEnd = min($totalPages, $claimStart + $claimLimit - 1);
+
+                // Adjust start if end is less than limit
+                if ($claimEnd - $claimStart < $claimLimit - 1) {
+                    $claimStart = max(1, $claimEnd - $claimLimit + 1);
+                }
+
+                // Add pagination controls
+                echo "<nav aria-label='Page navigation' class='mt-3 mb-4'>
+                        <ul class='pagination justify-content-center' id='claimPaginationControls'>";
+
+                // Previous button
+                if ($page2 > 1) {
+                    echo "<li class='page-item'>
+                            <a class='page-link claim-pagination' href='?page2' data-page='" . ($page2 - 1) . "'>
+                                Previous
+                            </a>
+                        </li>";
+                } else {
+                    echo "<li class='page-item disabled'>
+                            <a class='page-link'>
+                                Previous
+                            </a>
+                        </li>";
+                }
+
+                // Display limited page numbers
+                for ($i = $claimStart; $i <= $claimEnd; $i++) {
+                    $active = $page2 === $i ? 'active' : '';
+                    echo "<li class='page-item $active'>
+                            <a class='page-link claim-pagination' href='?page2' data-page='$i'>$i</a>
+                        </li>";
+                }
+
+                // Next button
+                if ($page2 < $totalPages) {
+                    echo "<li class='page-item'>
+                            <a class='page-link claim-pagination' href='?page2' data-page='" . ($page2 + 1) . "'>
+                                Next
+                            </a>
+                        </li>";
+                } else {
+                    echo "<li class='page-item disabled'>
+                            <a class='page-link'>
+                                Next 
+                            </a>
+                        </li>";
+                }
+
+                echo "</ul></nav>";
+                ?>
             </div>
         </div>
     </div>
@@ -258,19 +313,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <!-- Modal for Submitting Lost/Found Item -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4 modal-dark">
+            <div class="modal-content shadow-lg rounded-4">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold" id="registerModalLabel">Submit Lost/Found</h5>
                     <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-0">
                     <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST" enctype="multipart/form-data"> <!-- Add enctype -->
                         <div class="form-floating form-floating-sm mb-3">
-                            <input type="text" class="form-control form-control-dark" id="found_by" name="found_by" placeholder="Found by" required>
+                            <input type="text" class="form-control form-control-dark" style="font-size: 12px;" id="found_by" name="found_by" placeholder="Found by" required>
                             <label for="found_by">Found by</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <select class="form-select form-control-dark" id="type" name="type" placeholder="Select type" required>
+                            <select class="form-select form-control-dark" style="font-size: 12px;" id="type" name="type" placeholder="Select type" required>
                                 <option value="">Select Type</option>
                                 <option value="Lost">Lost</option>
                                 <option value="Found">Found</option>
@@ -278,26 +333,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                             <label for="type">Type</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control form-control-dark" id="room" name="room" placeholder="Enter room" required>
+                            <input type="text" class="form-control form-control-dark" style="font-size: 12px;" id="room" name="room" placeholder="Enter room" required>
                             <label for="room">Room/Area</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="date" class="form-control form-control-dark" id="date" name="date" placeholder="Date" required>
+                            <input type="date" class="form-control form-control-dark" style="font-size: 12px;" id="date" name="date" placeholder="Date" required>
                             <label for="date">Date</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control form-control-dark" id="item" name="item" placeholder="Item" required>
+                            <input type="text" class="form-control form-control-dark" style="font-size: 12px;" id="item" name="item" placeholder="Item" required>
                             <label for="item">Item</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control form-control-dark" id="description" name="description" placeholder="Description" required>
+                            <input type="text" class="form-control form-control-dark" style="font-size: 12px;" id="description" name="description" placeholder="Description" required>
                             <label for="description">Description</label>
                         </div>
                         <div class="mb-3">
-                            <input type="file" class="form-control form-control-dark" id="picture" name="picture" accept="image/*" required>
+                            <input type="file" class="form-control form-control-dark" style="font-size: 12px;" id="picture" name="picture" accept="image/*" required>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" name="submit_request" class="btn btn-success btn-sm rounded-pill px-4 py-2">Submit</button>
+                            <button type="submit" name="submit_request" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">Submit</button>
                         </div>
                     </form>
                 </div>
@@ -306,72 +361,82 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     </div>
 
     <!-- Image View Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content modal-dark">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Proof of Ownership</h5>
-                    <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="proofImage" src="" class="img-fluid" alt="Proof of Ownership">
+            <div class="modal-content-pic border-0">
+                <div class="modal-header border-0">
+                    <div class="position-relative border-0">
+                        <img id="proofImage" src="" class="img-fluid rounded-4 custom-img" alt="Proof of Ownership">
+                        
+                        <!-- Title Overlay -->
+                        <h5 class="image-overlay text-white text-center p-2">Proof of Ownership</h5>
+
+                        <!-- Close Button Overlay -->
+                        <button type="button" class="btn-close position-absolute top-0 end-0 m-2 p-2 rounded-circle bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+
     <!-- Export Modal -->
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content modal-dark">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
                     <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-0">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">What would you like to export?</label>
-                        <div class="form-check">
+                        <label class="form-label fw-semibold" style="font-size: 13px;">What would you like to export?</label>
+                        <div class="form-check" style="font-size: 12px;">
                             <input class="form-check-input" type="radio" name="exportType" id="exportTypeLost" value="lost_and_found" checked>
                             <label class="form-check-label" for="exportTypeLost">Lost & Found Items</label>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check" style="font-size: 12px;">
                             <input class="form-check-input" type="radio" name="exportType" id="exportTypeClaims" value="claims">
                             <label class="form-check-label" for="exportTypeClaims">Claims History</label>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Export Format</label>
-                        <div class="form-check">
+                        <label class="form-label fw-semibold" style="font-size: 13px;">Export Format</label>
+                        <div class="form-check" style="font-size: 12px;">
                             <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
                             <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check" style="font-size: 12px;">
                             <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
                             <label class="form-check-label" for="exportFormatPDF">PDF</label>
                         </div>
                     </div>
                     
                     <!-- Date range section -->
-                    <div id="dateRangeSection">
+                    <div id="dateRangeSection" style="font-size: 12px;">
                         <hr>
                         <h6 class="mb-3">Date Range</h6>
                         
                         <div class="mb-3">
                             <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control form-control-dark" id="startDate">
+                            <input type="date" class="form-control" style="font-size: 12px;" id="startDate">
                         </div>
                         
                         <div class="mb-3">
                             <label for="endDate" class="form-label">End Date</label>
-                            <input type="date" class="form-control form-control-dark" id="endDate">
+                            <input type="date" class="form-control" style="font-size: 12px;" id="endDate">
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
+                        <i class="bx bx-download me-1"></i> Export
+                    </button>
                 </div>
             </div>
         </div>
@@ -417,6 +482,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                 e.preventDefault(); // Prevent default anchor behavior
                 const target = this.getAttribute('data-target'); // Get the target tab
                 activateTab(target); // Activate the corresponding tab
+                window.location.hash = target; // Update the URL hash
             });
         });
 
@@ -426,8 +492,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                 e.preventDefault(); // Prevent default anchor behavior
                 const target = this.getAttribute('href'); // Get the target tab
                 activateTab(target); // Activate the corresponding tab
+                history.replaceState(null, null, target); // Update the URL hash without scrolling
             });
         });
+
 
         // Check for initial tab parameter on page load
         const urlParams = new URLSearchParams(window.location.search);
@@ -603,45 +671,44 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.style.display = 'inline-block';
         });
     });
+
+        // Add this new function to handle claim pagination via AJAX
+        function loadClaimPage(page2) {
+            fetch('lostfoundItems.php?page2=' + page2)
+                .then(response => response.text())
+                .then(data => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data, 'text/html');
+                    const newClaimTableBody = doc.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML;
+                    const newClaimPaginationControls = doc.getElementById('claimPaginationControls').innerHTML;
+
+                    document.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML = newClaimTableBody;
+                    document.getElementById('claimPaginationControls').innerHTML = newClaimPaginationControls;
+
+                    // Reattach event listeners to new pagination links
+                    attachClaimPaginationListeners();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function attachClaimPaginationListeners() {
+            document.querySelectorAll('.claim-pagination').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page2 = this.getAttribute('data-page');
+                    loadClaimPage(page2);
+                });
+            });
+        }
+
+        // Initialize claim pagination listeners on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            attachClaimPaginationListeners();
+        });
     </script>
 
     <style>
-    /* Dark mode styles for modals */
-    .modal-dark {
-        background-color: #2c2c2c;
-        color: #fff;
-    }
-    .modal-dark .modal-header {
-        border-bottom: 1px solid #444;
-    }
-    .modal-dark .modal-footer {
-        border-top: 1px solid #444;
-    }
-    .modal-dark .form-control-dark {
-        background-color: #444;
-        color: #fff;
-        border: 1px solid #555;
-    }
-    .modal-dark .form-control-dark::placeholder {
-        color: #bbb;
-    }
-    .modal-dark .form-control-dark:focus {
-        background-color: #555;
-        border-color: #666;
-    }
-    .modal-dark .btn-close {
-        background-color: #fff;
-    }
-    .modal-dark .btn-close:hover {
-        background-color: #ddd;
-    }
-    .modal-dark .modal-close-btn {
-        background-color: #444;
-        color: #fff;
-    }
-    .modal-dark .modal-close-btn:hover {
-        background-color: #555;
-    }
+    
 
     /* Export button styling */
     .export-btn {
@@ -725,6 +792,32 @@ document.addEventListener('DOMContentLoaded', () => {
             width: 32px;
             height: 32px;
         }
+    }
+
+    /* Status badge colors */
+    .status-badge {
+        padding: 5px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .status-pending {
+        background-color: #e0e0e0;
+        color: #666666;
+    }
+
+    .status-claimed, .status-found {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-lost {
+        background-color: #f8d7da;
+        color: #721c24;
     }
     </style>
 </body>

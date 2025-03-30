@@ -1,65 +1,56 @@
-const sidebarToggle = document.querySelector("#sidebar-toggle");
-sidebarToggle.addEventListener("click", function () {
-    document.querySelector("#sidebar").classList.toggle("collapsed");
-    refreshDropdowns(); // Refresh dropdowns after sidebar toggle
+document.addEventListener("DOMContentLoaded", function() {
+    // Apply saved theme on page load
+    applyTheme();
+    
+    // Theme toggle functionality
+    const themeToggle = document.querySelector(".theme-toggle");
+    
+    if (themeToggle) {
+        themeToggle.addEventListener("click", function(e) {
+            e.preventDefault();
+            toggleTheme();
+        });
+    }
+    
+    // Apply saved sidebar state
+    applySidebarState();
 });
 
-document.querySelector(".theme-toggle").addEventListener("click", () => {
-    toggleLocalStorage();
-    toggleRootClass();
-    refreshDropdowns(); // Refresh dropdowns after theme toggle
-});
-
-const sidebar = document.querySelector(".sidebar");
-const sidebarToggler = document.querySelector(".sidebar-toggler");
-const menuToggler = document.querySelector(".menu-toggler");
-// Ensure these heights match the CSS sidebar height values
-let collapsedSidebarHeight = "56px"; // Height in mobile view (collapsed)
-let fullSidebarHeight = "calc(100vh - 32px)"; // Height in larger screen
-// Toggle sidebar's collapsed state
-sidebarToggler.addEventListener("click", () => {
-  sidebar.classList.toggle("collapsed");
-});
-// Update sidebar height and menu toggle text
-const toggleMenu = (isMenuActive) => {
-  sidebar.style.height = isMenuActive ? `${sidebar.scrollHeight}px` : collapsedSidebarHeight;
-  menuToggler.querySelector("span").innerText = isMenuActive ? "close" : "menu";
-}
-// Toggle menu-active class and adjust height
-menuToggler.addEventListener("click", () => {
-  toggleMenu(sidebar.classList.toggle("menu-active"));
-});
-// (Optional code): Adjust sidebar height on window resize
-window.addEventListener("resize", () => {
-  if (window.innerWidth >= 1024) {
-    sidebar.style.height = fullSidebarHeight;
-  } else {
-    sidebar.classList.remove("collapsed");
-    sidebar.style.height = "auto";
-    toggleMenu(sidebar.classList.contains("menu-active"));
-  }
-});
-
-function toggleRootClass() {
-    const current = document.documentElement.getAttribute('data-bs-theme');
-    const inverted = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-bs-theme', inverted);
+// Function to toggle between light and dark themes
+function toggleTheme() {
+    const htmlElement = document.querySelector("html");
+    const currentTheme = htmlElement.getAttribute("data-bs-theme");
+    const newTheme = (currentTheme === "dark") ? "light" : "dark";
+    
+    // Set the new theme
+    htmlElement.setAttribute("data-bs-theme", newTheme);
+    
+    // Save theme preference to localStorage
+    localStorage.setItem("preferredTheme", newTheme);
 }
 
-function toggleLocalStorage() {
-    if (isLight()) {
-        localStorage.removeItem("light");
-    } else {
-        localStorage.setItem("light", "set");
+// Function to apply the saved theme on page load
+function applyTheme() {
+    const htmlElement = document.querySelector("html");
+    const savedTheme = localStorage.getItem("preferredTheme");
+    
+    // If there's a saved theme preference, apply it
+    if (savedTheme) {
+        htmlElement.setAttribute("data-bs-theme", savedTheme);
     }
 }
 
-function isLight() {
-    return localStorage.getItem("light");
-}
-
-if (isLight()) {
-    toggleRootClass();
+// Function to apply saved sidebar state
+function applySidebarState() {
+    const sidebar = document.getElementById('sidebar');
+    
+    if (!sidebar) return;
+    
+    // Load saved sidebar state
+    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+    }
 }
 
 // Function to reinitialize or refresh the dropdowns

@@ -1,4 +1,7 @@
-<div class="col-md-3 mb-0 mt-4">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+</style>
+<div class="col-md-3 mb-0">
     <div class="card housekeeper-card shadow-sm" onclick="showEmployeeDetails(<?= $employee['emp_id']; ?>)" style="cursor: pointer;">
         <div class="card-body text-center">
             

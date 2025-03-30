@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #f8f9fa;
@@ -48,8 +50,8 @@ body {
 }
 
 .status-card {
-    padding: 10px;
-    height: 80px;
+    padding: 5px;
+    min-height: 100px;
     transition: transform 0.3s;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -177,8 +179,8 @@ body {
 /* Media Queries for larger screens */
 @media (min-width: 1200px) {
     .status-card {
-        padding: 10px;
-        height: 80px;
+        padding: 9px;
+        min-height: 87px;
         font-size: 12px;
     }
 
@@ -204,8 +206,8 @@ body {
 
 @media (min-width: 1600px) {
     .status-card {
-        padding: 20px;
-        height: 120px;
+        padding: 12px;
+        min-height: 108px;
         font-size: 50px;
         font-weight: 500;
     }
@@ -237,7 +239,131 @@ body {
     }
 
     .card-body {
-        height: 625px;
+        height: 500px;
         font-size: medium;
     }
+}
+
+.table-view {
+    height: 465px;
+    /* Adjust height as needed */
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+}
+
+.table-view .card {
+    flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-view .table-responsive {
+    flex-grow: 1;
+    overflow-y: auto;
+    /* Enables vertical scrolling */
+    border-radius: 5px;
+}
+
+.task-row {
+    cursor: pointer;
+}
+
+.task-row:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.task-row.selected {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+
+#pagination {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 8px;
+}
+
+.pagination-btn {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-btn:hover {
+    background: linear-gradient(135deg, #388E3C, #2E7D32);
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.pagination-btn.active {
+    background: #2E7D32;
+    font-weight: bold;
+    transform: scale(1.1);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pagination-btn:disabled {
+    background: #A5D6A7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/*Code for view toggle table*/
+.btn-table {
+    border: none;
+    outline: none;
+    height: 40px;
+    width: 40px;
+}
+
+.btn-table i {
+    font-size: 20px;
+    /* Adjust icon size */
+    transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.btn-table:hover i {
+    background: none;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.btn-table:active i {
+    transform: scale(0.95);
+    /* Slight press effect */
+}
+
+/* Remove border and focus outline */
+.btn-table:hover,
+.btn-table:active,
+.btn-table:focus {
+    border: none !important;
+    /* Ensure border is removed */
+    outline: none !important;
+    box-shadow: none !important;
+    /* Remove any shadow */
+    border-radius: 50%;
+}
+
+.btn-table:hover,
+.btn-add:hover {
+    background-color: gray !important;
+    color: white !important;
 }

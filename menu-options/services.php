@@ -35,6 +35,7 @@ if (isset($_SESSION['uname'])) {
     <title>Services</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="../img/logo.webp">
     <link rel="stylesheet" href="style.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
@@ -101,6 +102,15 @@ if (isset($_SESSION['uname'])) {
                         <div class="menu-text">
                             <h5 class="fw-semibold">Stepping Out</h5>
                             <p>(e.g., settle charges, return your keys)</p>
+                        </div>
+                    </a>
+                    <a href="check-status.php" class="menu-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="menu-text">
+                            <h5 class="fw-semibold">Check Request Status</h5>
+                            <p>(view status of your service requests and food orders)</p>
                         </div>
                     </a>
                 </div>

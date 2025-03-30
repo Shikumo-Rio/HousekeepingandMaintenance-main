@@ -1,12 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     font-family: 'Poppins', sans-serif;
 }
 
 .dashboard-heading {
     text-align: left;
-    margin: 10px;
     background-color: white;
     padding: 10px;
+    margin: 10px;
     border-radius: 8px;
 }
 
@@ -39,7 +41,7 @@ body {
     width: 500px;
 }
 
-.top-employee .card-body{
+.top-employee .card-body {
     height: 285px;
 }
 
@@ -94,7 +96,7 @@ body {
     margin: 0 auto;
 }
 
-.lost-found-card .card-header h5{
+.lost-found-card .card-header h5 {
     padding: 0.5rem;
     font-size: medium;
 }
@@ -178,7 +180,7 @@ body {
     width: 425px;
 }
 
-.room-service-schedule-card .card-header h5{
+.room-service-schedule-card .card-header h5 {
     padding: 0.5rem;
     font-size: medium;
 }
@@ -296,8 +298,9 @@ body.dark {
 #content main .box-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    grid-gap: 5px;
-    margin-top: 24px;
+    grid-gap: 10px;
+    margin-top: 10px;
+    justify-content: center;
 }
 
 #content main .box-info li {
@@ -308,9 +311,9 @@ body.dark {
     align-items: left;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     height: 115px;
-    width: 180px;
+    width: 198px;
     flex-direction: column;
-    margin-left: 17px;
+
 }
 
 #content main .box-info li .bx {
@@ -389,8 +392,6 @@ li {
 }
 
 
-
-
 /* Media Queries for larger screens */
 @media (min-width: 1200px) {
     .col-md-4 {
@@ -398,7 +399,7 @@ li {
         max-width: 50%;
     }
 
-    .lost-found-card .card-body{
+    .lost-found-card .card-body {
         width: 100%;
         height: 250px;
     }
@@ -422,7 +423,7 @@ li {
     }
 }
 
-/**/
+/* Large Desktops*/
 @media (min-width: 1600px) {
     #content main .box-info li {
         width: 18%;
@@ -444,7 +445,7 @@ li {
         width: 100%;
     }
 
-    .maintenance-card canvas {  
+    .maintenance-card canvas {
         width: 100%;
         margin-left: 50px;
     }
@@ -475,10 +476,14 @@ li {
 /* For mobile phones: */
 @media only screen and (max-width: 768px) {
     #content main .box-info li {
-        width: 25%;
+        width: 20%;
     }
 
-   #content main .box-info li .text p {
+    #content main .box-info {
+        gap: 0;
+    }
+
+    #content main .box-info li .text p {
         font-size: 8px;
     }
 

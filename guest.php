@@ -31,109 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Requests</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
-    <!-- Updated Font Awesome CDN that works in housekeepers.php -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://kit.fontawesome.com/ae360af17e.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="css/housekeepertasks.css">
     <link rel="icon" href="img/logo.webp">
     <style>
-        .dataTables_wrapper .dataTables_paginate {
-            text-align: center !important;
-            float: none !important;
-            margin-top: 20px !important;
-        }
         
-        .dataTables_wrapper .dataTables_filter {
-            margin-bottom: 20px;
-            text-align: right !important;
-        }
-        
-        .table-responsive {
-            overflow-y: hidden !important;
-        }
-        
-        .dataTables_wrapper {
-            overflow: hidden;
-        }
-        
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .table-responsive::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .table-responsive {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        
-        @media screen and (max-width: 767px) {
-            .dataTables_wrapper .dataTables_filter {
-                text-align: right !important;
-            }
-            
-            .table-responsive {
-                border: 0;
-                margin-bottom: 0;
-                overflow-x: auto;
-                overflow-y: hidden !important;
-            }
-            
-            .form-select {
-                width: 100% !important;
-                margin-bottom: 15px;
-            }
-            
-            .card-body {
-                padding: 15px;
-            }
-            
-            table.dataTable {
-                margin-bottom: 0 !important;
-            }
-        }
-
-        .dataTables_filter input {
-            margin-left: 5px;
-        }
-
-        .filter-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .status-filter {
-            width: auto;
-            min-width: 150px;
-        }
-
-        .dataTables_filter {
-            display: flex !important;
-            justify-content: flex-end !important;
-            align-items: center !important;
-            gap: 10px;
-        }
-
-        .filter-button {
-            margin-right: 10px;
-        }
-
-        body {
-            overflow-y: auto !important;
-        }
-        
-        .modal-open {
-            overflow: auto !important;
-            padding-right: 0 !important;
-        }
-        
-        .table-responsive {
-            overflow-y: visible !important;
-        }
     </style>
 </head>
 <body>
@@ -141,10 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container mt-2">
         <!-- Header Section -->
-        <div class="p-4 mb-4 task-allocation-heading card">
+        <div class="p-4 mb-4 task-allocation-heading card mt-4">
             <div class="d-flex justify-content-between align-items-center">
-                <h3>Guest Requests</h3>
-                <button class="btn btn-success" onclick="showExportModal()">
+                <h3 class="">Guest Requests</h3>
+                <button class="btn btn-success-export m-0" onclick="showExportModal()">
                     <i class="fas fa-file-export"></i> Export
                 </button>
             </div>
@@ -157,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-with-line p-3 text-center card">
                     <h5 class="card-title">Pending Notices</h5>
                     <div class="d-flex justify-content-center align-items-center">
-                        <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
                         <h4 class="text-success mb-0">
                             <?php
                                 $pendingNoticesQuery = "SELECT COUNT(*) as pending FROM checkout_notices WHERE status = 'Pending'";
@@ -173,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-with-line p-3 text-center card">
                     <h5 class="card-title">Pending Orders</h5>
                     <div class="d-flex justify-content-center align-items-center">
-                        <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
                         <h4 class="text-success mb-0">
                             <?php
                                 $pendingOrdersQuery = "SELECT COUNT(*) as pending FROM foodorders WHERE status = 'Pending'";
@@ -189,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-with-line p-3 text-center card">
                     <h5 class="card-title">Pending Room Service</h5>
                     <div class="d-flex justify-content-center align-items-center">
-                        <i class="bi bi-hourglass-split text-success fs-4 me-2"></i>
                         <h4 class="text-success mb-0">
                             <?php
                                 $pendingRoomServiceQuery = "SELECT COUNT(*) as pending FROM customer_messages WHERE status = 'Pending'";
@@ -203,17 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <!-- Notices Table Section -->
-        <div class="row">
+        <div class="row m-0">
             <!-- Checkout Notices -->
             <div class="col-md-6">
-                <div class="p-4 task-allocation-heading card mb-4">
+                <div class="p-4 task-allocation-heading card mb-4 m-0">
                     <h3>Checkout Notices</h3>
                 </div>
-                <div class="card shadow-sm border-0">
+                <div class="card shadow-sm border-0 custom-card">
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div class="table-responsive custom-table">
                             <table id="checkoutTable" class="table table-hover">
-                                <thead class="table-dark">
+                                <thead class="table">
                                     <tr>
                                         <th>ID</th>
                                         <th>Room No</th>
@@ -236,12 +138,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['checkout_time']}</td>";
                                         echo "<td>{$row['request']}</td>";
                                         echo "<td>{$row['special_request']}</td>";
+                                        // Updated status badge styling with multiple status options
                                         echo "<td><span class='badge " . 
                                             (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
-                                            (strtolower($row['status']) == 'working' ? 'bg-info' : 
-                                            (strtolower($row['status']) == 'complete' ? 'bg-success' : 
-                                            (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
-                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                            (strtolower($row['status']) == 'working' ? 'bg-primary' : 
+                                            (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
                                             "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "<td>";
@@ -265,14 +167,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Food Orders -->
             <div class="col-md-6">
-                <div class="p-4 task-allocation-heading card mb-4">
+                <div class="p-4 task-allocation-heading card mb-4 m-0">
                     <h3>Food Orders</h3>
                 </div>
-                <div class="card shadow-sm border-0">
+                <div class="card shadow-sm border-0 custom-card">
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div class="table-responsive custom-table">
                             <table id="foodOrdersTable" class="table table-hover">
-                                <thead class="table-dark">
+                                <thead>
                                     <tr>
                                         <th>ID</th>
                                         <th>Code</th>
@@ -294,12 +196,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['customer_name']}</td>";
                                         echo "<td>{$row['food_item']}</td>";
                                         echo "<td>{$row['quantity']}</td>";
+                                        // Updated status badge styling with multiple status options
                                         echo "<td><span class='badge " . 
                                             (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
-                                            (strtolower($row['status']) == 'working' ? 'bg-info' : 
-                                            (strtolower($row['status']) == 'complete' ? 'bg-success' : 
-                                            (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
-                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                            (strtolower($row['status']) == 'working' ? 'bg-primary' : 
+                                            (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
                                             "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "</tr>";
@@ -315,13 +217,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Customer Messages -->
         <div class="p-4 task-allocation-heading card mb-4 mt-4">
-            <h3>Guest Messages</h3>
+            <h3>Customer Messages</h3>
         </div>
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 m-3 customer-msg">
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="customerMessagesTable" class="table table-hover">
-                        <thead class="table-dark">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Username</th>
@@ -344,12 +246,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 echo "<td>{$row['request']}</td>";
                                 echo "<td>{$row['details']}</td>";
                                 echo "<td>{$row['room']}</td>";
+                                // Updated status badge styling with multiple status options
                                 echo "<td><span class='badge " . 
                                     (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
-                                    (strtolower($row['status']) == 'working' ? 'bg-info' : 
-                                    (strtolower($row['status']) == 'complete' ? 'bg-success' : 
-                                    (strtolower($row['status']) == 'preparing' ? 'bg-warning' : 
-                                    (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary'))))) . 
+                                    (strtolower($row['status']) == 'working' ? 'bg-primary' : 
+                                    (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
+                                    (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
                                     "'>{$row['status']}</span></td>";
                                 echo "<td>{$row['priority']}</td>";
                                 echo "<td>{$row['created_at']}</td>";
@@ -363,72 +265,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <!-- Filter Modal -->
-        <div class="modal fade" id="filterModal" tabindex="-1">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Filter by Status</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-semibold" id="filterModalLabel">
+                            <i class="bx bx-filter-alt me-2"></i> Filter by Status
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    
+                    <div class="modal-body px-4 pb-4">
                         <div class="d-grid gap-2">
-                            <button class="btn btn-outline-secondary filter-btn" data-status="">All Status</button>
-                            <button class="btn btn-outline-warning filter-btn" data-status="Preparing">Preparing</button>
-                            <button class="btn btn-outline-secondary filter-btn" data-status="Pending">Pending</button>
-                            <button class="btn btn-outline-info filter-btn" data-status="Working">Working</button>
-                            <button class="btn btn-outline-success filter-btn" data-status="Complete">Complete</button>
-                            <button class="btn btn-outline-danger filter-btn" data-status="Invalid">Invalid</button>
+                            <button class="btn btn-light filter-btn fw-semibold text-dark shadow-sm" data-status="">
+                                <i class="bx bx-list-ul me-2"></i> All Status
+                            </button>
+                            <button class="btn btn-warning filter-btn fw-semibold text-dark shadow-sm" data-status="Pending">
+                                <i class="bx bx-time-five me-2"></i> Pending
+                            </button>
+                            <button class="btn btn-info filter-btn fw-semibold text-white shadow-sm" data-status="Working">
+                                <i class="bx bx-cog me-2"></i> Working
+                            </button>
+                            <button class="btn btn-success filter-btn fw-semibold text-white shadow-sm" data-status="Complete">
+                                <i class="bx bx-check-circle me-2"></i> Complete
+                            </button>
+                            <button class="btn btn-danger filter-btn fw-semibold text-white shadow-sm" data-status="Invalid">
+                                <i class="bx bx-x-circle me-2"></i> Invalid
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+
         <!-- Export Modal -->
         <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
                         <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">What would you like to export?</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeCheckout" value="checkout" checked>
-                                <label class="form-check-label" for="exportTypeCheckout">Checkout Notices</label>
+                    <div class="modal-body px-4">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">What would you like to export?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportType" id="exportTypeCheckout" value="checkout" checked>
+                                    <label class="form-check-label" for="exportTypeCheckout">Checkout Notices</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportType" id="exportTypeFoodOrders" value="foodorders">
+                                    <label class="form-check-label" for="exportTypeFoodOrders">Food Orders</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportType" id="exportTypeMessages" value="messages">
+                                    <label class="form-check-label" for="exportTypeMessages">Customer Messages</label>
+                                </div>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeFoodOrders" value="foodorders">
-                                <label class="form-check-label" for="exportTypeFoodOrders">Food Orders</label>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Export Format</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                                    <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                                    <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                                </div>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeMessages" value="messages">
-                                <label class="form-check-label" for="exportTypeMessages">Customer Messages</label>
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                                    <i class="bx bx-x-circle me-1"></i> Cancel
+                                </button>
+                                <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
+                                    <i class="bx bx-download me-1"></i> Export
+                                </button>
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Export Format</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
-                                <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
-                                <label class="form-check-label" for="exportFormatPDF">PDF</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Assignment Modal -->
     <div class="modal fade" id="assignModal" tabindex="-1">
@@ -462,13 +383,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Add Popper JS for Bootstrap dropdowns -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    
-    <!-- Add this script to fix notification issues BEFORE loading script.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Add this script to fix notification issues BEFORE loading script.js -->
     <script>
         // Create safe fallbacks for elements script.js might expect
         document.addEventListener('DOMContentLoaded', function() {
@@ -517,6 +439,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
     <script>
         $(document).ready(function() {
             // Function to style search bars
@@ -527,24 +450,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Initialize tables and apply styling
             var checkoutTable = $('#checkoutTable').DataTable({
-                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
+                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12 d-flex justify-content-center"p>>',
                 language: {
                     search: "",
                     searchPlaceholder: "Search...",
                     paginate: {
-                        previous: "<i class='bi bi-chevron-left'></i>",
-                        next: "<i class='bi bi-chevron-right'></i>"
+                        first: "",
+                        last: ""
                     }
                 },
-                pageLength: 10,
+                pageLength: 5,
                 ordering: true,
                 info: false,
                 lengthChange: false,
-                order: [[0, 'desc']] // Order by first column (ID) descending
+                order: [[0, 'desc']], // Order by first column (ID) descending
+                pagingType: "full_numbers", // Ensures number pagination
             });
 
+            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
+
             // Style the search bar
-            styleSearchBar();
+            function styleSearchBar() {
+                let searchInput = $(".dataTables_filter input");
+                
+                searchInput.addClass("form-control stylish-search"); // Add custom styling class
+                searchInput.attr("placeholder", "Type to search..."); // Add a stylish placeholder
+                searchInput.css({
+                    "width": "250px",
+                    "padding": "10px 10px",
+                    "border-radius": "8px",
+                    "border": "1px solid #ccc",
+                    "outline": "none",
+                    "transition": "0.3s ease-in-out",
+                    "margin-bottom": "10px",
+                    "font-size": "12px"
+                });
+
+                // Add hover & focus effects
+                searchInput.hover(
+                    function () {
+                        $(this).css("border-color", "#4CAF50");
+                    },
+                    function () {
+                        $(this).css("border-color", "#ccc");
+                    }
+                );
+
+                searchInput.focus(function () {
+                    $(this).css({
+                        "border-color": "#28a745"
+                    });
+                });
+
+                searchInput.blur(function () {
+                    $(this).css({
+                        "border-color": "#ccc",
+                        "box-shadow": "none"
+                    });
+                });
+            }
+
 
             $('.assign-btn').click(function() {
                 $('#checkout_id').val($(this).data('id'));
@@ -573,16 +538,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     search: "",
                     searchPlaceholder: "Search...",
                     paginate: {
-                        previous: "<i class='bi bi-chevron-left'></i>",
-                        next: "<i 'bi bi-chevron-right'></i>"
+                        first: "",
+                        last: ""
                     }
                 },
-                pageLength: 10,
+                pageLength: 5,
                 ordering: true,
                 info: false,
                 lengthChange: false,
-                order: [[0, 'desc']] // Order by first column (ID) descending
+                order: [[0, 'desc']], // Order by first column (ID) descending
+                pagingType: "full_numbers", // Ensures number pagination
             });
+
+            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
 
             var customerMessagesTable = $('#customerMessagesTable').DataTable({
                 dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
@@ -590,16 +558,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     search: "",
                     searchPlaceholder: "Search...",
                     paginate: {
-                        previous: "<i class='bi bi-chevron-left'></i>",
-                        next: "<i class='bi bi-chevron-right'></i>"
+                        first: "",
+                        last: "",
                     }
                 },
-                pageLength: 10,
+                pageLength: 5,
                 ordering: true,
                 info: false,
                 lengthChange: false,
-                order: [[0, 'desc']] // Order by first column (ID) descending
+                order: [[0, 'desc']], // Order by first column (ID) descending
+                pagingType: "full_numbers", // Ensures number pagination
             });
+
+            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
+
 
             // Add filter functionality for customer messages
             $('#messageStatusFilter').on('change', function() {
@@ -610,43 +582,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Apply styling to all search bars
             styleSearchBar();
 
-            // Move filter button to search bar
-            var filterButton = $('<button class="btn btn-secondary filter-button" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="bi bi-funnel"></i> Filter</button>');
-            $('#customerMessagesTable_filter').prepend(filterButton);
+            $(document).ready(function() {
+                // Add filter button next to search bar
+                if (!$('#customerMessagesTable_filter .filter-button').length) {
+                    var filterButton = $('<button class="btn filter-button mb-2" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="bi bi-funnel mb-4"></i> Filter</button>');
+                    $('#customerMessagesTable_filter').prepend(filterButton);
+                }
 
-            // Handle filter button clicks
-            $('.filter-btn').click(function() {
-                var status = $(this).data('status');
-                customerMessagesTable.column(5).search(status).draw();
-                
-                // Properly close the modal and remove backdrop
-                $('#filterModal').modal('hide');
-                $('body').removeClass('modal-open');
-                $('.modal-backdrop').remove();
-                
-                // Update button text to show current filter
-                var filterText = status || 'All Status';
-                $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
+                // Handle filter button clicks
+                $('.filter-btn').off('click').on('click', function() {
+                    var status = $(this).data('status');
+                    customerMessagesTable.column(5).search(status).draw();
+
+                    // Close modal without affecting scroll behavior
+                    $('#filterModal').modal('hide');
+
+                    setTimeout(function() {
+                        $('body').removeClass('modal-open');
+                        $('.modal-backdrop').remove();
+                    }, 200);
+
+                    // Update button text dynamically
+                    var filterText = status || 'All Status';
+                    $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
+                });
             });
 
-            // Handle filter button clicks
-            $('.filter-btn').click(function() {
-                var status = $(this).data('status');
-                customerMessagesTable.column(5).search(status).draw();
-                
-                // Close modal without affecting page scroll
-                $('#filterModal').modal('hide');
-                setTimeout(function() {
-                    $('body').removeClass('modal-open');
-                    $('.modal-backdrop').remove();
-                }, 200);
-                
-                // Update button text to show current filter
-                var filterText = status || 'All Status';
-                $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
-            });
         });
-        
+
         // Export functionality
         function showExportModal() {
             // Open the modal

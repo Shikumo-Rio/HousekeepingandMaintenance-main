@@ -196,7 +196,7 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
 <?php include 'index.php'; ?>
 <div class="container">
     
-    <div class="p-4 title-heading card">
+    <div class="p-4 mt-4 title-heading card">
         <h3>Request Inventory</h3>
         <?php if ($requestType === 'low_stock'): ?>
             <div class="text-warning">Requesting Low Stock Items</div>
@@ -270,7 +270,7 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
                 <div class="underline"></div>
                 <div class="card-body">
                     <h5 class="card-title">Warehouse Items</h5>
-                    <h3 class="card-text"><i class="fas fa-warehouse"></i> <span id="totalWarehouseItems">0</span></h3>
+                    <h3 class="card-text"><span id="totalWarehouseItems">0</span></h3>
                 </div>
             </div>
         </div>
@@ -279,7 +279,7 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
                 <div class="underline"></div>
                 <div class="card-body">
                     <h5 class="card-title">Pending Requests</h5>
-                    <h3 class="card-text"><i class="fas fa-clock"></i> <span id="pendingRequests">0</span></h3>
+                    <h3 class="card-text"><span id="pendingRequests">0</span></h3>
                 </div>
             </div>
         </div>
@@ -289,28 +289,30 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
     <div class="row m-0">
         <div class="col-lg-7 mb-4">
             <div class="card centered-div">
-                <div class="card-body p-5">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <h3 class="mb-0"><i class="fas fa-warehouse"></i> Warehouse</h3>
-                        <div class="input-group mb-3">
+                        <div class="input-group mt-2">
                             <input type="text" id="searchInput" placeholder="Search items..." class="form-control small-input" onkeyup="filterTable()">
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
                             </span>
                         </div>
                     </div>
-                    <table class="table table-hover border table-bordered" id="inventoryTable">
-                        <thead class="striky-top">
-                            <tr class="bg-dark text-light">
-                                <th scope="col">ID</th>
-                                <th scope="col">Item Name</th>
-                                <th scope="col">Available Stock</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="warehouse-table">
+                        <table class="table table-hover border table-bordered" id="inventoryTable">
+                            <thead class="striky-top">
+                                <tr class="bg-dark text-light">
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">Available Stock</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                     <div class="d-flex justify-content-center mt-3">
                         <nav aria-label="Inventory pagination">
                             <ul class="pagination pagination-sm" id="inventoryPagination">
@@ -324,24 +326,26 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
         <!-- Requested Stocks Table -->
         <div class="col-lg-5 mx-auto">
             <div class="card centered-div">
-                <div class="card-body p-5">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-4"><i class="fas fa-box-open"></i> Requested Stocks</h3>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mt-2"><i class="fas fa-box-open"></i> Requested Stocks</h3>
                     </div>
-                    <table class="table table-hover border table-bordered" id="requestedStocksTable">
-                        <thead class="striky-top">
-                            <tr class="bg-dark text-light">
-                                <th scope="col">ID</th>
-                                <th scope="col">Item Name</th>
-                                <th scope="col">Requested Quantity</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Status</th> <!-- Added Status column -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be populated by JavaScript -->
-                        </tbody>
-                    </table>
+                    <div class="warehouse-table">
+                        <table class="table table-hover border table-bordered" id="requestedStocksTable">
+                            <thead class="striky-top">
+                                <tr class="bg-dark text-light">
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">Requested Quantity</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Status</th> <!-- Added Status column -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="d-flex justify-content-center mt-3">
                         <nav aria-label="Requested stocks pagination">
                             <ul class="pagination pagination-sm" id="requestedPagination">
@@ -518,7 +522,7 @@ async function populateInventoryTable(data) {
 function createRequestModal(item) {
     const modalHtml = `
         <div class='modal fade' id='requestModal${item.id}' tabindex='-1' role='dialog' aria-labelledby='requestModalLabel' aria-hidden='true'>
-            <div class='modal-dialog modal-lg' role='document'>
+            <div class='modal-dialog modal-lg modal-dialog-centered' role='document'>
                 <div class='modal-content'>
                     <div class='modal-header'>
                         <h5 class='modal-title' id='requestModalLabel'>Request ${item.item_name}</h5>
@@ -529,24 +533,24 @@ function createRequestModal(item) {
                             <h6>Requester Information</h6>
                             <div class="row">
                                 <div class="col-md-4 mb-2">
-                                    <label class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="pickup_location${item.id}" value="Housekeeping" required>
+                                    <label class="form-label" style="font-size: 12px;">Department</label>
+                                    <input type="text" class="form-control" style="font-size: 12px;" id="pickup_location${item.id}" value="Housekeeping" required>
                                 </div>
                                 <div class="col-md-4 mb-2">
-                                    <label class="form-label">Delivery Location</label>
-                                    <input type="text" class="form-control" id="delivery_location${item.id}" value="Housekeeping" required>
+                                    <label class="form-label" style="font-size: 12px;">Delivery Location</label>
+                                    <input type="text" class="form-control" style="font-size: 12px;"  id="delivery_location${item.id}" value="Housekeeping" required>
                                 </div>
-                                <div class="col-md-4 mb-2">
+                                <div class="col-md-4 mb-2" style="font-size: 12px;">
                                     <label class="form-label">Requester Name</label>
-                                    <input type="text" class="form-control" id="requester_name${item.id}" value="<?php echo $_SESSION['username']; ?>" required>
+                                    <input type="text" class="form-control" style="font-size: 12px;" id="requester_name${item.id}" value="<?php echo $_SESSION['username']; ?>" required>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="requester_email${item.id}" required>
+                                    <label class="form-label" style="font-size: 12px;">Email</label>
+                                    <input type="email" class="form-control" style="font-size: 12px;" id="requester_email${item.id}" required>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <label class="form-label">Contact Number</label>
-                                    <input type="tel" class="form-control" id="contact_number${item.id}" required>
+                                    <label class="form-label" style="font-size: 12px;">Contact Number</label>
+                                    <input type="tel" class="form-control" style="font-size: 12px;" id="contact_number${item.id}" required>
                                 </div>
                             </div>
                         </div>
@@ -554,19 +558,24 @@ function createRequestModal(item) {
                             <h6>Item Request Details</h6>
                             <div class="row">
                                 <div class="col-md-6 mb-2">
-                                    <label class="form-label">Category</label>
-                                    <input type="text" class="form-control" id="category${item.id}" value="${item.category}" readonly>
+                                    <label class="form-label" style="font-size: 12px;">Category</label>
+                                    <input type="text" class="form-control" style="font-size: 12px;" id="category${item.id}" value="${item.category}" readonly>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <label class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="quantity${item.id}" min="1" required>
+                                    <label class="form-label" style="font-size: 12px;">Quantity</label>
+                                    <input type="number" class="form-control" style="font-size: 12px;" id="quantity${item.id}" min="1" required>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>
-                        <button type='button' class='btn btn-success' onclick="submitRequest(${item.id})">Submit Request</button>
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                            <i class="bx bx-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success px-2 rounded-3" style="font-size: 12px;">
+                            <i class="bx bx-send me-1"></i> Submit
+                        </button>
                     </div>
                 </div>
             </div>

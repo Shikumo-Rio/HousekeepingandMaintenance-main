@@ -28,6 +28,7 @@ $user = mysqli_fetch_assoc($result);
     <title>Account Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/housekeeper.css">
+    <link rel="icon" href="img/logo.webp">
 </head>
 <body>
     <?php include 'nav.php'; ?>

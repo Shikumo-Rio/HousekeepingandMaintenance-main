@@ -45,7 +45,7 @@ $totalPages = ceil($totalRows / $limit);
     <div class="container mt-0">
         <h5>Found Items</h5>
         <div class="table-responsive">
-            <table class="table table-hover border table-bordered">
+            <table class="table table-hover border-0 table-bordered">
             <thead class="sticky-top">
                         <tr>
                         <th>ID</th>
@@ -68,7 +68,7 @@ $totalPages = ceil($totalRows / $limit);
                                 <td><?= htmlspecialchars($row['date']); ?></td>
                                 <td><?= htmlspecialchars($row['item']); ?></td>
                                 <td><?= htmlspecialchars($row['description']); ?></td>
-                                <td><span class='badge text-bg-<?= ($row['status'] == 'pending') ? 'secondary' : 'success'; ?>'>
+                                <td><span class='status-badge status-<?= htmlspecialchars($row['status']); ?>'>
                                     <?= htmlspecialchars($row['status']); ?>
                                 </span></td>
                                 <td>
@@ -93,8 +93,8 @@ $totalPages = ceil($totalRows / $limit);
         <!-- Modal for Image Preview -->
         <div class="modal fade" id="imageModalFound" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content-pic">
-                    <div class="modal-header">
+                <div class="modal-content-pic border-0">
+                    <div class="modal-header border-0">
                         <div class="position-relative">
                             <img src="" id="modalImageFound" class="img-fluid w-100" alt="Found Item Image">
                             <button type="button" class="btn-close position-absolute top-0 end-0 m-2 p-2 rounded-circle bg-light" data-bs-dismiss="modal" aria-label="Close"></button>

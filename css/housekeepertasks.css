@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #f7f8fa;
@@ -10,6 +12,7 @@ body {
     background-color: white;
     padding: 10px;
     border-radius: 8px;
+    margin-top: 0%;
 }
 
 .task-allocation-heading h3 {
@@ -102,6 +105,7 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+
 .card table:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
@@ -110,11 +114,13 @@ body {
 /*Table Styling*/
 table {
     background-color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     border-collapse: separate;
     border-spacing: 0 10px;
     width: 100%;
     font-size: 12px;
+    left: 10px;
+    min-height: 500%;
 }
 
 table thead {
@@ -162,3 +168,465 @@ table thead {
     background-color: green;
     color: white;
 }
+
+
+.table-responsive {
+    overflow-y: hidden !important;
+}
+
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.table-responsive::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.table-responsive {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+@media screen and (max-width: 767px) {
+    .dataTables_wrapper .dataTables_filter {
+        text-align: right !important;
+    }
+
+    .table-responsive {
+        border: 0;
+        margin-bottom: 0;
+        overflow-x: auto;
+        overflow-y: hidden !important;
+    }
+
+    .form-select {
+        width: 100% !important;
+        margin-bottom: 15px;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    table.dataTable {
+        margin-bottom: 0 !important;
+    }
+}
+
+.dataTables_filter input {
+    margin-left: 5px;
+}
+
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.status-filter {
+    width: auto;
+    min-width: 150px;
+}
+
+.dataTables_filter {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 10px;
+}
+
+.filter-button {
+    margin-right: 10px;
+}
+
+body {
+    overflow-y: auto !important;
+}
+
+.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+.table-responsive {
+    overflow-y: visible !important;
+}
+
+/*Table card styling*/
+.custom-card {
+    min-height: 530px;
+    /* Minimum height for the card */
+}
+
+.customer-msg {
+    min-height: 350px;
+}
+
+.custom-table {
+    min-height: 500px;
+    font-size: 12px;
+    /* Minimum height for the table inside the card */
+}
+
+/* The code starts here for pagination*/
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 8px;
+}
+
+/* Pagination Buttons */
+.pagination .page-item {
+    list-style: none;
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pagination .page-link {
+    color: white !important;
+    border: none;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hover Effect */
+.pagination .page-item:hover {
+    background: linear-gradient(135deg, #388E3C, #2E7D32);
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Button */
+.pagination .page-item.active {
+    background: #2E7D32 !important;
+    font-weight: bold;
+    transform: scale(1.05);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Disabled Buttons */
+.pagination .page-item.disabled {
+    background: #A5D6A7;
+    color: #fff;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Override Bootstrap DataTable Pagination Icons */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous i,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next i {
+    font-size: 10px !important;
+    /* Adjusts arrow size */
+}
+
+.pagination {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Remove Bootstrap default button styles */
+.page-link {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: none !important;
+    font-size: none !important;
+}
+
+/* Styles for Employee filter, Date filter, and Search*/
+.custom-filter-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.task-table {
+    min-height: 420px;
+}
+
+/* Resize the font size of the dropdown button */
+#employeeFilter {
+    font-size: 12px;
+    /* Adjust the value as needed */
+    height: 37px;
+    /* Adjust the height as needed */
+    padding: 0.375rem 1rem;
+    /* Adjust the padding to maintain the height */
+}
+
+/* Optional: You can also apply font resizing on hover */
+#employeeFilter:hover {
+    font-size: 12px;
+    /* Optional, same size on hover */
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+    background-color: gray !important;
+    /* Green theme */
+    color: white !important;
+    font-weight: 500;
+    font-size: 12px;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.dropdown-toggle:hover {
+    background-color: rgb(155, 155, 155) !important;
+}
+
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    padding: 10px 15px;
+    transition: background 0.3s;
+    font-size: 12px;
+}
+
+.dropdown-item:hover,
+.dropdown-item.active {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Date Filter & Search Input */
+#dateFilter,
+#searchInput {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease-in-out;
+    font-size: 12px;
+    justify-content: left;
+}
+
+#dateFilter:focus,
+#searchInput:focus {
+    border-color: #28a745;
+    box-shadow: 0px 0px 5px rgba(40, 167, 69, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .custom-filter-container {
+        padding: 10px;
+    }
+
+    .dropdown-toggle,
+    #dateFilter,
+    #searchInput {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Export button*/
+
+.btn-success-export {
+    font-size: 12px !important;
+    background-color: green !important;
+}
+
+.pagination-container {
+    position: relative;
+    /* Ensures proper positioning */
+    margin-top: 15px;
+    /* Adds spacing above pagination */
+    bottom: 0;
+    /* Keeps it at the bottom */
+    width: 100%;
+    /* Ensures it spans the full width */
+    margin-bottom: 15px;
+    /* Adds spacing below pagination */
+}
+
+.dataTables_wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.dataTables_paginate {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-bottom: 10px;
+    /* Adds a bit of space */
+}
+
+
+/* Filter Dropdown Styling */
+#messageStatusFilter {
+    width: 200px;
+    /* Adjust width as needed */
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 2px solid #6c757d;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 0;
+}
+
+/* Hover & Focus Effects */
+#messageStatusFilter:hover,
+#messageStatusFilter:focus {
+    border-color: #28a745;
+    /* Green border on focus */
+    outline: none;
+    box-shadow: 0px 4px 12px rgba(40, 167, 69, 0.2);
+    /* Green glow */
+}
+
+/* Dropdown Arrow Styling */
+#messageStatusFilter:after {
+    content: "\f078";
+    /* FontAwesome caret-down */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+    #messageStatusFilter {
+        width: 100%;
+    }
+}
+
+
+/* Filter Button */
+#customerMessagesTable_filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    /* Adjust this value for more/less spacing */
+}
+
+.filter-button {
+    font-size: 14px !important;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    color: #fff;
+    transition: all 0.3s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+}
+
+.filter-button i {
+    font-size: 16px;
+}
+
+.filter-button:hover {
+    transform: translateY(-2px);
+    border: none;
+}
+
+/* Filter Buttons in Modal */
+.btn-success .filter-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    border: 2px solid transparent;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Filter Modal Styling */
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 2px solid #e0e0e0;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Close Button */
+.btn-close {
+    background-color: transparent;
+    border: none;
+    opacity: 0.7;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .modal-dialog {
+        max-width: 90%;
+    }
+}
+
+#saveSettingsButton {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+
+.btn-settings:hover {
+    background-color: gray !important;
+    color: white !important;
+}
+
+#logsContainer {
+    max-height: 800px;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logs-table {
+    min-height: 400px;
+}
+
+

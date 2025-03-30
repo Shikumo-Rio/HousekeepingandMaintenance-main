@@ -208,8 +208,8 @@ $conn->close();
 
 <?php include('index.php'); ?>
 
-<div class="container mt-1 py-4">
-    <div class="p-4 card dashboard-heading">
+<div class="container mt-0 py-4">
+    <div class="p-4 card dashboard-heading mt-0">
         <h3>Dashboard</h3>
     </div>
     <div class="container-fluid">
@@ -217,7 +217,7 @@ $conn->close();
         <div class="col-lg-12 col-md-12 col-sm-12">
             <section id="content" class="d-flex align-items-center vh-20 p-0 m-0">
                 <main class="p-0 m-0 w-100">
-                    <ul class="box-info d-flex flex-wrap justify-content-start p-0 mx-0">
+                    <ul class="box-info d-flex flex-wrap justify-content-between p-0 me-0 ms-0">
                         <li class="col-6 col-sm-6 col-md-4 col-lg-2 my-2 text-center card">
                             <i class='bx bx-task icon'></i>
                             <span class="text">
@@ -409,7 +409,6 @@ $conn->close();
         </div>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Prepare data for top employees chart
