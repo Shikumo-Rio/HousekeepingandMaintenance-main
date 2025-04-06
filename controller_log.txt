@@ -1,0 +1,102 @@
+[2025-03-30 13:00:36] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 13:00:36] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 13:00:36] User requires face verification
+[2025-03-30 13:00:36] No faces registered for user
+[2025-03-30 13:01:41] Login controller accessed. Session data: {"login_error":"No face registered for your account. Please contact an administrator.","pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-03-30 13:01:41] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-03-30 13:01:41] User requires OTP verification
+[2025-03-30 13:01:41] User has email, redirecting to OTP verification
+[2025-03-30 13:03:17] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 13:03:17] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 13:03:17] User requires face verification
+[2025-03-30 13:03:17] User has registered faces, redirecting to face verification
+[2025-03-30 13:03:59] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 13:03:59] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 13:03:59] User requires face verification
+[2025-03-30 13:03:59] User has registered faces, redirecting to face verification
+[2025-03-30 13:04:33] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 13:04:33] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 13:04:33] User requires face verification
+[2025-03-30 13:04:33] User has registered faces, redirecting to face verification
+[2025-03-30 13:04:58] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 13:04:58] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 13:04:58] User requires face verification
+[2025-03-30 13:04:58] User has registered faces, redirecting to face verification
+[2025-03-30 13:09:07] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015455","pending_user_id":21015455,"pending_user_type":"Maintenance"}
+[2025-03-30 13:09:07] Processing login for user: 21015455, ID: 21015455, Type: Maintenance
+[2025-03-30 13:09:07] User requires face verification
+[2025-03-30 13:09:07] No faces registered for user
+[2025-03-30 13:29:25] Login controller accessed. Session data: {"login_error":"No face registered for your account. Please contact an administrator.","pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-03-30 13:29:25] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-03-30 13:29:25] User requires OTP verification
+[2025-03-30 13:29:25] User has email, redirecting to OTP verification
+[2025-03-30 13:58:01] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 13:58:01] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 13:58:01] User requires face verification
+[2025-03-30 13:58:01] User has registered faces, redirecting to face verification
+[2025-03-30 14:08:02] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 14:08:02] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 14:08:02] User requires face verification
+[2025-03-30 14:08:02] User has registered faces, redirecting to face verification
+[2025-03-30 14:27:53] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 14:27:53] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 14:27:53] User requires face verification
+[2025-03-30 14:27:53] User has registered faces, redirecting to face verification
+[2025-03-30 14:33:06] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 14:33:06] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 14:33:06] User requires face verification
+[2025-03-30 14:33:06] User has registered faces, redirecting to face verification
+[2025-03-30 14:33:26] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 14:33:26] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 14:33:26] User requires face verification
+[2025-03-30 14:33:26] User has registered faces, redirecting to face verification
+[2025-03-30 14:35:38] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 14:35:38] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 14:35:38] User requires face verification
+[2025-03-30 14:35:38] User has registered faces, redirecting to face verification
+[2025-03-30 14:35:55] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 14:35:55] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 14:35:55] User requires face verification
+[2025-03-30 14:35:55] User has registered faces, redirecting to face verification
+[2025-03-30 14:36:13] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 14:36:13] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 14:36:13] User requires face verification
+[2025-03-30 14:36:13] User has registered faces, redirecting to face verification
+[2025-03-30 14:36:33] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-03-30 14:36:33] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-03-30 14:36:33] User requires face verification
+[2025-03-30 14:36:33] User has registered faces, redirecting to face verification
+[2025-03-30 14:36:53] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015000","pending_user_id":21015000,"pending_user_type":"maintenance-staff"}
+[2025-03-30 14:36:53] Processing login for user: 21015000, ID: 21015000, Type: maintenance-staff
+[2025-03-30 14:36:53] User requires face verification
+[2025-03-30 14:36:53] User has registered faces, redirecting to face verification
+[2025-03-30 14:37:40] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-03-30 14:37:40] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-03-30 14:37:40] User requires OTP verification
+[2025-03-30 14:37:40] User has email, redirecting to OTP verification
+[2025-03-30 15:37:37] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-03-30 15:37:37] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-03-30 15:37:37] User requires OTP verification
+[2025-03-30 15:37:37] User has email, redirecting to OTP verification
+[2025-04-05 06:22:44] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-04-05 06:22:44] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-04-05 06:22:44] User requires face verification
+[2025-04-05 06:22:44] User has registered faces, redirecting to face verification
+[2025-04-05 06:33:43] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-04-05 06:33:43] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-04-05 06:33:43] Special login bypass activated for user: 21015451, Type: Employee
+[2025-04-05 06:34:04] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-04-05 06:34:04] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-04-05 06:34:04] Special login bypass activated for user: 21015005, Type: Admin
+[2025-04-05 06:36:48] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-04-05 06:36:48] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-04-05 06:36:48] User requires face verification
+[2025-04-05 06:36:48] User has registered faces, redirecting to face verification
+[2025-04-06 10:54:16] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015005","pending_user_id":21015005,"pending_user_type":"Admin"}
+[2025-04-06 10:54:16] Processing login for user: 21015005, ID: 21015005, Type: Admin
+[2025-04-06 10:54:16] User requires OTP verification
+[2025-04-06 10:54:16] User has email, redirecting to OTP verification
+[2025-04-06 12:13:01] Login controller accessed. Session data: {"pending_login":true,"pending_username":"21015451","pending_user_id":21015451,"pending_user_type":"Employee"}
+[2025-04-06 12:13:01] Processing login for user: 21015451, ID: 21015451, Type: Employee
+[2025-04-06 12:13:01] User requires face verification
+[2025-04-06 12:13:01] User has registered faces, redirecting to face verification

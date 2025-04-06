@@ -38,8 +38,19 @@ $user = mysqli_fetch_assoc($result);
             <!-- Replace the text with an image -->
             <img src="../img/logo.webp" alt="Logo" class="logo" style="width: 40px; height: auto;"> <!-- Logo next to Hamburger -->
         </div>
-        <div class="notification">
-            <i class="bi bi-bell" style="font-size: 24px;"></i> <!-- Bell icon for notifications -->
+        <!-- Custom notification dropdown (not using Bootstrap) -->
+        <div class="custom-dropdown">
+            <div class="notification-icon" id="notificationIcon">
+                <i class="bi bi-bell" style="font-size: 24px; cursor: pointer;"></i>
+                <span class="notification-badge" id="notificationCount">0</span>
+            </div>
+            <div class="dropdown-content" id="notificationDropdown">
+                <div class="dropdown-header">Notifications</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-items" id="notificationItems">
+                    <div class="no-notifications" id="noNotifications">No new notifications</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -90,6 +101,7 @@ $user = mysqli_fetch_assoc($result);
     <div class="overlay" id="overlay"></div>
 
     <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Toggle the sidebar and apply overlay effects
         function toggleSidebar() {
@@ -147,6 +159,280 @@ $user = mysqli_fetch_assoc($result);
             document.getElementById("content").style.marginLeft= "0";
             }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add custom styles for the dropdown -->
+    <style>
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .notification-icon {
+            position: relative;
+            display: inline-block;
+            padding: 8px;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            display: none;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .dropdown-header {
+            padding: 12px 16px;
+            font-weight: bold;
+            background-color: #f1f1f1;
+            position: sticky;
+            top: 0;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: #e5e5e5;
+        }
+        
+        .dropdown-items {
+            padding: 8px 0;
+        }
+        
+        .dropdown-item {
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .no-notifications {
+            padding: 16px;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .dropdown-item.unread {
+            font-weight: bold;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: block;
+            margin-top: 4px;
+        }
+        
+        /* Show the dropdown when active */
+        .dropdown-content.show {
+            display: block;
+        }
+    </style>
+
+    <!-- Replace Bootstrap dropdown JavaScript with custom implementation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationIcon = document.getElementById('notificationIcon');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const notificationCount = document.getElementById('notificationCount');
+            const notificationItems = document.getElementById('notificationItems');
+            const notificationSound = new Audio('../housekeepers/notification.mp3');
+            
+            // Toggle dropdown visibility when clicking the notification icon
+            notificationIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('show');
+                
+                // If opening the dropdown, load notifications
+                if (notificationDropdown.classList.contains('show')) {
+                    loadNotifications();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationDropdown.contains(e.target) && 
+                    !notificationIcon.contains(e.target)) {
+                    notificationDropdown.classList.remove('show');
+                }
+            });
+            
+            // Load notifications function
+            function loadNotifications() {
+                console.log('Loading notifications...');
+                
+                fetch('get_notifications.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Notification data:', data);
+                        
+                        // Process notifications
+                        const notifications = data.notifications || [];
+                        const unreadCount = data.unread_count || 0;
+                        
+                        // Update notification count badge
+                        if (unreadCount > 0) {
+                            notificationCount.textContent = unreadCount;
+                            notificationCount.style.display = 'inline-block';
+                        } else {
+                            notificationCount.style.display = 'none';
+                        }
+                        
+                        // Clear current notifications
+                        notificationItems.innerHTML = '';
+                        
+                        // Add notifications or "no notifications" message
+                        if (notifications.length > 0) {
+                            notifications.forEach(notification => {
+                                const item = document.createElement('a');
+                                item.className = `dropdown-item ${notification.is_read ? '' : 'unread'}`;
+                                item.href = notification.link || '#';
+                                item.setAttribute('data-id', notification.id);
+                                
+                                item.innerHTML = `
+                                    <div>
+                                        <div>${notification.message}</div>
+                                        <small class="notification-time">${formatDate(notification.created_at)}</small>
+                                    </div>
+                                `;
+                                
+                                // Add click event to mark as read
+                                item.addEventListener('click', function(e) {
+                                    if (this.href === '#' || this.href === window.location.href + '#') {
+                                        e.preventDefault();
+                                    }
+                                    
+                                    const id = this.getAttribute('data-id');
+                                    markAsRead(id);
+                                });
+                                
+                                notificationItems.appendChild(item);
+                            });
+                        } else {
+                            const noItems = document.createElement('div');
+                            noItems.className = 'no-notifications';
+                            noItems.textContent = 'No new notifications';
+                            notificationItems.appendChild(noItems);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching notifications:', error);
+                        
+                        // Show error message
+                        notificationItems.innerHTML = 
+                            '<div class="no-notifications" style="color: #dc3545;">Error loading notifications</div>';
+                    });
+            }
+            
+            // Format date for display
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString; // Return as-is if invalid
+                }
+                
+                const now = new Date();
+                const diffMs = now - date;
+                const diffSec = Math.floor(diffMs / 1000);
+                const diffMin = Math.floor(diffSec / 60);
+                const diffHour = Math.floor(diffMin / 60);
+                const diffDay = Math.floor(diffHour / 24);
+                
+                if (diffSec < 60) return 'Just now';
+                if (diffMin < 60) return `${diffMin} min ago`;
+                if (diffHour < 24) return `${diffHour} h ago`;
+                return `${diffDay} day(s) ago`;
+            }
+            
+            // Mark notification as read
+            function markAsRead(id) {
+                console.log('Marking notification as read:', id);
+                
+                fetch(`mark_notification_read.php?id=${id}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Mark as read response:', data);
+                    if (data.success) {
+                        loadNotifications(); // Reload notifications
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
+            }
+            
+            // WebSocket for real-time notifications
+            try {
+                const socket = new WebSocket('ws://localhost:8080/chat');
+                
+                socket.onopen = function() {
+                    console.log('WebSocket connection established');
+                };
+                
+                socket.onmessage = function(event) {
+                    console.log('WebSocket message received:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.type === 'notification' || 
+                            (data.type === 'task_assignment' && 
+                             data.assigned_to === '<?php echo $_SESSION['username']; ?>')) {
+                            
+                            // Play notification sound
+                            notificationSound.play().catch(e => console.log('Sound error:', e));
+                            
+                            // Reload notifications
+                            loadNotifications();
+                        }
+                    } catch (error) {
+                        console.error('Error processing WebSocket message:', error);
+                    }
+                };
+                
+                socket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                };
+                
+                socket.onclose = function(event) {
+                    console.log('WebSocket connection closed:', event.code, event.reason);
+                };
+            } catch (error) {
+                console.error('Error setting up WebSocket:', error);
+            }
+            
+            // Initial load of notifications
+            loadNotifications();
+            
+            // Set up periodic refresh - every 30 seconds
+            setInterval(loadNotifications, 30000);
+
+            // Expose markAsRead to window object to allow calls from HTML
+            window.markAsRead = markAsRead;
+        });
+    </script>
 </body>
 </html>

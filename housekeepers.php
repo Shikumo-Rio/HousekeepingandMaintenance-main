@@ -92,6 +92,9 @@ if (isset($_POST['requestEmployee'])) {
             <button class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                 <i class="fas fa-user-plus"></i> Add
             </button>
+            <button class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#faceAuthModal">
+                <i class="fas fa-id-card"></i> Manage Face Images
+            </button>
         </div>
 
         <!-- Room Attendants Section -->    
@@ -201,7 +204,149 @@ if (isset($_POST['requestEmployee'])) {
             </div>
         </div>
 
+        <!-- Face Authentication Modal -->
+        <div class="modal fade" id="faceAuthModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt me-2"></i>Authentication Required</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Please enter your admin password to access face management.
+                        </div>
+                        <form id="faceAuthForm">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="faceAuthPassword" name="password" placeholder="Password">
+                                <label for="faceAuthPassword">Admin Password</label>
+                            </div>
+                            <div id="passwordError" class="text-danger mb-3" style="display: none;">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                Incorrect password. Please try again.
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="verifyFaceAuthBtn">
+                            <i class="fas fa-unlock-alt me-2"></i>Verify & Proceed
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded and parsed');
+
+            const passwordField = document.getElementById('faceAuthPassword');
+            const passwordError = document.getElementById('passwordError');
+            const verifyBtn = document.getElementById('verifyFaceAuthBtn');
+            const modalElement = document.getElementById('faceAuthModal');
+            const faceAuthModal = new bootstrap.Modal(modalElement);
+
+            if (!verifyBtn) {
+                console.error('Verify button not found');
+                return;
+            }
+
+            console.log('Verify button found, attaching event listener');
+
+            // Add focus to password field when modal is shown
+            modalElement.addEventListener('shown.bs.modal', function () {
+                console.log('Face Authentication Modal shown');
+                passwordField.focus();
+                passwordError.style.display = 'none';
+                passwordField.value = '';
+            });
+
+            // Handle Enter key in password field
+            passwordField.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    console.log('Enter key pressed');
+                    handleVerification();
+                }
+            });
+
+            // Handle Verify button click
+            verifyBtn.addEventListener('click', function() {
+                console.log('Verify button clicked');
+                handleVerification();
+            });
+
+            // Function to handle verification
+            function handleVerification() {
+                const password = passwordField.value.trim();
+
+                if (password === '') {
+                    console.log('Password is empty');
+                    passwordError.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Please enter your password';
+                    passwordError.style.display = 'block';
+                    return;
+                }
+
+                // Show loading state
+                verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+                verifyBtn.disabled = true;
+
+                console.log('Sending password to server for verification...');
+                fetch('verify_admin_pass.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'password=' + encodeURIComponent(password)
+                })
+                .then(response => {
+                    console.log('Received response from server');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Verification response:', data);
+                    
+                    if (data.success) {
+                        console.log('Authentication successful, opening manage_face.php in a new tab');
+                        faceAuthModal.hide();
+                        cleanupModal(); // Ensure modal artifacts are removed
+                        window.open('manage_face.php', '_blank'); // Open in a new tab
+                    } else {
+                        console.log('Authentication failed:', data.message);
+                        passwordError.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${data.message}`;
+                        passwordError.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Verification error:', error);
+                    passwordError.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>An error occurred. Please try again.';
+                    passwordError.style.display = 'block';
+                })
+                .finally(() => {
+                    verifyBtn.innerHTML = '<i class="fas fa-unlock-alt me-2"></i>Verify & Proceed';
+                    verifyBtn.disabled = false;
+                });
+            }
+
+            // Cleanup modal artifacts (backdrop and modal-open class)
+            function cleanupModal() {
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+
+            // Ensure cleanup when modal is hidden
+            modalElement.addEventListener('hidden.bs.modal', cleanupModal);
+        });
+
         let currentEmpId = null;
 
         function showEmployeeDetails(empId) {
@@ -464,7 +609,7 @@ if (isset($_POST['requestEmployee'])) {
             modalElement.addEventListener('hidden.bs.modal', cleanupModal);
             modalElement.addEventListener('hide.bs.modal', cleanupModal);
         });
-        </script>
+</script>
 
     <!-- Updated Modal with Role Selection and History -->
     <div class="modal fade" id="requestEmployeeModal" tabindex="-1" aria-hidden="true">
@@ -607,7 +752,150 @@ if (isset($_POST['requestEmployee'])) {
     </div>
 
     <script>
-        function editHousekeeper(empId) {
+        fun</script>
+
+    <!-- Updated Modal with Role Selection and History -->
+    <div class="modal fade" id="requestEmployeeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Employee Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#new-request" type="button">
+                                New Request
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#request-history" type="button" onclick="loadRequestHistory()">
+                                Request History
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- New Request Tab -->
+                        <div class="tab-pane fade show active" id="new-request">
+                            <form id="requestEmployeeForm" method="POST" onsubmit="submitEmployeeRequest(event)">
+                                <div class="form-floating mb-3">
+                                    <select name="role" class="form-control rounded-3" style="font-size: 12px;" id="role" required>
+                                        <option value="room_attendant">Room Attendant</option>
+                                        <option value="linen_attendant">Linen Attendant</option>
+
+                                    </select>
+                                    <label for="role">Employee Role</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="number" name="quantity" class="form-control rounded-3" style="font-size: 12px;" id="quantity" required>
+                                    <label for="quantity">Number of Employees Needed</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <textarea name="reason" class="form-control rounded-3" style="font-size: 12px;" id="reason" style="height: 100px;" required></textarea>
+                                    <label for="reason">Reason for Request</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <select name="preferred_shift" class="form-control rounded-3" style="font-size: 12px;" id="preferred_shift" required>
+                                        <option value="morning">Morning (6AM - 2PM)</option>
+                                        <option value="afternoon">Afternoon (2PM - 10PM)</option>
+                                        <option value="night">Night (10PM - 6AM)</option>
+                                    </select>
+                                    <label for="preferred_shift">Preferred Schedule/Shift</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <select name="urgency_level" class="form-control rounded-3" style="font-size: 12px;" id="urgency_level" required>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                    <label for="urgency_level">Urgency Level</label>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" name="requestEmployee" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">
+                                        <i class="bx bx-send me-1"></i>Submit
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Request History Tab -->
+                        <div class="tab-pane fade" id="request-history">
+                            <div class="table-responsive rounded shadow-sm p-0">
+                                <table class="table table-hover align-middle" style="font-size: 12px;">
+                                    <thead class="text-center">
+                                        <tr>
+                                            <th>Request ID</th>
+                                            <th>Role</th>
+                                            <th>Quantity</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>HR Response</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="requestHistoryBody" class="text-center">
+                                        <!-- Data will be loaded here -->
+                                    </tbody>
+                                </table>
+
+                                <!-- Pagination and Records Info -->
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted">Showing 10 records per page</small>
+                                    <nav>
+                                        <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                                            <!-- Pagination buttons will be added here -->
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Add New Employee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <form action="" method="POST">
+                        <div class="form-floating mb-3">
+                            <input type="text" name="name" class="form-control rounded-3" style="font-size: 12px;" id="name" required>
+                            <label for="name">Employee Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select name="status" class="form-control rounded-3" style="font-size: 12px;" id="status" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                            <label for="status">Status</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select name="role" class="form-control rounded-3" style="font-size: 12px;" id="role" required>
+                                <option value="housekeeper">Housekeeper</option>
+                                <option value="room_attendant">Room Attendant</option>
+                                <option value="linen_attendant">Linen Attendant</option>
+                            </select>
+                            <label for="role">Employee Role</label>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" name="addEmployee" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">Add Employee</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+tion editHousekeeper(empId) {
             alert('Edit housekeeper with ID: ' + empId);
         }
 
@@ -633,6 +921,9 @@ if (isset($_POST['requestEmployee'])) {
         });
     });
     </script>
+    
+    <!-- Make sure jQuery is loaded before Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

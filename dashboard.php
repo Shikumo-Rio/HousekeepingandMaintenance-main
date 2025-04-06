@@ -210,7 +210,9 @@ $conn->close();
 
 <div class="container mt-0 py-4">
     <div class="p-4 card dashboard-heading mt-0">
-        <h3>Dashboard</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Dashboard</h3>
+        </div>
     </div>
     <div class="container-fluid">
         <!-- Task Summary Section -->

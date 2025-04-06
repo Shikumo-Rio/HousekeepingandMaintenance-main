@@ -25,6 +25,15 @@ if ($_SESSION['user_type'] !== 'Admin') {
     <script src="https://kit.fontawesome.com/ae360af17e.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="img/logo.webp">
+    <link rel="manifest" href="/housekeepingandmaintenance-main/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/housekeepingandmaintenance-main/service-worker.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch((error) => console.error('Service Worker Registration Failed:', error));
+        }
+    </script>
 </head>
 
 <body>

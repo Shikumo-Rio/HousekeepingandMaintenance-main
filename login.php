@@ -29,47 +29,26 @@ if (isset($_POST['login'])) {
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Store session variables
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['user_type'] = $user['user_type'];
-        $_SESSION['emp_id'] = $user['emp_id']; // Store emp_id for later reference
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
 
-        // Update is_online and last_activity in login_accounts
-        $update_stmt = $conn->prepare("UPDATE login_accounts SET is_online = 1, last_activity = NOW() WHERE username = ?");
-        $update_stmt->bind_param("s", $username);
-        $update_stmt->execute();
+        if (password_verify($password, $user['password'])) {
+            // Set up pending login session for verification
+            $_SESSION['pending_login'] = true;
+            $_SESSION['pending_username'] = $user['username'];
+            $_SESSION['pending_user_id'] = $user['emp_id'];
+            $_SESSION['pending_user_type'] = $user['user_type'];
 
-        // Set employee status to active in employee table
-        $emp_id = $user['emp_id'];
-        $update_employee_status = $conn->prepare("UPDATE employee SET status = 'active' WHERE emp_id = ?");
-        $update_employee_status->bind_param("i", $emp_id);
-        $update_employee_status->execute();
+            // Debug log to see what's happening
+            file_put_contents(__DIR__ . '/login_debug.txt', date('[Y-m-d H:i:s] ') . "Redirecting to login controller for user: {$user['username']}\n", FILE_APPEND);
 
-        $logQuery = "INSERT INTO login_logs (emp_id) VALUES (?)";
-        $log_stmt = $conn->prepare($logQuery);
-        $log_stmt->bind_param("i", $emp_id);
-        $log_stmt->execute();
-
-        $notificationQuery = "INSERT INTO notifications (emp_id, message) VALUES (?, '$emp_id have successfully logged in.')";
-        $notification_stmt = $conn->prepare($notificationQuery);
-        $notification_stmt->bind_param("i", $emp_id);
-        $notification_stmt->execute();
-
-
-        // Redirect based on user type
-        if ($user['user_type'] == 'Employee') {
-            header("Location: /housekeepingandmaintenance-main/housekeepers/index.php");
-        } elseif ($user['user_type'] == 'Admin') {
-            header("Location: dashboard.php");
-        } elseif ($user['user_type'] == 'Maintenance') {
-            header("Location: /housekeepingandmaintenance-main/maintenance-department/maintenance.php");
-        } elseif ($user['user_type'] == 'maintenance-staff') {
-            header("Location: /housekeepingandmaintenance-main/maintenance-staff/staff.php");
+            // Redirect to the login controller instead of directly to verification
+            header("Location: login_controller.php");
+            exit;
+        } else {
+            $error = "Invalid username or password.";
         }
-        exit;
     } else {
         $error = "Invalid username or password.";
     }
@@ -77,6 +56,14 @@ if (isset($_POST['login'])) {
     // Close statement and connection
     $stmt->close();
     $conn->close();
+}
+
+// If we have a verification error 
+if (isset($_GET['face_error'])) {
+    $error = "Either there is no registered face or the face verification failed. Please try again.";
+}
+if (isset($_GET['otp_error'])) {
+    $error = "OTP verification failed. Please try again.";
 }
 ?>
 
@@ -92,6 +79,15 @@ if (isset($_POST['login'])) {
     <link rel="icon" type="image/webp" sizes="32x32" href="img/logo.webp">
     <link rel="icon" type="image/webp" sizes="16x16" href="img/logo.webp">
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="/housekeepingandmaintenance-main/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/housekeepingandmaintenance-main/service-worker.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch((error) => console.error('Service Worker Registration Failed:', error));
+        }
+    </script>
     <style>
         body,
         html {
@@ -164,8 +160,30 @@ if (isset($_POST['login'])) {
         .input-group .input-group-text {
             border-radius: 20px;
         }
-    </style>
 
+        /* Ensure the install button is visible above the background */
+        .install-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999; /* High z-index to ensure visibility */
+        }
+
+        #installButton {
+            background-color: #007bff; /* Button background color */
+            color: #fff; /* Button text color */
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #installButton:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
     </style>
 </head>
 <body>
@@ -191,6 +209,13 @@ if (isset($_POST['login'])) {
                     <div class="text-danger mb-3 text-center"><?php echo $error; ?></div>
                 <?php endif; ?>
                 <button type="submit" name="login" class="btn btn-green text-light w-100">LOGIN</button>
+                
+                <!-- Install button -->
+                <div class="mt-3 text-center">
+                    <button id="installButton" class="btn btn-primary" style="display: none;">
+                        <i class="bi bi-download"></i> Install App
+                    </button>
+                </div>
             </form>
 
             <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="true">
@@ -227,9 +252,47 @@ if (isset($_POST['login'])) {
             // Toggle the eye icon
             this.querySelector('i').classList.toggle('bi-eye-slash');
         });
+
+        let deferredPrompt;
+
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt event fired'); // Debug log
+            // Prevent the mini-infobar from appearing
+            e.preventDefault();
+            // Save the event for later use
+            deferredPrompt = e;
+            // Show the install button
+            const installButton = document.getElementById('installButton');
+            installButton.style.display = 'block';
+            console.log('Install button displayed'); // Debug log
+
+            // Add click event to the install button
+            installButton.addEventListener('click', () => {
+                console.log('Install button clicked'); // Debug log
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user's response
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    // Clear the deferred prompt
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+        // Hide the install button if the app is already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed'); // Debug log
+            document.getElementById('installButton').style.display = 'none';
+        });
     </script>
 
-    <!-- Bootstrap JS and Icons JS for modal functionality and icon toggle -->
+    <!-- Bootstrap JS and Icons JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <?php if (!empty($error)): ?>
