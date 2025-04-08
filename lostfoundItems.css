@@ -211,21 +211,37 @@ body {
     font-size: 12px;
 }
 
-.btn-success {
-    background-color: green;
-    color: white;
-    border-radius: 20px;
-    padding: 5px 15px;
-    border: none;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+.btn-success-export {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: rgb(48, 143, 103);
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-.btn-success:hover {
-    background-color: green;
-    transform: scale(1.05);
+.btn-success-export:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
+.btn-success-export:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success-export i {
+    font-size: 15px;
+}
+
 
 .btn-secondary {
     background-color: #6c757d;

@@ -18,8 +18,61 @@ if ($api_key !== $valid_api_key) {
     exit;
 }
 
+// Define allowed status values
+$allowedStatuses = ['Pending', 'In Process', 'Ready', 'Delivered', 'Canceled', 'Rejected'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Read JSON input
+    // Handle status update request
+    if (isset($_GET['action']) && $_GET['action'] === 'update_status') {
+        $orderCode = $_GET['code'] ?? '';
+        $newStatus = $_GET['status'] ?? '';
+        
+        // Validate input
+        if (empty($orderCode)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Order code is required"]);
+            exit;
+        }
+        
+        if (!in_array($newStatus, $allowedStatuses)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Invalid status value"]);
+            exit;
+        }
+        
+        try {
+            // Update order status
+            $updateStmt = $pdo->prepare("UPDATE foodorders SET status = :status WHERE code = :code");
+            $updateStmt->execute([
+                ':status' => $newStatus,
+                ':code' => $orderCode
+            ]);
+            
+            if ($updateStmt->rowCount() > 0) {
+                // Get updated order details to return
+                $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE code = :code");
+                $stmt->execute([':code' => $orderCode]);
+                $updatedOrder = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Order status updated successfully",
+                    "order" => $updatedOrder
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    "error" => "Order not found or no changes made"
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Database Error", "message" => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Handle order creation/update (original functionality)
     $json_input = file_get_contents("php://input");
     $input = json_decode($json_input, true);
 
@@ -29,34 +82,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Handle both single orders and arrays of orders
     $orders = [];
-    if (isset($input[0]) && is_array($input)) {
+    if (isset($input[0]) && is_array($input[0])) {
         $orders = $input;
     } else {
         $orders[] = $input;
     }
 
     $responses = [];
-    // Process each order
-    foreach ($orders as $order) {
-        // Validate required fields
-        $required_fields = ['code', 'customer_name', 'food_item', 'quantity', 'totalprice'];
-        foreach ($required_fields as $field) {
-            if (!isset($order[$field]) || $order[$field] === "") {
+    $pdo->beginTransaction();
+    
+    try {
+        foreach ($orders as $order) {
+            $required_fields = ['code', 'customer_name', 'food_item', 'quantity', 'totalprice'];
+            foreach ($required_fields as $field) {
+                if (!isset($order[$field]) || $order[$field] === "") {
+                    $pdo->rollBack();
+                    http_response_code(400);
+                    echo json_encode(["error" => "Missing field: $field"]);
+                    exit;
+                }
+            }
+            
+            // Validate data types
+            if (!is_numeric($order['quantity']) || $order['quantity'] <= 0) {
+                $pdo->rollBack();
                 http_response_code(400);
-                echo json_encode(["error" => "Missing field: $field"]);
+                echo json_encode(["error" => "Quantity must be a positive number"]);
                 exit;
             }
-        }
-        
-        try {
-            // Check if the order code already exists
+            
+            if (!is_numeric($order['totalprice']) || $order['totalprice'] <= 0) {
+                $pdo->rollBack();
+                http_response_code(400);
+                echo json_encode(["error" => "Total price must be a positive number"]);
+                exit;
+            }
+            
+            // Check if order exists
             $checkStmt = $pdo->prepare("SELECT id FROM foodorders WHERE code = :code");
-            $checkStmt->execute([
-                ':code' => $order['code']
-            ]);
+            $checkStmt->execute([':code' => $order['code']]);
             $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            $status = isset($order['status']) && in_array($order['status'], $allowedStatuses) 
+                ? $order['status'] 
+                : 'Pending';
             
             if ($existing) {
                 // Update existing order
@@ -65,10 +135,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     food_item = :food_item, 
                     quantity = :quantity, 
                     totalprice = :totalprice, 
-                    status = :status 
+                    status = :status,
+                    updated_at = NOW()
                     WHERE id = :id");
-                
-                $status = isset($order['status']) ? $order['status'] : 'pending';
                 
                 $updateStmt->execute([
                     ':customer_name' => $order['customer_name'],
@@ -79,15 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id'            => $existing['id']
                 ]);
                 
-                $responses[] = [
-                    "success" => true,
-                    "message" => "Order updated successfully.",
-                    "id"      => $existing['id']
-                ];
+                $orderId = $existing['id'];
             } else {
                 // Insert new order
-                $status = isset($order['status']) ? $order['status'] : 'pending';
-                
                 $insertStmt = $pdo->prepare("INSERT INTO foodorders (
                     code, customer_name, food_item, quantity, totalprice, status, created_at
                 ) VALUES (
@@ -103,38 +166,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':status'        => $status
                 ]);
                 
-                $responses[] = [
-                    "success" => true,
-                    "message" => "Order created successfully.",
-                    "id"      => $pdo->lastInsertId()
-                ];
+                $orderId = $pdo->lastInsertId();
             }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["error" => "Database Error", "message" => $e->getMessage()]);
-            exit;
+            
+            // Get the full order details to return
+            $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE id = ?");
+            $stmt->execute([$orderId]);
+            $orderDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $responses[] = $orderDetails;
         }
+        
+        $pdo->commit();
+        http_response_code(201);
+        echo json_encode(count($responses) === 1 ? $responses[0] : $responses);
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        http_response_code(500);
+        echo json_encode(["error" => "Database Error", "message" => $e->getMessage()]);
     }
-    
-    http_response_code(201);
-    echo json_encode($responses);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        // Optional filtering by status
-        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        // Handle different actions
+        $action = $_GET['action'] ?? '';
         
-        if ($status) {
-            $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE status = :status ORDER BY created_at DESC");
-            $stmt->execute([':status' => $status]);
-        } else {
-            $stmt = $pdo->query("SELECT * FROM foodorders ORDER BY created_at DESC");
+        switch ($action) {
+            case 'get_orders':
+                $status = $_GET['status'] ?? null;
+                $code = $_GET['code'] ?? null;
+                
+                if ($code) {
+                    // Get single order by code
+                    $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE code = :code");
+                    $stmt->execute([':code' => $code]);
+                    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($order) {
+                        echo json_encode($order);
+                    } else {
+                        http_response_code(404);
+                        echo json_encode(["error" => "Order not found"]);
+                    }
+                } elseif ($status) {
+                    // Filter by status
+                    if (!in_array($status, $allowedStatuses)) {
+                        http_response_code(400);
+                        echo json_encode(["error" => "Invalid status value"]);
+                        exit;
+                    }
+                    
+                    $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE status = :status ORDER BY created_at DESC");
+                    $stmt->execute([':status' => $status]);
+                    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    echo json_encode($data);
+                } else {
+                    // Get all orders
+                    $stmt = $pdo->query("SELECT * FROM foodorders ORDER BY created_at DESC");
+                    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    echo json_encode($data);
+                }
+                break;
+                
+            case 'get_statuses':
+                // Return list of allowed statuses
+                echo json_encode($allowedStatuses);
+                break;
+                
+            default:
+                // Original GET functionality (backward compatibility)
+                $status = $_GET['status'] ?? null;
+                
+                if ($status) {
+                    $stmt = $pdo->prepare("SELECT * FROM foodorders WHERE status = :status ORDER BY created_at DESC");
+                    $stmt->execute([':status' => $status]);
+                } else {
+                    $stmt = $pdo->query("SELECT * FROM foodorders ORDER BY created_at DESC");
+                }
+                
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode($data);
         }
-        
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($data);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Database Error", "message" => $e->getMessage()]);

@@ -64,8 +64,46 @@ $guestResult = $conn->query($guestSql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/inventory.css"> 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="icon" href="img/logo.webp">
     <title>Maintenance Management</title>
+    <style>
+        .date-picker {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            padding: 6px 12px;
+        }
+        .filter-badge {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            margin-left: 5px;
+            border-radius: 10px;
+        }
+        .filter-button {
+            margin-right: 10px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+        }
+        .stylish-search {
+            width: 250px;
+            padding: 10px 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+            transition: 0.3s ease-in-out;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .stylish-search:hover {
+            border-color: #4CAF50;
+        }
+        .stylish-search:focus {
+            border-color: #28a745;
+        }
+    </style>
 </head>
 <body>
 
@@ -78,9 +116,14 @@ $guestResult = $conn->query($guestSql);
         <div class="p-4 mb-4 mt-4 title-heading card">
             <div class="d-flex justify-content-between align-items-center">
                 <h3>Maintenance Requests</h3>
-                <button class="btn btn-success-export m-0" onclick="showExportModal()">
-                    <i class="fas fa-file-export"></i> Export
-                </button>
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-success-export me-3" data-bs-toggle="modal" data-bs-target="#emailModal">
+                        <i class="fas fa-envelope me-1"></i> Email Request
+                    </button>
+                    <button class="btn btn-success-export m-0" onclick="showExportModal()">
+                        <i class="fas fa-file-export"></i> Generate Report
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -125,15 +168,11 @@ $guestResult = $conn->query($guestSql);
         <div class="card shadow-lg rounded-3 m-2 custom-card">
             <div class="card-body m-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="mb-2 mt-4 m-3">Requests Overview</h3>
-                    <div class="email me-4 mt-2">
-                        <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#emailModal">
-                         Email Request
-                        </button>
-                     </div>
+                    <h3 class="mb-2 mt-2">Requests Overview</h3>
+                    <!-- Filter button moved to script for proper alignment with search bar -->
                 </div>
                 <div class='table-responsive task-table' id="requestsTable">
-                    <table class="table table-hover">
+                    <table class="table table-hover" id="maintenanceTable">
                         <thead class="striky-top">
                             <tr class="bg-dark text-light">
                                 <th>Request Title</th>
@@ -143,7 +182,6 @@ $guestResult = $conn->query($guestSql);
                                 <th>Status</th>
                                 <th>Scheduled On</th>
                                 <th>Being work by</th>
-                                
                             </tr>
                         </thead>
                         <tbody id="requestsTableBody">
@@ -174,62 +212,6 @@ $guestResult = $conn->query($guestSql);
                         </tbody>
                     </table>
                 </div>
-
-                <?php
-                // Define how many page numbers to show
-                $limit = 5;
-                $start = max(1, $page - floor($limit / 2));
-                $end = min($totalPages, $start + $limit - 1);
-
-                // Adjust start if end is less than limit
-                if ($end - $start < $limit - 1) {
-                    $start = max(1, $end - $limit + 1);
-                }
-
-                // Add pagination controls
-                echo "<nav aria-label='Page navigation' class='mt-3 mb-4'>
-                        <ul class='pagination justify-content-center' id='paginationControls'>";
-
-                // Previous button
-                if ($page > 1) {
-                    echo "<li class='page-item'>
-                            <a class='page-link logs-pagination' href='#' data-page='" . ($page - 1) . "'>
-                                Previous
-                            </a>
-                        </li>";
-                } else {
-                    echo "<li class='page-item disabled'>
-                            <a class='page-link'>
-                                Previous
-                            </a>
-                        </li>";
-                }
-
-                // Display limited page numbers
-                for ($i = $start; $i <= $end; $i++) {
-                    $active = $page === $i ? 'active' : '';
-                    echo "<li class='page-item $active'>
-                            <a class='page-link logs-pagination' href='#' data-page='$i'>$i</a>
-                        </li>";
-                }
-
-                // Next button
-                if ($page < $totalPages) {
-                    echo "<li class='page-item'>
-                            <a class='page-link logs-pagination' href='#' data-page='" . ($page + 1) . "'>
-                                Next
-                            </a>
-                        </li>";
-                } else {
-                    echo "<li class='page-item disabled'>
-                            <a class='page-link'>
-                                Next 
-                            </a>
-                        </li>";
-                }
-
-                echo "</ul></nav>";
-                ?>
             </div>
         </div>
     </div>
@@ -238,9 +220,12 @@ $guestResult = $conn->query($guestSql);
     <div class="container mt-4 mb-4">
         <div class="card shadow-lg rounded-3 m-2 custom-card">
             <div class="card-body m-0">
-                <h3 class="mb-4 mt-2">Guest Maintenance Requests</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-2 mt-2">Guest Maintenance Requests</h3>
+                    <!-- Filter button moved to script for proper alignment with search bar -->
+                </div>
                 <div class='table-responsive task-table' id="guestRequestsTable">
-                    <table class="table table-hover">
+                    <table class="table table-hover" id="guestMaintenanceTable">
                         <thead class="striky-top">
                             <tr class="bg-dark text-light">
                                 <th>ID</th>
@@ -276,62 +261,41 @@ $guestResult = $conn->query($guestSql);
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <?php
-                // Define how many page numbers to show
-                $guestLimit = 5;
-                $guestStart = max(1, $guestPage - floor($guestLimit / 2));
-                $guestEnd = min($totalGuestPages, $guestStart + $guestLimit - 1);
-
-                // Adjust start if end is less than limit
-                if ($guestEnd - $guestStart < $guestLimit - 1) {
-                    $guestStart = max(1, $guestEnd - $guestLimit + 1);
-                }
-
-                // Add pagination controls
-                echo "<nav aria-label='Page navigation' class='mt-3 mb-4'>
-                        <ul class='pagination justify-content-center' id='guestPaginationControls'>";
-
-                // Previous button
-                if ($guestPage > 1) {
-                    echo "<li class='page-item'>
-                            <a class='page-link guest-pagination' href='#' data-page='" . ($guestPage - 1) . "'>
-                                Previous
-                            </a>
-                        </li>";
-                } else {
-                    echo "<li class='page-item disabled'>
-                            <a class='page-link'>
-                                Previous
-                            </a>
-                        </li>";
-                }
-
-                // Display limited page numbers
-                for ($i = $guestStart; $i <= $guestEnd; $i++) {
-                    $active = $guestPage === $i ? 'active' : '';
-                    echo "<li class='page-item $active'>
-                            <a class='page-link guest-pagination' href='#' data-page='$i'>$i</a>
-                        </li>";
-                }
-
-                // Next button
-                if ($guestPage < $totalGuestPages) {
-                    echo "<li class='page-item'>
-                            <a class='page-link guest-pagination' href='#' data-page='" . ($guestPage + 1) . "'>
-                                Next
-                            </a>
-                        </li>";
-                } else {
-                    echo "<li class='page-item disabled'>
-                            <a class='page-link'>
-                                Next 
-                            </a>
-                        </li>";
-                }
-
-                echo "</ul></nav>";
-                ?>
+    <!-- Add this new Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="filterModalLabel">
+                        <i class="bx bx-filter-alt me-2"></i> Filter by Status
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body px-4 pb-4">
+                    <input type="hidden" id="currentFilterTable" value="">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-light filter-btn fw-semibold text-dark shadow-sm" data-status="">
+                            <i class="bx bx-list-ul me-2"></i> All Status
+                        </button>
+                        <button class="btn btn-warning filter-btn fw-semibold text-dark shadow-sm" data-status="Pending">
+                            <i class="bx bx-time-five me-2"></i> Pending
+                        </button>
+                        <button class="btn btn-info filter-btn fw-semibold text-white shadow-sm" data-status="In Progress">
+                            <i class="bx bx-cog me-2"></i> In Progress
+                        </button>
+                        <button class="btn btn-success filter-btn fw-semibold text-white shadow-sm" data-status="Completed">
+                            <i class="bx bx-check-circle me-2"></i> Completed
+                        </button>
+                        <button class="btn btn-danger filter-btn fw-semibold text-white shadow-sm" data-status="Canceled">
+                            <i class="bx bx-x-circle me-2"></i> Canceled
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -418,6 +382,31 @@ $guestResult = $conn->query($guestSql);
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label fw-bold">Filter by Status</label>
+                            <select class="form-select rounded-3" id="statusFilter" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Canceled">Canceled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Date Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">From</label>
+                                    <input type="date" class="form-control date-picker" id="startDate" name="startDate" value="<?php echo date('Y-m-d', strtotime('-30 days')); ?>">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">To</label>
+                                    <input type="date" class="form-control date-picker" id="endDate" name="endDate" value="<?php echo date('Y-m-d'); ?>">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label class="form-label fw-bold">Export Format</label>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
@@ -433,8 +422,8 @@ $guestResult = $conn->query($guestSql);
                             <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
                                 <i class="bx bx-x-circle me-1"></i> Cancel
                             </button>
-                            <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
-                                <i class="bx bx-download me-1"></i> Export
+                            <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="nextStep()">
+                                <i class="bx bx-download me-1"></i> Next
                             </button>
                         </div>
                     </form>
@@ -442,171 +431,227 @@ $guestResult = $conn->query($guestSql);
             </div>
         </div>
     </div>
+    
+    <!-- Password Verification Modal -->
+    <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control rounded-3" id="adminPassword" placeholder="Enter your password">
+                        <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                            Incorrect password. Please try again.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary px-3 rounded-3" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-3 rounded-3" id="verifyPasswordBtn">
+                        <i class="bx bx-check me-1"></i> Verify & Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-     <!-- Include Bootstrap JS -->
+     <!-- Include Bootstrap JS and DataTables JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script src="js/script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    function updateStatus(requestId, newStatus) {
-        // ...existing updateStatus code...
+    // Utility function to clean up modals
+    function resetModal() {
+        setTimeout(function() {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+            $('body').css('overflow', '');
+        }, 150);
     }
 
-    // Add this new function to handle email submission
-    function sendEmail(formElement) {
-        formElement.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            fetch('email_request.php', {
-                method: 'POST',
-                body: formData
+    $(document).ready(function() {
+        // Initialize DataTables
+        var tables = {
+            maintenanceTable: $('#maintenanceTable').DataTable({
+                dom: '<"row align-items-center"<"col-md-12"<"d-flex justify-content-end filter-search-container"f>>>rt<"row"<"col-12 d-flex justify-content-center"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search...",
+                    paginate: {
+                        first: "",
+                        last: ""
+                    }
+                },
+                pageLength: 5,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                order: [[0, 'desc']],
+                pagingType: "full_numbers",
+            }),
+            guestMaintenanceTable: $('#guestMaintenanceTable').DataTable({
+                dom: '<"row align-items-center"<"col-md-12"<"d-flex justify-content-end filter-search-container"f>>>rt<"row"<"col-12 d-flex justify-content-center"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search...",
+                    paginate: {
+                        first: "",
+                        last: ""
+                    }
+                },
+                pageLength: 5,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                order: [[0, 'desc']],
+                pagingType: "full_numbers",
             })
-            .then(response => response.json())
-            .then(data => {
-                const modalElement = document.getElementById('emailResponseModal');
-                const messageElement = document.getElementById('emailResponseMessage');
-                const modal = new bootstrap.Modal(modalElement);
+        };
 
-                if (data.success) {
-                    messageElement.innerHTML = `
-                        <div class="text-success">
-                            <i class="fas fa-check-circle fa-3x mb-3"></i>
-                            <p>${data.message}</p>
-                        </div>`;
-                    
-                    // Close email modal and show response modal
-                    bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
-                    modal.show();
+        $.fn.DataTable.ext.pager.numbers_length = 5;
 
-                    // Automatically reload page after 2 seconds on success
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    messageElement.innerHTML = `
-                        <div class="text-danger">
-                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                            <p>${data.message}</p>
-                            <small class="text-muted">${data.error || ''}</small>
-                        </div>`;
-                    modal.show();
+        // Function to style the search bar and align with filter button
+        function styleSearchBar() {
+            let filterButtons = `
+                <button class="btn btn-sm btn-outline-secondary filter-button" data-table="maintenanceTable" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            `;
+            
+            let guestFilterButtons = `
+                <button class="btn btn-sm btn-outline-secondary filter-button" data-table="guestMaintenanceTable" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            `;
+            
+            // Insert filter buttons before search input
+            $("#maintenanceTable_filter").before(filterButtons);
+            $("#guestMaintenanceTable_filter").before(guestFilterButtons);
+            
+            // Add spacing between filter button and search input
+            $(".filter-button").css('margin-right', '15px');
+            
+            // Create filter-search containers
+            $(".dataTables_filter").each(function() {
+                $(this).parent().addClass('d-flex align-items-center justify-content-end');
+            });
+            
+            // Style search input fields
+            let searchInputs = $(".dataTables_filter input");
+            searchInputs.addClass("form-control stylish-search");
+            searchInputs.attr("placeholder", "Type to search...");
+            searchInputs.css({
+                "width": "250px",
+                "padding": "8px 10px",
+                "border-radius": "8px",
+                "border": "1px solid #ccc",
+                "outline": "none",
+                "transition": "0.3s ease-in-out",
+                "margin-bottom": "0px",
+                "font-size": "12px"
+            });
+
+            searchInputs.hover(
+                function () {
+                    $(this).css("border-color", "#4CAF50");
+                },
+                function () {
+                    $(this).css("border-color", "#ccc");
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const modalElement = document.getElementById('emailResponseModal');
-                const messageElement = document.getElementById('emailResponseMessage');
-                const modal = new bootstrap.Modal(modalElement);
+            );
+
+            searchInputs.focus(function () {
+                $(this).css({
+                    "border-color": "#28a745"
+                });
+            });
+
+            searchInputs.blur(function () {
+                $(this).css({
+                    "border-color": "#ccc",
+                    "box-shadow": "none"
+                });
+            });
+            
+            // Position the filter-search containers at the top of tables
+            $(".filter-search-container").each(function() {
+                // Get the parent card's title element
+                let cardTitle = $(this).closest('.card-body').find('h3').first();
                 
-                messageElement.innerHTML = `
-                    <div class="text-danger">
-                        <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                        <p>An error occurred while sending the email.</p>
-                    </div>`;
-                modal.show();
+                // Create a container that fills the width and positions elements
+                let container = $('<div class="d-flex justify-content-between align-items-center w-100 mb-3"></div>');
+                
+                // Clone the title and add it to the new container
+                let titleClone = cardTitle.clone();
+                container.append(titleClone);
+                
+                // Add the filter and search elements to the container
+                container.append($(this));
+                
+                // Replace the existing title with the new container
+                cardTitle.closest('.d-flex').replaceWith(container);
             });
-        });
-    }
-
-    // Initialize email form submission
-    document.addEventListener('DOMContentLoaded', function() {
-        const emailForm = document.getElementById('emailForm');
-        if (emailForm) {
-            sendEmail(emailForm);
         }
-    });
 
-    // Add this new function to handle pagination via AJAX
-    function loadPage(page) {
-        fetch('maintenance_requests.php?page=' + page)
-            .then(response => response.text())
-            .then(data => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data, 'text/html');
-                const newTableBody = doc.getElementById('requestsTableBody').innerHTML;
-                const newPaginationControls = doc.getElementById('paginationControls').innerHTML;
+        // Track filter states
+        var tableFilters = {
+            maintenanceTable: '',
+            guestMaintenanceTable: ''
+        };
 
-                document.getElementById('requestsTableBody').innerHTML = newTableBody;
-                document.getElementById('paginationControls').innerHTML = newPaginationControls;
-
-                // Reattach event listeners to new pagination links
-                attachPaginationListeners();
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function attachPaginationListeners() {
-        document.querySelectorAll('.logs-pagination').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.getAttribute('data-page');
-                loadPage(page);
-            });
+        // Set up filter modal
+        $(document).on('click', '.filter-button', function() {
+            var tableId = $(this).data('table');
+            $('#currentFilterTable').val(tableId);
+            resetModal();
         });
-    }
 
-    // Initialize pagination listeners on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        attachPaginationListeners();
-    });
-
-    // Add this new function to handle guest pagination via AJAX
-    function loadGuestPage(page) {
-        fetch('maintenance_requests.php?guestPage=' + page)
-            .then(response => response.text())
-            .then(data => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data, 'text/html');
-                const newGuestTableBody = doc.getElementById('guestRequestsTableBody').innerHTML;
-                const newGuestPaginationControls = doc.getElementById('guestPaginationControls').innerHTML;
-
-                document.getElementById('requestsTableBody').innerHTML = newGuestTableBody;
-                document.getElementById('paginationControls').innerHTML = newGuestPaginationControls;
-
-                // Reattach event listeners to new pagination links
-                attachGuestPaginationListeners();
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function attachGuestPaginationListeners() {
-        document.querySelectorAll('.guest-pagination').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.getAttribute('data-page');
-                loadGuestPage(page);
-            });
+        // Handle filter button clicks
+        $('.filter-btn').click(function() {
+            var status = $(this).data('status');
+            var tableId = $('#currentFilterTable').val();
+            
+            if (tableId && tables[tableId]) {
+                tableFilters[tableId] = status;
+                
+                // For maintenance tables, status is in column 4
+                tables[tableId].column(4).search(status).draw();
+                
+                var filterText = status || 'All';
+                var statusClass = '';
+                
+                if (status === 'Pending') statusClass = 'bg-warning text-dark';
+                else if (status === 'In Progress') statusClass = 'bg-info text-white';
+                else if (status === 'Completed') statusClass = 'bg-success text-white';
+                else if (status === 'Canceled') statusClass = 'bg-danger text-white';
+                
+                $(`.filter-button[data-table="${tableId}"]`).html(
+                    `<i class="bi bi-funnel"></i> Filter ${status ? 
+                        `<span class="filter-badge ${statusClass}">${status}</span>` : ''}`
+                );
+            }
+            
+            $('#filterModal').modal('hide');
+            resetModal();
         });
-    }
 
-    // Initialize guest pagination listeners on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        attachGuestPaginationListeners();
+        // Apply search bar styling and alignment
+        styleSearchBar();
+
+        // ...existing code...
     });
 
-    // Export functionality
-    function showExportModal() {
-        // Show the modal using Bootstrap 5
-        const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
-        exportModal.show();
-    }
-
-    function exportData() {
-        const exportType = document.querySelector('input[name="exportType"]:checked').value;
-        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
-        
-        // Build the URL with parameters
-        const url = `export_maintenance.php?type=${exportType}&format=${exportFormat}`;
-        
-        // Open in new window/tab
-        window.open(url, '_blank');
-        
-        // Close the modal
-        const exportModalEl = document.getElementById('exportModal');
-        const exportModal = bootstrap.Modal.getInstance(exportModalEl);
-        exportModal.hide();
-    }
+    // ...existing code...
     </script>
 </body>
 </html>

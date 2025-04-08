@@ -25,6 +25,17 @@ if (isset($_SESSION['uname'])) {
     exit();
 }
 
+// Check if we need to debug the date issue
+$showDebug = isset($_GET['debug']) && $_GET['debug'] == 1;
+
+// Check if user has an active booking (is within check-in and check-out period)
+// Default to true if flags not set to prevent breaking functionality
+$isCheckedIn = $_SESSION['is_checked_in'] ?? true;
+$isCheckedOut = $_SESSION['is_checked_out'] ?? false;
+$isActiveBooking = $isCheckedIn && !$isCheckedOut;
+
+$bookingMessage = $_SESSION['booking_message'] ?? '';
+$bookingStatus = $_SESSION['booking_status'] ?? 'unknown';
 ?>
 
 <!DOCTYPE html>
@@ -38,6 +49,16 @@ if (isset($_SESSION['uname'])) {
     <link rel="icon" href="../img/logo.webp">
     <link rel="stylesheet" href="style.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        .disabled-card {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .booking-alert {
+            border-left: 4px solid #f39c12;
+            background-color: #fff8e1;
+        }
+    </style>
 </head>
 <body>
     <div class="menu-container container p-0 m-0">
@@ -53,13 +74,41 @@ if (isset($_SESSION['uname'])) {
         <!-- Image Section Below Header -->
         <img src="header-image.jpeg" alt="Hotel View" class="header-image">
 
+        <!-- Debug Section -->
+        <?php if ($showDebug): ?>
+        <div class="alert alert-secondary m-3">
+            <h5 class="mb-2">Debug Information</h5>
+            <pre><?php print_r($_SESSION['date_debug'] ?? 'No debug info available'); ?></pre>
+            <p>API Check-out: <?php echo htmlspecialchars($_SESSION['debug_booking_record']['check_out'] ?? 'Not set'); ?></p>
+            <p>Parsed Check-out: <?php echo htmlspecialchars($_SESSION['check_out'] ?? 'Not set'); ?></p>
+            <p>Current status: <?php echo $isActiveBooking ? 'Active booking' : 'Inactive booking'; ?></p>
+            <a href="date_debug.php" class="btn btn-sm btn-primary">View Detailed Debug</a>
+        </div>
+        <?php endif; ?>
+
+        <!-- Booking Status Alert -->
+        <?php if (!$isActiveBooking && !empty($bookingMessage)): ?>
+            <div class="alert booking-alert m-3" role="alert">
+                <h6 class="fw-bold mb-1">
+                    <?php if ($bookingStatus == 'upcoming'): ?>
+                        <i class="fas fa-calendar-alt me-2"></i> Upcoming Stay
+                    <?php elseif ($bookingStatus == 'past'): ?>
+                        <i class="fas fa-calendar-check me-2"></i> Past Stay
+                    <?php else: ?>
+                        <i class="fas fa-info-circle me-2"></i> Booking Notice
+                    <?php endif; ?>
+                </h6>
+                <p class="mb-0"><?php echo htmlspecialchars($bookingMessage); ?></p>
+            </div>
+        <?php endif; ?>
+
         <!-- Main Chat Section -->
         <div class="menu-body py-3 mt-4 p-3">
             <h5 class="fw-semibold">All Services</h5>
             <!-- Menu-based Options as List Cards -->
             <div class="msg-header">
                 <div class="user-options grid-template">
-                    <a href="req-room-service.php" class="menu-card">
+                    <a href="<?php echo $isActiveBooking ? 'req-room-service.php' : '#'; ?>" class="menu-card <?php echo !$isActiveBooking ? 'disabled-card' : ''; ?>">
                         <div class="icon-wrapper">
                             <i class="fas fa-bell-concierge"></i>
                         </div>
@@ -68,7 +117,7 @@ if (isset($_SESSION['uname'])) {
                             <p>(e.g., extra towels, pillows, etc.)</p>
                         </div>
                     </a>
-                    <a href="req-housekeeping.php" class="menu-card">
+                    <a href="<?php echo $isActiveBooking ? 'req-housekeeping.php' : '#'; ?>" class="menu-card <?php echo !$isActiveBooking ? 'disabled-card' : ''; ?>">
                         <div class="icon-wrapper">
                             <i class="fas fa-broom"></i>
                         </div>
@@ -77,7 +126,7 @@ if (isset($_SESSION['uname'])) {
                             <p>(e.g., room cleaning, trash collection)</p>
                         </div>
                     </a>
-                    <a href="req-maintenance.php" class="menu-card">
+                    <a href="<?php echo $isActiveBooking ? 'req-maintenance.php' : '#'; ?>" class="menu-card <?php echo !$isActiveBooking ? 'disabled-card' : ''; ?>">
                         <div class="icon-wrapper">
                             <i class="fas fa-tools"></i>
                         </div>
@@ -86,7 +135,7 @@ if (isset($_SESSION['uname'])) {
                             <p>(e.g., broken appliances, leaky faucets)</p>
                         </div>
                     </a>
-                    <a href="lost-and-found.php" class="menu-card">
+                    <a href="<?php echo $isActiveBooking ? 'lost-and-found.php' : '#'; ?>" class="menu-card <?php echo !$isActiveBooking ? 'disabled-card' : ''; ?>">
                         <div class="icon-wrapper">
                             <i class="fas fa-box"></i>
                         </div>
@@ -95,7 +144,7 @@ if (isset($_SESSION['uname'])) {
                             <p>(e.g., report lost items or check for found items)</p>
                         </div>
                     </a>
-                    <a href="steppingOut.php" class="menu-card">
+                    <a href="<?php echo $isActiveBooking ? 'steppingOut.php' : '#'; ?>" class="menu-card <?php echo !$isActiveBooking ? 'disabled-card' : ''; ?>">
                         <div class="icon-wrapper">
                             <i class="fas fa-hotel"></i>
                         </div>
@@ -115,11 +164,32 @@ if (isset($_SESSION['uname'])) {
                     </a>
                 </div>
             </div>
+            
+            <?php if (!$isActiveBooking): ?>
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i> Limited Access</h6>
+                <p class="mb-0">
+                    <?php if ($bookingStatus == 'upcoming'): ?>
+                        You can only access the Check Request Status feature before your check-in date.
+                    <?php elseif ($bookingStatus == 'past'): ?>
+                        You can only access the Check Request Status feature after your check-out date.
+                    <?php else: ?>
+                        Some services are currently unavailable. Please contact reception for assistance.
+                    <?php endif; ?>
+                </p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <script>
         $(document).ready(function() {
+            // Handle clicks on disabled cards
+            $('.disabled-card').on('click', function(e) {
+                e.preventDefault();
+                alert('This service is not available <?php echo ($bookingStatus == "upcoming") ? "before check-in" : "after check-out"; ?>. Please contact reception for assistance.');
+            });
+
             $('.option-btn').on('click', function() {
                 let option = $(this).data('option');
                 let msg = '<div class="user-inbox inbox"><div class="msg-header"><p>' + option + '</p></div></div>';

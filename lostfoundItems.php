@@ -15,12 +15,12 @@ if ($_SESSION['user_type'] !== 'Admin') {
 
 $message = ""; // Initialize message variable
 
+// Get counts for the cards
+$total_lost = $conn->query("SELECT COUNT(*) as count FROM lost_and_found WHERE type = 'Lost'")->fetch_assoc()['count'];
+$total_found = $conn->query("SELECT COUNT(*) as count FROM lost_and_found WHERE type = 'Found'")->fetch_assoc()['count'];
+$total_claimed = $conn->query("SELECT COUNT(*) as count FROM lost_and_found WHERE status = 'claimed'")->fetch_assoc()['count'];
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
-    // Sanitize and assign form inputs
-    $found_by = isset($_POST['found_by']) ? htmlspecialchars(trim($_POST['found_by'])) : '';
-    $type = isset($_POST['type']) ? htmlspecialchars(trim($_POST['type'])) : '';
-    $room = isset($_POST['room']) ? htmlspecialchars(trim($_POST['room'])) : '';
-    $date = isset($_POST['date']) ? htmlspecialchars(trim($_POST['date'])) : '';
     $item = isset($_POST['item']) ? htmlspecialchars(trim($_POST['item'])) : '';
     $description = isset($_POST['description']) ? htmlspecialchars(trim($_POST['description'])) : '';
 
@@ -104,6 +104,125 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <link rel="stylesheet" href="css/lostfounditems.css">
     <link rel="icon" href="img/logo.webp">
     <title>Lost and Found Management</title>
+    <style>
+        /* Filter button styles */
+        .filter-badge {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            margin-left: 5px;
+            border-radius: 10px;
+        }
+        .filter-button {
+            margin-right: 10px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+        }
+        
+        /* Search input styles */
+        .search-input {
+            width: 200px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            outline: none;
+            transition: 0.3s ease-in-out;
+            font-size: 0.8rem;
+        }
+        .search-input:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        /* Export button styling from guest.php */
+        .btn-success-export {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-success-export:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-success-export:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success-export i {
+            font-size: 15px;
+        }
+
+        /* Date picker styling */
+        .date-picker {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        /* Additional styles to ensure the buttons work correctly */
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-btn {
+            position: relative !important;
+            right: auto !important;
+            margin-bottom: 0 !important;
+            background-color: #198754;
+            color: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .add-btn:hover {
+            background-color: rgba(0, 128, 0, 0.8);
+            color: white;
+        }
+
+        .add-btn i {
+            font-size: 14px;
+        }
+
+        /* Responsive fixes */
+        @media (max-width: 576px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+                align-items: flex-end;
+            }
+            
+            .add-btn {
+                font-size: 12px;
+                padding: 5px 12px;
+            }
+        }
+    </style>
 </head>
 <body onload="window.scrollTo(0, 0);"> <!-- Add onload attribute to body tag -->
 
@@ -132,8 +251,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
                     <button class="btn btn-success add-btn" data-bs-toggle="modal" data-bs-target="#createModal">
                         <i class="fa-solid fa-plus"></i> Create
                     </button>
-                    <button class="btn btn-success export-btn" onclick="showExportModal()" title="Export Data">
-                        <i class="fas fa-file-export fs-6"></i>
+                    <button class="btn btn-success add-btn" onclick="showExportModal()" title="Export Data">
+                        <i class="fas fa-file-export"></i> Generate Report
                     </button>
                 </div>
             </div>
@@ -166,9 +285,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
         <div class="card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-0">
                 <h5 class="mb-0 mt-4">Claims History</h5>
-                <div class="d-flex gap-2">
-                    <input type="text" id="searchInput" class="form-control form-control-sm mt-4" 
-                           placeholder="Search claims..." onkeyup="filterTable()">
+                <div class="d-flex align-items-center mt-4">
+                    <!-- Filter Dropdown -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle filter-button" type="button" id="claimsFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="claimsFilterDropdown">
+                            <li><a class="dropdown-item claims-filter-option" href="#" data-filter="all">All Status</a></li>
+                            <li><a class="dropdown-item claims-filter-option" href="#" data-filter="pending">Pending</a></li>
+                            <li><a class="dropdown-item claims-filter-option" href="#" data-filter="approved">Approved</a></li>
+                            <li><a class="dropdown-item claims-filter-option" href="#" data-filter="rejected">Rejected</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <input type="text" id="claimsSearchInput" class="form-control form-control-sm search-input" placeholder="Search claims...">
                 </div>
             </div>
             <div class="card-body">
@@ -383,66 +515,113 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_request'])) {
     <!-- Export Modal -->
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
                     <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
                     <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" style="font-size: 13px;">What would you like to export?</label>
-                        <div class="form-check" style="font-size: 12px;">
-                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeLost" value="lost_and_found" checked>
-                            <label class="form-check-label" for="exportTypeLost">Lost & Found Items</label>
-                        </div>
-                        <div class="form-check" style="font-size: 12px;">
-                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeClaims" value="claims">
-                            <label class="form-check-label" for="exportTypeClaims">Claims History</label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" style="font-size: 13px;">Export Format</label>
-                        <div class="form-check" style="font-size: 12px;">
-                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
-                            <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
-                        </div>
-                        <div class="form-check" style="font-size: 12px;">
-                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
-                            <label class="form-check-label" for="exportFormatPDF">PDF</label>
-                        </div>
-                    </div>
-                    
-                    <!-- Date range section -->
-                    <div id="dateRangeSection" style="font-size: 12px;">
-                        <hr>
-                        <h6 class="mb-3">Date Range</h6>
-                        
+                <div class="modal-body px-4">
+                    <form id="exportForm">
                         <div class="mb-3">
-                            <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" style="font-size: 12px;" id="startDate">
+                            <label class="form-label fw-bold">What would you like to export?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeLost" value="lost_and_found" checked>
+                                <label class="form-check-label" for="exportTypeLost">Lost & Found Items</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportType" id="exportTypeClaims" value="claims">
+                                <label class="form-check-label" for="exportTypeClaims">Claims History</label>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="endDate" class="form-label">End Date</label>
-                            <input type="date" class="form-control" style="font-size: 12px;" id="endDate">
+                            <label class="form-label fw-bold">Date Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">From</label>
+                                    <input type="date" class="form-control date-picker" id="startDate" name="startDate">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">To</label>
+                                    <input type="date" class="form-control date-picker" id="endDate" name="endDate">
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <!-- Action Buttons -->
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
-                        <i class="bx bx-x-circle me-1"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
-                        <i class="bx bx-download me-1"></i> Export
-                    </button>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status Filter</label>
+                            <select class="form-select" id="exportStatusFilter" name="statusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="found">Found</option>
+                                <option value="lost">Lost</option>
+                                <option value="claimed">Claimed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Export Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                                <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                                <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                                <i class="bx bx-x-circle me-1"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
+                                <i class="bx bx-download me-1"></i> Export
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Password Verification Modal -->
+    <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="adminPassword" placeholder="Enter your password">
+                        <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                            Incorrect password. Please try again.
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                            <i class="bx bx-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" id="verifyPasswordBtn">
+                            <i class="bx bx-check me-1"></i> Verify & Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -611,6 +790,16 @@ document.addEventListener('DOMContentLoaded', () => {
         new bootstrap.Modal(document.getElementById('imageModal')).show();
     }
 
+    // Function to properly reset modals
+    function resetModal() {
+        setTimeout(function() {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+            $('body').css('overflow', '');
+        }, 150);
+    }
+
     // Export functionality
     function showExportModal() {
         // Set default date range (last 30 days)
@@ -622,45 +811,116 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('endDate').value = today.toISOString().split('T')[0];
         
         // Show the modal
+        resetModal();
         new bootstrap.Modal(document.getElementById('exportModal')).show();
     }
 
+    // Store export parameters in global scope
+    window.exportParameters = {};
+
     function exportData() {
-        const exportType = document.querySelector('input[name="exportType"]:checked').value;
-        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+        // Save export parameters before closing modal
+        window.exportParameters = {
+            exportType: document.querySelector('input[name="exportType"]:checked').value,
+            exportFormat: document.querySelector('input[name="exportFormat"]:checked').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value,
+            statusFilter: document.getElementById('exportStatusFilter').value
+        };
         
-        // Get date range
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        
-        // Validate dates
-        if (!startDate || !endDate) {
-            alert('Please select both start and end dates.');
-            return;
+        // Close export modal
+        const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+        if (exportModal) {
+            exportModal.hide();
         }
         
-        if (new Date(startDate) > new Date(endDate)) {
-            alert('Start date cannot be after end date.');
-            return;
-        }
-        
-        // Set the appropriate title
-        let title = '';
-        if (exportType === 'lost_and_found') {
-            title = 'Lost and Found Items';
-        } else if (exportType === 'claims') {
-            title = 'Claims History';
-        }
-        
-        // Construct URL
-        const url = `export_data.php?table=${exportType}&format=${exportFormat}&start=${startDate}&end=${endDate}&title=${encodeURIComponent(title)}`;
-        
-        // Open in new window/tab
-        window.open(url, '_blank');
-        
-        // Close the modal
-        bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+        // Show password verification modal with a delay to ensure proper modal cleanup
+        setTimeout(function() {
+            resetModal();
+            // Clear any previous password input and error message
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            // Show the password verification modal
+            new bootstrap.Modal(document.getElementById('passwordVerificationModal')).show();
+        }, 300);
     }
+
+    // Setup password verification handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('verifyPasswordBtn').addEventListener('click', function() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (!password) {
+                document.getElementById('passwordError').textContent = 'Password cannot be empty';
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            // Verify the admin password
+            fetch('verify_admin_pass.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'password=' + encodeURIComponent(password)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Password is correct, proceed with export
+                    const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordVerificationModal'));
+                    if (passwordModal) {
+                        passwordModal.hide();
+                    }
+                    
+                    // Build the export URL with parameters
+                    let url = `export_data.php?table=${window.exportParameters.exportType}&format=${window.exportParameters.exportFormat}`;
+                    
+                    if (window.exportParameters.startDate) 
+                        url += `&start=${window.exportParameters.startDate}`;
+                    if (window.exportParameters.endDate) 
+                        url += `&end=${window.exportParameters.endDate}`;
+                    if (window.exportParameters.statusFilter) 
+                        url += `&status=${window.exportParameters.statusFilter}`;
+                    
+                    // Add title parameter
+                    let title = '';
+                    if (window.exportParameters.exportType === 'lost_and_found') {
+                        title = 'Lost and Found Items';
+                    } else if (window.exportParameters.exportType === 'claims') {
+                        title = 'Claims History';
+                    }
+                    url += `&title=${encodeURIComponent(title)}`;
+                    
+                    // Add the encryption password (same as admin password for simplicity)
+                    url += `&encryption_password=${encodeURIComponent(password)}`;
+                    
+                    // Open in new window/tab
+                    window.open(url, '_blank');
+                    
+                    // Clean up modal
+                    resetModal();
+                } else {
+                    // Show error message
+                    document.getElementById('passwordError').textContent = data.message || 'Incorrect password. Please try again.';
+                    document.getElementById('passwordError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('passwordError').textContent = 'Error verifying password. Please try again.';
+                document.getElementById('passwordError').style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
+
+        // Allow Enter key to trigger verification
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('verifyPasswordBtn').click();
+                e.preventDefault();
+            }
+        });
+    });
 
     // Check if export button is visible on page load
     document.addEventListener('DOMContentLoaded', function() {
@@ -672,153 +932,121 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-        // Add this new function to handle claim pagination via AJAX
-        function loadClaimPage(page2) {
-            fetch('lostfoundItems.php?page2=' + page2)
-                .then(response => response.text())
-                .then(data => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(data, 'text/html');
-                    const newClaimTableBody = doc.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML;
-                    const newClaimPaginationControls = doc.getElementById('claimPaginationControls').innerHTML;
+    // Add this new function to handle claim pagination via AJAX
+    function loadClaimPage(page2) {
+        fetch('lostfoundItems.php?page2=' + page2)
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                const newClaimTableBody = doc.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML;
+                const newClaimPaginationControls = doc.getElementById('claimPaginationControls').innerHTML;
 
-                    document.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML = newClaimTableBody;
-                    document.getElementById('claimPaginationControls').innerHTML = newClaimPaginationControls;
+                document.getElementById('claimsTable').getElementsByTagName('tbody')[0].innerHTML = newClaimTableBody;
+                document.getElementById('claimPaginationControls').innerHTML = newClaimPaginationControls;
 
-                    // Reattach event listeners to new pagination links
-                    attachClaimPaginationListeners();
-                })
-                .catch(error => console.error('Error:', error));
-        }
+                // Reattach event listeners to new pagination links
+                attachClaimPaginationListeners();
+            })
+            .catch(error => console.error('Error:', error));
+    }
 
-        function attachClaimPaginationListeners() {
-            document.querySelectorAll('.claim-pagination').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page2 = this.getAttribute('data-page');
-                    loadClaimPage(page2);
-                });
+    function attachClaimPaginationListeners() {
+        document.querySelectorAll('.claim-pagination').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page2 = this.getAttribute('data-page');
+                loadClaimPage(page2);
             });
-        }
-
-        // Initialize claim pagination listeners on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            attachClaimPaginationListeners();
         });
-    </script>
+    }
 
-    <style>
+    // Initialize claim pagination listeners on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        attachClaimPaginationListeners();
+    });
+
+    // Claims table search functionality
+    const searchInput = document.getElementById('claimsSearchInput');
+    const claimsTable = document.getElementById('claimsTable');
     
-
-    /* Export button styling */
-    .export-btn {
-        width: 38px;
-        height: 38px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    if (searchInput && claimsTable) {
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const rows = claimsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let noResult = true;
+            
+            for (let i = 0; i < rows.length; i++) {
+                let found = false;
+                const cells = rows[i].getElementsByTagName('td');
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent || cells[j].innerText;
+                    
+                    if (cellText.toLowerCase().indexOf(searchText) > -1) {
+                        found = true;
+                        noResult = false;
+                        break;
+                    }
+                }
+                
+                rows[i].style.display = found ? '' : 'none';
+            }
+            
+            // Show no results message if nothing found
+            const noResultsRow = claimsTable.querySelector('.no-results');
+            if (noResult && rows.length > 1) {
+                if (!noResultsRow) {
+                    const tbody = claimsTable.getElementsByTagName('tbody')[0];
+                    const newRow = tbody.insertRow();
+                    newRow.className = 'no-results';
+                    const cell = newRow.insertCell();
+                    cell.colSpan = 12;
+                    cell.className = 'text-center';
+                    cell.textContent = 'No matching records found';
+                }
+            } else if (noResultsRow) {
+                noResultsRow.remove();
+            }
+        });
     }
-
-    .export-btn i {
-        font-size: 16px;
-    }
-
-    /* Ensure Font Awesome icons display properly */
-    .fas, .fa-solid {
-        display: inline-block !important;
-    }
-
-    body.dark-mode .export-btn {
-        background-color: #0d6efd;
-        border-color: #0a58ca;
-    }
-
-    /* Add pulse animation to draw attention to the export button */
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    .export-btn:hover {
-        animation: pulse 1s infinite;
-    }
-
-    /* Additional styles to ensure the buttons work correctly */
-    .action-buttons {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .add-btn {
-        position: relative !important;
-        right: auto !important;
-        margin-bottom: 0 !important;
-    }
-
-    .btn-success.add-btn {
-        background-color: #198754;
-    }
-
-    .btn-success.add-btn:hover {
-        background-color: #157347;
-    }
-
-    .btn-primary.export-btn {
-        background-color: #0d6efd;
-        border-color: #0a58ca;
-    }
-
-    .export-btn i, .add-btn i {
-        display: inline-block !important;
-    }
-
-    /* Responsive fixes */
-    @media (max-width: 576px) {
-        .action-buttons {
-            flex-direction: row;
-            gap: 5px;
-        }
-        
-        .add-btn {
-            font-size: 12px;
-            padding: 6px 12px;
-        }
-        
-        .export-btn {
-            width: 32px;
-            height: 32px;
-        }
-    }
-
-    /* Status badge colors */
-    .status-badge {
-        padding: 5px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 500;
-        display: inline-block;
-        text-align: center;
-        min-width: 80px;
-    }
-
-    .status-pending {
-        background-color: #e0e0e0;
-        color: #666666;
-    }
-
-    .status-claimed, .status-found {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .status-lost {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    </style>
+    
+    // Claims table filter functionality
+    const filterOptions = document.querySelectorAll('.claims-filter-option');
+    
+    filterOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filterValue = this.getAttribute('data-filter');
+            const rows = claimsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].classList.contains('no-results')) continue;
+                
+                if (filterValue === 'all') {
+                    rows[i].style.display = '';
+                } else {
+                    // Column index might need adjustment based on your table structure
+                    // Assuming status is in column 9 (index 8)
+                    const statusCell = rows[i].querySelector('td:nth-child(9)');
+                    if (statusCell) {
+                        const statusText = statusCell.textContent.toLowerCase().trim();
+                        rows[i].style.display = statusText.includes(filterValue) ? '' : 'none';
+                    }
+                }
+            }
+            
+            // Update filter button to show current filter
+            let statusClass = '';
+            if (filterValue === 'pending') statusClass = 'bg-warning text-dark';
+            else if (filterValue === 'approved') statusClass = 'bg-success text-white';
+            else if (filterValue === 'rejected') statusClass = 'bg-danger text-white';
+            
+            document.getElementById('claimsFilterDropdown').innerHTML = 
+                `<i class="bi bi-funnel"></i> Filter ${filterValue !== 'all' ? 
+                    `<span class="filter-badge ${statusClass}">${filterValue.charAt(0).toUpperCase() + filterValue.slice(1)}</span>` : ''}`;
+        });
+    });
+    </script>
 </body>
 </html>

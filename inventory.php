@@ -102,7 +102,7 @@ $result = $conn->query($sql);
         <div class="d-flex justify-content-between align-items-center">
             <h3 class="ms-2">Housekeeping Inventory</h3>
             <button class="btn btn-success-export" onclick="showExportModal()">
-                <i class="fas fa-file-export"></i> Export
+                <i class="fas fa-file-export"></i> Generate Report
             </button>
         </div>
     </div>
@@ -268,56 +268,95 @@ $result = $conn->query($sql);
 
 <!-- Export Modal -->
 <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0">
                 <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">What would you like to export?</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exportType" id="exportTypeInventory" value="inventory" checked>
-                        <label class="form-check-label" for="exportTypeInventory">Current Inventory</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exportType" id="exportTypeUsage" value="usage">
-                        <label class="form-check-label" for="exportTypeUsage">Usage History</label>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Export Format</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
-                        <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
-                        <label class="form-check-label" for="exportFormatPDF">PDF</label>
-                    </div>
-                </div>
-                
-                <!-- Date range section (only visible for usage history) -->
-                <div id="dateRangeSection" style="display: none;">
-                    <hr>
-                    <h6 class="mb-3">Date Range</h6>
-                    
+            <div class="modal-body px-4">
+                <form id="exportForm">
                     <div class="mb-3">
-                        <label for="startDate" class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="startDate">
+                        <label class="form-label fw-bold">What would you like to export?</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeInventory" value="inventory" checked>
+                            <label class="form-check-label" for="exportTypeInventory">Current Inventory</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportTypeUsage" value="usage">
+                            <label class="form-check-label" for="exportTypeUsage">Usage History</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Date range section (only visible for usage history) -->
+                    <div id="dateRangeSection">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Date Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">From</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">To</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="endDate" class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="endDate">
+                        <label class="form-label fw-bold">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                            <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                            <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                        </div>
                     </div>
-                </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                            <i class="bx bx-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
+                            <i class="bx bx-download me-1"></i> Export
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="exportData()">Export</button>
+        </div>
+    </div>
+</div>
+
+<!-- Password Verification Modal -->
+<div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4">
+                <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                <div class="mb-3">
+                    <label for="adminPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Enter your password">
+                    <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                        Incorrect password. Please try again.
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" id="verifyPasswordBtn">
+                        <i class="bx bx-check me-1"></i> Verify & Export
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -651,66 +690,107 @@ function toggleDateRangeVisibility() {
     }
 }
 
+// Store export parameters in global scope
+window.exportParameters = {};
+
 function exportData() {
-    const exportType = document.querySelector('input[name="exportType"]:checked').value;
-    const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+    // Save export parameters before closing modal
+    window.exportParameters = {
+        exportType: $('input[name="exportType"]:checked').val(),
+        exportFormat: $('input[name="exportFormat"]:checked').val(),
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val()
+    };
     
-    let url = '';
-    
-    if (exportType === 'inventory') {
-        // Export current inventory
-        url = `export_inventory.php?format=${exportFormat}`;
-    } else {
-        // Export usage history with date range
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        
-        // Validate dates
-        if (!startDate || !endDate) {
-            alert('Please select both start and end dates for usage history export.');
-            return;
-        }
-        
-        if (new Date(startDate) > new Date(endDate)) {
-            alert('Start date cannot be after end date.');
-            return;
-        }
-        
-        url = `export_usage.php?format=${exportFormat}&start=${startDate}&end=${endDate}`;
-    }
-    
-    // Open in new window/tab
-    window.open(url, '_blank');
-    
-    // Close the modal using jQuery for Bootstrap 4
+    // Close export modal
     $('#exportModal').modal('hide');
+    
+    // Show password verification modal with a delay to ensure proper modal cleanup
+    setTimeout(function() {
+        resetModal();
+        // Clear any previous password input and error message
+        $('#adminPassword').val('');
+        $('#passwordError').hide();
+        // Show the password verification modal
+        $('#passwordVerificationModal').modal('show');
+    }, 300);
 }
 
-// Handle potential script.js errors
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle potential missing elements that script.js might be trying to access
-    const elementsToCheck = [
-        'searchForm', 'searchInput', 'notificationBell', 'sideMenu', 'toggleSidebar'
-    ];
-    
-    elementsToCheck.forEach(id => {
-        const elem = document.getElementById(id);
-        if (!elem) {
-            console.log(`Element with ID '${id}' not found, creating placeholder to prevent errors`);
-            // Create a hidden placeholder to prevent null reference errors
-            const placeholder = document.createElement('div');
-            placeholder.id = id;
-            placeholder.style.display = 'none';
-            document.body.appendChild(placeholder);
+// Setup password verification handlers
+$(document).ready(function() {
+    $('#verifyPasswordBtn').click(function() {
+        var password = $('#adminPassword').val();
+        
+        if (!password) {
+            $('#passwordError').text('Password cannot be empty').show();
+            return;
+        }
+        
+        // Verify the admin password
+        $.ajax({
+            url: 'verify_admin_pass.php',
+            type: 'POST',
+            data: {
+                password: password
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Password is correct, proceed with export
+                    $('#passwordVerificationModal').modal('hide');
+                    
+                    // Build the export URL with parameters
+                    let url = '';
+                    if (window.exportParameters.exportType === 'inventory') {
+                        url = `export_inventory_data.php?type=inventory&format=${window.exportParameters.exportFormat}`;
+                    } else {
+                        url = `export_inventory_data.php?type=usage&format=${window.exportParameters.exportFormat}&start=${window.exportParameters.startDate}&end=${window.exportParameters.endDate}`;
+                    }
+                    
+                    // Add the encryption password (same as admin password for simplicity)
+                    url += `&encryption_password=${encodeURIComponent(password)}`;
+                    
+                    // Open in new window/tab
+                    window.open(url, '_blank');
+                    
+                    // Clean up modal
+                    resetModal();
+                } else {
+                    // Show error message
+                    $('#passwordError').text(response.message).show();
+                }
+            },
+            error: function() {
+                $('#passwordError').text('Error verifying password. Please try again.').show();
+            }
+        });
+    });
+
+    // Allow Enter key to trigger verification
+    $('#adminPassword').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#verifyPasswordBtn').click();
+            e.preventDefault();
         }
     });
 });
 
 // Fix modal close buttons for Bootstrap 4
 $(document).ready(function() {
+    // Reset modal function for consistent behavior
+    window.resetModal = function() {
+        setTimeout(function() {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+            $('body').css('overflow', '');
+        }, 150);
+    };
+    
     // Make sure close buttons work properly
     $('.modal .btn-close, .modal .close, .modal .btn-secondary[data-bs-dismiss="modal"]').on('click', function() {
         $(this).closest('.modal').modal('hide');
+        resetModal();
     });
 });
 </script>

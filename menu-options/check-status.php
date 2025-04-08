@@ -25,10 +25,28 @@ if (isset($_SESSION['uname'])) {
     exit();
 }
 
+// Set default timezone to ensure consistent date handling
+date_default_timezone_set('Asia/Manila');
+
 // Get the view parameter - default to 'today'
 $view = isset($_GET['view']) ? $_GET['view'] : 'today';
 $todayDate = date('Y-m-d');
 
+// Check if there's a checkout message
+$checkoutMessage = '';
+if (isset($_SESSION['booking_status']) && $_SESSION['booking_status'] == 'past') {
+    $checkoutMessage = $_SESSION['booking_message'] ?? 
+                       "Your stay ended on {$_SESSION['check_out']}. You cannot access services after checkout.";
+}
+
+// For debugging purposes
+if (isset($_GET['debug'])) {
+    echo "<pre>";
+    echo "Session variables:\n";
+    print_r($_SESSION);
+    echo "\nCurrent date: " . date('d-m-Y') . "\n";
+    echo "</pre>";
+}
 ?>
 
 <!DOCTYPE html>
@@ -99,6 +117,12 @@ $todayDate = date('Y-m-d');
                 </a>
             </div>
             
+            <?php if (!empty($checkoutMessage)): ?>
+                <div class="alert alert-warning mb-4" role="alert">
+                    <?php echo $checkoutMessage; ?>
+                </div>
+            <?php endif; ?>
+
             <h4 class="fw-semibold">Your Request Status</h4>
             
             <!-- View Toggle Buttons -->
@@ -146,13 +170,17 @@ $todayDate = date('Y-m-d');
                                 $statusClass = 'status-processing';
                         }
                         
+                        // Convert the date to a consistent format
+                        $createdDate = DateTime::createFromFormat('Y-m-d H:i:s', $row['created_at']) ?: 
+                                      new DateTime($row['created_at']);
+                        
                         echo '<div class="status-card">';
                         echo '<div class="d-flex justify-content-between">';
                         echo '<h6>' . htmlspecialchars($row['request']) . '</h6>';
                         echo '<span class="badge ' . $statusClass . '">' . htmlspecialchars($row['status']) . '</span>';
                         echo '</div>';
                         echo '<p class="small mb-1">' . htmlspecialchars($row['details']) . '</p>';
-                        echo '<p class="small text-muted mb-0">Requested on: ' . date('M j, Y g:i A', strtotime($row['created_at'])) . '</p>';
+                        echo '<p class="small text-muted mb-0">Requested on: ' . $createdDate->format('d-m-Y g:i A') . '</p>';
                         if ($row['priority']) {
                             echo '<p class="small text-danger mb-0">Priority: ' . htmlspecialchars($row['priority']) . '</p>';
                         }
@@ -206,6 +234,10 @@ $todayDate = date('Y-m-d');
                                 $statusClass = 'status-processing';
                         }
                         
+                        // Convert the date to a consistent format
+                        $createdDate = DateTime::createFromFormat('Y-m-d H:i:s', $row['created_at']) ?: 
+                                      new DateTime($row['created_at']);
+                        
                         echo '<div class="status-card">';
                         echo '<div class="d-flex justify-content-between">';
                         echo '<h6>Order #' . htmlspecialchars($row['code']) . '</h6>';
@@ -213,7 +245,7 @@ $todayDate = date('Y-m-d');
                         echo '</div>';
                         echo '<p class="small mb-1">' . htmlspecialchars($row['food_item']) . ' x ' . htmlspecialchars($row['quantity']) . '</p>';
                         echo '<p class="small mb-1">Total: $' . htmlspecialchars($row['totalprice']) . '</p>';
-                        echo '<p class="small text-muted mb-0">Ordered on: ' . date('M j, Y g:i A', strtotime($row['created_at'])) . '</p>';
+                        echo '<p class="small text-muted mb-0">Ordered on: ' . $createdDate->format('d-m-Y g:i A') . '</p>';
                         echo '</div>';
                     }
                 } else {

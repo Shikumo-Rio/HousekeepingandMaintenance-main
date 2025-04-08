@@ -3,6 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Set PHP default timezone
+date_default_timezone_set('Asia/Manila');
+
 // Database connection settings
 $db_host = 'localhost';
 $db_username = 'root';
@@ -17,10 +20,16 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Set timezone for MySQLi connection
+$conn->query("SET time_zone = '+08:00'");
+
 // PDO Connection
 try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_username, $db_password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Set timezone for PDO connection
+    $pdo->exec("SET time_zone = '+08:00'");
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }

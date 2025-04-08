@@ -197,7 +197,12 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
 <div class="container">
     
     <div class="p-4 mt-4 title-heading card">
-        <h3>Request Inventory</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Request Inventory</h3>
+            <button class="btn btn-success-export" onclick="showExportModal()">
+                <i class="fas fa-file-export"></i> Generate Report
+            </button>
+        </div>
         <?php if ($requestType === 'low_stock'): ?>
             <div class="text-warning">Requesting Low Stock Items</div>
         <?php elseif ($requestType === 'out_of_stock'): ?>
@@ -352,6 +357,98 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
                             </ul>
                         </nav>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="exportModalLabel">Export Requested Stocks</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4">
+                <form id="exportForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Date Range</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">From</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">To</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status Filter</label>
+                        <select class="form-select" id="exportStatusFilter" name="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatExcel" value="excel" checked>
+                            <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportFormatPDF" value="pdf">
+                            <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                            <i class="bx bx-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" onclick="exportData()">
+                            <i class="bx bx-download me-1"></i> Export
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Verification Modal -->
+<div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4">
+                <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                <div class="mb-3">
+                    <label for="adminPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Enter your password">
+                    <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                        Incorrect password. Please try again.
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" id="verifyPasswordBtn">
+                        <i class="bx bx-check me-1"></i> Verify & Export
+                    </button>
                 </div>
             </div>
         </div>
@@ -973,6 +1070,130 @@ function filterTable() {
         noResultsRow.style.display = 'none'; // Hide it if results are found
     }
 }
+
+// Add export functionality
+function showExportModal() {
+    // Set default date range (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    
+    $('#startDate').val(thirtyDaysAgoStr);
+    $('#endDate').val(todayStr);
+    
+    // Open the modal using jQuery
+    $('#exportModal').modal('show');
+}
+
+// Store export parameters in global scope
+window.exportParameters = {};
+
+function exportData() {
+    // Save export parameters before closing modal
+    window.exportParameters = {
+        exportFormat: $('input[name="exportFormat"]:checked').val(),
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        statusFilter: $('#exportStatusFilter').val()
+    };
+    
+    // Close export modal
+    $('#exportModal').modal('hide');
+    
+    // Show password verification modal with a delay to ensure proper modal cleanup
+    setTimeout(function() {
+        resetModal();
+        // Clear any previous password input and error message
+        $('#adminPassword').val('');
+        $('#passwordError').hide();
+        // Show the password verification modal
+        $('#passwordVerificationModal').modal('show');
+    }, 300);
+}
+
+// Reset modal function for consistent behavior
+function resetModal() {
+    setTimeout(function() {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+        $('body').css('padding-right', '');
+        $('body').css('overflow', '');
+    }, 150);
+}
+
+// Setup password verification handlers
+$(document).ready(function() {
+    $('#verifyPasswordBtn').click(function() {
+        var password = $('#adminPassword').val();
+        
+        if (!password) {
+            $('#passwordError').text('Password cannot be empty').show();
+            return;
+        }
+        
+        // Verify the admin password
+        $.ajax({
+            url: 'verify_admin_pass.php',
+            type: 'POST',
+            data: {
+                password: password
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Password is correct, proceed with export
+                    $('#passwordVerificationModal').modal('hide');
+                    
+                    // Build the export URL with parameters
+                    let url = `export_requested_stocks.php?format=${window.exportParameters.exportFormat}`;
+                    
+                    if (window.exportParameters.startDate)
+                        url += `&startDate=${window.exportParameters.startDate}`;
+                    if (window.exportParameters.endDate) 
+                        url += `&endDate=${window.exportParameters.endDate}`;
+                    if (window.exportParameters.statusFilter)
+                        url += `&status=${window.exportParameters.statusFilter}`;
+                    
+                    // Add the encryption password (same as admin password for simplicity)
+                    url += `&encryption_password=${encodeURIComponent(password)}`;
+                    
+                    // Open in new window/tab
+                    window.open(url, '_blank');
+                    
+                    // Clean up modal
+                    resetModal();
+                } else {
+                    // Show error message
+                    $('#passwordError').text(response.message).show();
+                }
+            },
+            error: function() {
+                $('#passwordError').text('Error verifying password. Please try again.').show();
+            }
+        });
+    });
+
+    // Allow Enter key to trigger verification
+    $('#adminPassword').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#verifyPasswordBtn').click();
+            e.preventDefault();
+        }
+    });
+    
+    // Save export parameters when export modal is closed
+    $('#exportModal').on('hide.bs.modal', function() {
+        window.exportParameters = {
+            exportFormat: $('input[name="exportFormat"]:checked').val(),
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val(),
+            statusFilter: $('#exportStatusFilter').val()
+        };
+    });
+});
 </script>
 </body>
 </html>

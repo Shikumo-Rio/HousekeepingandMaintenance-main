@@ -10,6 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once("database.php");
 require 'vendor/autoload.php';
 
+// Verify the user is logged in and is an admin
 if (!isset($_SESSION['username']) || $_SESSION['user_type'] !== 'Admin') {
     header("Location: login.php");
     exit;
@@ -18,26 +19,56 @@ if (!isset($_SESSION['username']) || $_SESSION['user_type'] !== 'Admin') {
 // Get the export type and format from the URL
 $exportType = $_GET['type'] ?? '';
 $exportFormat = $_GET['format'] ?? '';
+$startDate = $_GET['startDate'] ?? '';
+$endDate = $_GET['endDate'] ?? '';
+$statusFilter = $_GET['status'] ?? '';
+
+// Get password from request or use default
+$encryptionPassword = $_GET['encryption_password'] ?? "paradisehotel2025";
+
+// Store who generated the report
+$generatedBy = $_SESSION['username'] ?? 'Unknown User';
+
+// Start building the query
+$queryBase = "";
+$whereClause = " WHERE 1=1"; // Base where clause to make appending conditions easier
 
 // Process based on selected table
 if ($exportType == 'checkout') {
-    $query = "SELECT id, room_no, checkout_time, request, special_request, status, created_at FROM checkout_notices ORDER BY id DESC";
+    $queryBase = "SELECT id, room_no, checkout_time, request, special_request, status, assigned_to, created_at FROM checkout_notices";
     $filename = 'checkout_notices_' . date('Y-m-d_H-i-s');
     $title = 'Checkout Notices';
-    $headers = ['ID', 'Room No', 'Return Time', 'Type', 'Special Request', 'Status', 'Created At'];
+    $headers = ['ID', 'Room No', 'Return Time', 'Type', 'Special Request', 'Status', 'Assigned To', 'Created At'];
 } elseif ($exportType == 'foodorders') {
-    $query = "SELECT id, code, customer_name, food_item, quantity, totalprice, status, created_at FROM foodorders ORDER BY id DESC";
-    $filename = 'food_orders';
+    $queryBase = "SELECT id, code, customer_name, food_item, quantity, totalprice, status, created_at FROM foodorders";
+    $filename = 'food_orders_' . date('Y-m-d_H-i-s');
     $title = 'Food Orders';
     $headers = ['ID', 'Code', 'Customer Name', 'Food Item', 'Quantity', 'Total Price', 'Status', 'Created At'];
 } elseif ($exportType == 'messages') {
-    $query = "SELECT id, uname, request, details, room, status, priority, created_at FROM customer_messages ORDER BY id DESC";
-    $filename = 'customer_messages';
+    $queryBase = "SELECT id, uname, request, details, room, status, priority, created_at FROM customer_messages";
+    $filename = 'customer_messages_' . date('Y-m-d_H-i-s');
     $title = 'Customer Messages';
     $headers = ['ID', 'Username', 'Request', 'Details', 'Room', 'Status', 'Priority', 'Created At'];
 } else {
     die("Invalid export type");
 }
+
+// Add date filter if provided
+if (!empty($startDate) && !empty($endDate)) {
+    $whereClause .= " AND DATE(created_at) BETWEEN '$startDate' AND '$endDate'";
+} elseif (!empty($startDate)) {
+    $whereClause .= " AND DATE(created_at) >= '$startDate'";
+} elseif (!empty($endDate)) {
+    $whereClause .= " AND DATE(created_at) <= '$endDate'";
+}
+
+// Add status filter if provided
+if (!empty($statusFilter)) {
+    $whereClause .= " AND status = '$statusFilter'";
+}
+
+// Complete the query
+$query = $queryBase . $whereClause . " ORDER BY id DESC";
 
 // Execute the query
 $result = $conn->query($query);
@@ -55,9 +86,9 @@ if ($result && $result->num_rows > 0) {
 
 // Export based on format
 if ($exportFormat == 'excel') {
-    exportToExcel($data, $filename, $headers, $title, $exportType);
+    exportToExcel($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter);
 } elseif ($exportFormat == 'pdf') {
-    exportToPDF($data, $filename, $headers, $title, $exportType);
+    exportToPDFSecure($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter);
 } else {
     die("Invalid export format");
 }
@@ -65,7 +96,7 @@ if ($exportFormat == 'excel') {
 /**
  * Export data to Excel
  */
-function exportToExcel($data, $filename, $headers, $title, $exportType) {
+function exportToExcel($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter) {
     // Set headers for Excel download
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $filename . '.xls"');
@@ -83,13 +114,32 @@ function exportToExcel($data, $filename, $headers, $title, $exportType) {
     echo '.pending { color: #FF8000; }'; // Orange for pending
     echo '.assigned, .completed { color: #008000; }'; // Green for assigned/completed
     echo '.summary-row { background-color: #f0f0f0; font-weight: bold; }';
+    echo '.report-header { font-size: 14pt; font-weight: bold; margin-bottom: 10px; }';
+    echo '.report-meta { font-size: 10pt; margin-bottom: 20px; }';
     echo '</style>';
     echo '</head>';
     echo '<body>';
     
-    // Report title
-    echo '<h1>' . $title . '</h1>';
-    echo '<h3>Generated on: ' . date('Y-m-d H:i:s') . '</h3>';
+    // Report title and metadata
+    echo '<div class="report-header">' . $title . '</div>';
+    echo '<div class="report-meta">';
+    echo 'Generated on: ' . date('Y-m-d H:i:s') . '<br>';
+    echo 'Generated by: ' . $generatedBy . '<br>';
+    
+    // Show applied filters if any
+    if ($startDate && $endDate) {
+        echo 'Date Range: ' . $startDate . ' to ' . $endDate . '<br>';
+    } elseif ($startDate) {
+        echo 'From Date: ' . $startDate . '<br>';
+    } elseif ($endDate) {
+        echo 'To Date: ' . $endDate . '<br>';
+    }
+    
+    if ($statusFilter) {
+        echo 'Status Filter: ' . $statusFilter . '<br>';
+    }
+    
+    echo '</div>';
     
     // Table start
     echo '<table border="1">';
@@ -165,76 +215,128 @@ function exportToExcel($data, $filename, $headers, $title, $exportType) {
 }
 
 /**
- * Export data to PDF
+ * Export data to PDF with TCPDF and password protection
  */
-function exportToPDF($data, $filename, $headers, $title, $exportType) {
+function exportToPDFSecure($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter) {
+    global $encryptionPassword;
+    
     try {
         // Clear all previous output and buffers
         while (ob_get_level()) {
             ob_end_clean();
         }
         
-        // Try to use FPDF
-        if (class_exists('FPDF')) {
-            // Use FPDF
-            $pdf = new FPDF('P', 'mm', 'A4');
+        // Check if TCPDF class exists
+        if (class_exists('TCPDF')) {
+            // Create new PDF document
+            $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+            
+            // Set document information
+            $pdf->SetCreator('Paradise Hotel');
+            $pdf->SetAuthor($generatedBy);
+            $pdf->SetTitle($title);
+            $pdf->SetSubject('Export Report');
+            
+            // Set default header data
+            $pdf->SetHeaderData('', 0, $title, 'Generated on: ' . date('Y-m-d H:i:s') . ' | Generated by: ' . $generatedBy);
+            
+            // Set header and footer fonts
+            $pdf->setHeaderFont(Array('helvetica', '', 10));
+            $pdf->setFooterFont(Array('helvetica', '', 8));
+            
+            // Set default monospaced font
+            $pdf->SetDefaultMonospacedFont('courier');
+            
+            // Set margins
+            $pdf->SetMargins(15, 27, 15);
+            $pdf->SetHeaderMargin(5);
+            $pdf->SetFooterMargin(10);
+            
+            // Set auto page breaks
+            $pdf->SetAutoPageBreak(TRUE, 25);
+            
+            // Set PDF protection
+            $pdf->SetProtection(array('print', 'copy'), $encryptionPassword, null, 0, null);
+            
+            // Add a page
             $pdf->AddPage();
             
-            // Add title
-            $pdf->SetFont('Arial', 'B', 16);
-            $pdf->Cell(0, 10, $title, 0, 1, 'C');
-            $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(0, 6, 'Generated on: ' . date('Y-m-d H:i:s'), 0, 1, 'C');
-            $pdf->Ln(10);
+            // Set font
+            $pdf->SetFont('helvetica', '', 10);
             
-            // Define column widths - adjust based on headers
-            $colWidths = [];
-            $totalHeaders = count($headers);
-            $pageWidth = 190; // Available width in mm for A4 portrait
+            // Show filters if applied
+            $filterText = '';
+            if ($startDate && $endDate) {
+                $filterText .= 'Date Range: ' . $startDate . ' to ' . $endDate . "\n";
+            } elseif ($startDate) {
+                $filterText .= 'From Date: ' . $startDate . "\n";
+            } elseif ($endDate) {
+                $filterText .= 'To Date: ' . $endDate . "\n";
+            }
             
-            // Dynamically calculate width based on number of columns
-            $baseWidth = floor($pageWidth / $totalHeaders);
+            if ($statusFilter) {
+                $filterText .= 'Status Filter: ' . $statusFilter . "\n";
+            }
+            
+            if (!empty($filterText)) {
+                $pdf->SetFont('helvetica', 'B', 10);
+                $pdf->Write(0, 'Applied Filters:', '', 0, 'L', true, 0, false, false, 0);
+                $pdf->SetFont('helvetica', '', 10);
+                $pdf->Write(0, $filterText, '', 0, 'L', true, 0, false, false, 0);
+                $pdf->Ln(5);
+            }
+            
+            // Create table header
+            $pdf->SetFillColor(240, 240, 240);
+            $pdf->SetTextColor(0);
+            $pdf->SetFont('helvetica', 'B', 10);
+            
+            // Calculate column widths based on page width
+            $pageWidth = $pdf->getPageWidth() - 30; // Account for margins
+            $colWidths = array();
+            
+            // Adjust column widths based on content type
             foreach ($headers as $header) {
-                // Allocate more width for text-heavy columns
                 if (strpos(strtolower($header), 'request') !== false || 
                     strpos(strtolower($header), 'details') !== false) {
-                    $colWidths[] = $baseWidth * 1.5;
+                    $colWidths[] = $pageWidth * 0.2; // 20% for description columns
                 } else if ($header === 'ID') {
-                    $colWidths[] = $baseWidth * 0.5;
+                    $colWidths[] = $pageWidth * 0.05; // 5% for ID column
+                } else if ($header === 'Created At') {
+                    $colWidths[] = $pageWidth * 0.12; // 12% for date columns
                 } else {
-                    $colWidths[] = $baseWidth;
+                    $colWidths[] = $pageWidth * 0.1; // 10% for other columns
                 }
             }
             
-            // Adjust widths proportionally to fit page
+            // Normalize widths to fit page
             $totalWidth = array_sum($colWidths);
             if ($totalWidth > $pageWidth) {
                 $ratio = $pageWidth / $totalWidth;
                 for ($i = 0; $i < count($colWidths); $i++) {
-                    $colWidths[$i] = floor($colWidths[$i] * $ratio);
+                    $colWidths[$i] = $colWidths[$i] * $ratio;
                 }
             }
             
-            // Table header
-            $pdf->SetFont('Arial', 'B', 10);
+            // Print header row
             $pdf->SetFillColor(240, 240, 240);
-            
             foreach ($headers as $i => $header) {
-                $pdf->Cell($colWidths[$i], 8, $header, 1, 0, 'C', true);
+                $pdf->Cell($colWidths[$i], 7, $header, 1, 0, 'C', 1);
             }
             $pdf->Ln();
             
-            // Table data
-            $pdf->SetFont('Arial', '', 9);
+            // Print data rows
+            $pdf->SetFont('helvetica', '', 9);
+            $pdf->SetFillColor(255, 255, 255);
+            
+            $pendingCount = 0;
+            $assignedCount = 0;
             
             if (count($data) > 0) {
-                $pendingCount = 0;
-                $assignedCount = 0;
-                
                 foreach ($data as $row) {
                     $i = 0;
                     foreach ($row as $key => $value) {
-                        // Set special colors for status
+                        // Set text color based on status
                         if ($key === 'status') {
                             if (strtolower($value) === 'pending') {
                                 $pdf->SetTextColor(255, 128, 0); // Orange
@@ -254,67 +356,38 @@ function exportToPDF($data, $filename, $headers, $title, $exportType) {
                             $value = substr($value, 0, 27) . '...';
                         }
                         
-                        // Output the cell
-                        $pdf->Cell($colWidths[$i], 7, $value, 1, 0, 'L');
+                        $pdf->Cell($colWidths[$i], 6, $value, 1, 0, 'L');
                         $i++;
                     }
                     $pdf->Ln();
-                    
-                    // Check if we need a new page
-                    if ($pdf->GetY() > 260) {
-                        $pdf->AddPage();
-                        
-                        // Repeat header on new page
-                        $pdf->SetFont('Arial', 'B', 10);
-                        $pdf->SetFillColor(240, 240, 240);
-                        $pdf->SetTextColor(0, 0, 0);
-                        
-                        foreach ($headers as $i => $header) {
-                            $pdf->Cell($colWidths[$i], 8, $header, 1, 0, 'C', true);
-                        }
-                        $pdf->Ln();
-                        $pdf->SetFont('Arial', '', 9);
-                    }
                 }
                 
-                // Summary section
-                $pdf->SetTextColor(0, 0, 0);
+                // Add summary section
                 $pdf->Ln(10);
-                $pdf->SetFont('Arial', 'B', 12);
-                $pdf->Cell(0, 8, 'Summary', 0, 1, 'L');
-                $pdf->SetFont('Arial', '', 10);
+                $pdf->SetFont('helvetica', 'B', 11);
+                $pdf->Cell(0, 7, 'Summary', 0, 1, 'L');
+                $pdf->SetFont('helvetica', '', 10);
                 
-                $pdf->Cell(80, 7, 'Total Records:', 0, 0, 'L');
+                $pdf->Cell(60, 7, 'Total Records:', 0, 0, 'L');
                 $pdf->Cell(0, 7, count($data), 0, 1, 'L');
                 
                 if ($exportType != 'foodorders') {
-                    $pdf->Cell(80, 7, 'Pending Items:', 0, 0, 'L');
+                    $pdf->Cell(60, 7, 'Pending Items:', 0, 0, 'L');
                     $pdf->Cell(0, 7, $pendingCount, 0, 1, 'L');
                     
-                    $pdf->Cell(80, 7, 'Assigned/Completed Items:', 0, 0, 'L');
+                    $pdf->Cell(60, 7, 'Assigned/Completed Items:', 0, 0, 'L');
                     $pdf->Cell(0, 7, $assignedCount, 0, 1, 'L');
                 }
             } else {
                 $pdf->Cell(array_sum($colWidths), 10, 'No data available', 1, 1, 'C');
             }
             
-            // Output PDF directly as download
-            $pdf->Output('D', $filename . '.pdf');
+            // Close and output PDF document
+            $pdf->Output($filename . '.pdf', 'D');
             exit;
-        } 
-        // Fallback to TCPDF if available
-        else if (class_exists('TCPDF')) {
-            // Similar TCPDF implementation would go here
-            // ...existing code...
-        } 
-        else {
-            // No PDF library available
-            header('Content-Type: text/html; charset=utf-8');
-            echo "<h1>PDF Export Error</h1>";
-            echo "<p>PDF libraries not found despite being installed via Composer.</p>";
-            echo "<p>Please try exporting to Excel format instead.</p>";
-            echo "<p><a href='guest.php'>Return to Guest Requests</a></p>";
-            exit;
+        } else {
+            // Fall back to basic PDF
+            fallbackPDF($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter);
         }
     } catch (Exception $e) {
         // If PDF generation fails, show error and suggest Excel export
@@ -325,6 +398,19 @@ function exportToPDF($data, $filename, $headers, $title, $exportType) {
         echo "<p><a href='guest.php'>Return to Guest Requests</a></p>";
         exit;
     }
+}
+
+/**
+ * Fallback to simple PDF export if TCPDF fails
+ */
+function fallbackPDF($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter) {
+    // This is a basic fallback that uses any available PDF library
+    header('Content-Type: text/html; charset=utf-8');
+    echo "<h1>PDF Export Error</h1>";
+    echo "<p>The TCPDF library is not available or failed to load.</p>";
+    echo "<p>Please try exporting to Excel format instead.</p>";
+    echo "<p><a href='guest.php'>Return to Guest Requests</a></p>";
+    exit;
 }
 
 // Close connection

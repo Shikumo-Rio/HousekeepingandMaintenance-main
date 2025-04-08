@@ -38,7 +38,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="css/housekeepertasks.css">
     <link rel="icon" href="img/logo.webp">
     <style>
-        
+        .date-picker {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            padding: 6px 12px;
+        }
+        .filter-badge {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            margin-left: 5px;
+            border-radius: 10px;
+        }
+        .filter-button {
+            margin-right: 10px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+        }
     </style>
 </head>
 <body>
@@ -50,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="">Guest Requests</h3>
                 <button class="btn btn-success-export m-0" onclick="showExportModal()">
-                    <i class="fas fa-file-export"></i> Export
+                    <i class="fas fa-file-export"></i> Generate Report
                 </button>
             </div>
         </div>
@@ -109,7 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Checkout Notices -->
             <div class="col-md-6">
                 <div class="p-4 task-allocation-heading card mb-4 m-0">
-                    <h3>Checkout Notices</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>Checkout Notices</h3>
+                        <button class="btn btn-sm btn-outline-secondary filter-button" data-table="checkout" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
                 </div>
                 <div class="card shadow-sm border-0 custom-card">
                     <div class="card-body">
@@ -138,12 +161,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['checkout_time']}</td>";
                                         echo "<td>{$row['request']}</td>";
                                         echo "<td>{$row['special_request']}</td>";
-                                        // Updated status badge styling with multiple status options
                                         echo "<td><span class='badge " . 
                                             (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
                                             (strtolower($row['status']) == 'working' ? 'bg-primary' : 
                                             (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
-                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 
+                                            (strtolower($row['status']) == 'assigned' ? 'bg-secondary' : 'bg-secondary'))))) . 
                                             "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "<td>";
@@ -168,7 +191,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Food Orders -->
             <div class="col-md-6">
                 <div class="p-4 task-allocation-heading card mb-4 m-0">
-                    <h3>Food Orders</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>Food Orders</h3>
+                        <button class="btn btn-sm btn-outline-secondary filter-button" data-table="foodOrders" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
                 </div>
                 <div class="card shadow-sm border-0 custom-card">
                     <div class="card-body">
@@ -196,12 +224,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         echo "<td>{$row['customer_name']}</td>";
                                         echo "<td>{$row['food_item']}</td>";
                                         echo "<td>{$row['quantity']}</td>";
-                                        // Updated status badge styling with multiple status options
                                         echo "<td><span class='badge " . 
                                             (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
                                             (strtolower($row['status']) == 'working' ? 'bg-primary' : 
                                             (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
-                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
+                                            (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 
+                                            (strtolower($row['status']) == 'assigned' ? 'bg-secondary' : 'bg-secondary'))))) . 
                                             "'>{$row['status']}</span></td>";
                                         echo "<td>{$row['created_at']}</td>";
                                         echo "</tr>";
@@ -217,7 +245,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Customer Messages -->
         <div class="p-4 task-allocation-heading card mb-4 mt-4">
-            <h3>Customer Messages</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Customer Messages</h3>
+                <button class="btn btn-sm btn-outline-secondary filter-button" data-table="customerMessages" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
         </div>
         <div class="card shadow-sm border-0 m-3 customer-msg">
             <div class="card-body">
@@ -246,12 +279,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 echo "<td>{$row['request']}</td>";
                                 echo "<td>{$row['details']}</td>";
                                 echo "<td>{$row['room']}</td>";
-                                // Updated status badge styling with multiple status options
                                 echo "<td><span class='badge " . 
                                     (strtolower($row['status']) == 'pending' ? 'bg-secondary' : 
                                     (strtolower($row['status']) == 'working' ? 'bg-primary' : 
                                     (strtolower($row['status']) == 'complete' || strtolower($row['status']) == 'completed' ? 'bg-success' : 
-                                    (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 'bg-secondary')))) . 
+                                    (strtolower($row['status']) == 'invalid' ? 'bg-danger' : 
+                                    (strtolower($row['status']) == 'assigned' ? 'bg-secondary' : 'bg-secondary'))))) . 
                                     "'>{$row['status']}</span></td>";
                                 echo "<td>{$row['priority']}</td>";
                                 echo "<td>{$row['created_at']}</td>";
@@ -264,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Filter Modal -->
+        <!-- Enhanced Filter Modal -->
         <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg rounded-4">
@@ -276,6 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     
                     <div class="modal-body px-4 pb-4">
+                        <input type="hidden" id="currentFilterTable" value="">
                         <div class="d-grid gap-2">
                             <button class="btn btn-light filter-btn fw-semibold text-dark shadow-sm" data-status="">
                                 <i class="bx bx-list-ul me-2"></i> All Status
@@ -292,14 +326,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <button class="btn btn-danger filter-btn fw-semibold text-white shadow-sm" data-status="Invalid">
                                 <i class="bx bx-x-circle me-2"></i> Invalid
                             </button>
+                            <button class="btn btn-secondary filter-btn fw-semibold text-white shadow-sm" data-status="Assigned">
+                                <i class="bx bx-user-check me-2"></i> Assigned
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <!-- Export Modal -->
+        <!-- Enhanced Export Modal -->
         <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg rounded-4">
@@ -308,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body px-4">
-                        <form>
+                        <form id="exportForm">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">What would you like to export?</label>
                                 <div class="form-check">
@@ -323,6 +359,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input class="form-check-input" type="radio" name="exportType" id="exportTypeMessages" value="messages">
                                     <label class="form-check-label" for="exportTypeMessages">Customer Messages</label>
                                 </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Date Range</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label">From</label>
+                                        <input type="date" class="form-control date-picker" id="startDate" name="startDate">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">To</label>
+                                        <input type="date" class="form-control date-picker" id="endDate" name="endDate">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status Filter</label>
+                                <select class="form-select" id="exportStatusFilter" name="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Working">Working</option>
+                                    <option value="Complete">Complete</option>
+                                    <option value="Invalid">Invalid</option>
+                                    <option value="Assigned">Assigned</option>
+                                </select>
                             </div>
                             
                             <div class="mb-3">
@@ -346,6 +408,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Verification Modal -->
+        <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body px-4">
+                        <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                        <div class="mb-3">
+                            <label for="adminPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="adminPassword" placeholder="Enter your password">
+                            <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                                Incorrect password. Please try again.
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                                <i class="bx bx-x-circle me-1"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-success px-2 rounded-3" style="font-size: 12px;" id="verifyPasswordBtn">
+                                <i class="bx bx-check me-1"></i> Verify & Export
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -390,91 +482,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-        <!-- Add this script to fix notification issues BEFORE loading script.js -->
+    <!-- Add this script to fix notification issues BEFORE loading script.js -->
     <script>
-        // Create safe fallbacks for elements script.js might expect
-        document.addEventListener('DOMContentLoaded', function() {
-            // Safely get elements with null check handling
-            function safeGetElement(id) {
-                const element = document.getElementById(id);
-                if (!element) {
-                    console.log(`Element with ID '${id}' not found, creating placeholder`);
-                    const placeholder = document.createElement('div');
-                    placeholder.id = id;
-                    placeholder.style.display = 'none';
-                    document.body.appendChild(placeholder);
-                    return placeholder;
-                }
-                return element;
-            }
-            
-            // Create safe versions of elements script.js depends on
-            const elementsToCheck = ['searchForm', 'searchInput', 'notificationBell', 'toggleSidebar'];
-            elementsToCheck.forEach(safeGetElement);
-            
-            // Add robust modal cleanup function
-            window.cleanupModal = function() {
-                setTimeout(() => {
-                    document.body.classList.remove('modal-open');
-                    const backdrops = document.querySelectorAll('.modal-backdrop');
-                    backdrops.forEach(backdrop => {
-                        if (backdrop && backdrop.parentNode) {
-                            backdrop.parentNode.removeChild(backdrop);
-                        }
-                    });
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-                }, 100);
-            };
-            
-            // Ensure modal close buttons work properly
-            const closeButtons = document.querySelectorAll('.modal .btn-close, .modal [data-bs-dismiss="modal"]');
-            closeButtons.forEach(button => {
-                button.addEventListener('click', window.cleanupModal);
-            });
-        });
-    </script>
-    
-    <!-- Load script.js after the fallbacks are created -->
-    <script src="js/script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        // Define resetModal in global scope so it can be accessed by all functions
+        function resetModal() {
+            setTimeout(function() {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
+                $('body').css('overflow', '');
+            }, 150);
+        }
 
-
-    <script>
         $(document).ready(function() {
-            // Function to style search bars
-            function styleSearchBar() {
-                $('.dataTables_filter input').addClass('form-control');
-                $('.dataTables_filter').addClass('d-flex justify-content-end');
-            }
+            // Initialize DataTables
+            var tables = {
+                checkout: $('#checkoutTable').DataTable({
+                    dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12 d-flex justify-content-center"p>>',
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search...",
+                        paginate: {
+                            first: "",
+                            last: ""
+                        }
+                    },
+                    pageLength: 5,
+                    ordering: true,
+                    info: false,
+                    lengthChange: false,
+                    order: [[0, 'desc']],
+                    pagingType: "full_numbers",
+                }),
+                foodOrders: $('#foodOrdersTable').DataTable({
+                    dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search...",
+                        paginate: {
+                            first: "",
+                            last: ""
+                        }
+                    },
+                    pageLength: 5,
+                    ordering: true,
+                    info: false,
+                    lengthChange: false,
+                    order: [[0, 'desc']],
+                    pagingType: "full_numbers",
+                }),
+                customerMessages: $('#customerMessagesTable').DataTable({
+                    dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search...",
+                        paginate: {
+                            first: "",
+                            last: "",
+                        }
+                    },
+                    pageLength: 5,
+                    ordering: true,
+                    info: false,
+                    lengthChange: false,
+                    order: [[0, 'desc']],
+                    pagingType: "full_numbers",
+                })
+            };
 
-            // Initialize tables and apply styling
-            var checkoutTable = $('#checkoutTable').DataTable({
-                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12 d-flex justify-content-center"p>>',
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search...",
-                    paginate: {
-                        first: "",
-                        last: ""
-                    }
-                },
-                pageLength: 5,
-                ordering: true,
-                info: false,
-                lengthChange: false,
-                order: [[0, 'desc']], // Order by first column (ID) descending
-                pagingType: "full_numbers", // Ensures number pagination
-            });
-
-            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
-
-            // Style the search bar
+            $.fn.DataTable.ext.pager.numbers_length = 5;
+            
             function styleSearchBar() {
                 let searchInput = $(".dataTables_filter input");
                 
-                searchInput.addClass("form-control stylish-search"); // Add custom styling class
-                searchInput.attr("placeholder", "Type to search..."); // Add a stylish placeholder
+                searchInput.addClass("form-control stylish-search");
+                searchInput.attr("placeholder", "Type to search...");
                 searchInput.css({
                     "width": "250px",
                     "padding": "10px 10px",
@@ -486,7 +568,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "font-size": "12px"
                 });
 
-                // Add hover & focus effects
                 searchInput.hover(
                     function () {
                         $(this).css("border-color", "#4CAF50");
@@ -510,7 +591,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
 
+            var tableFilters = {
+                checkout: '',
+                foodOrders: '',
+                customerMessages: ''
+            };
 
+            function resetModal() {
+                setTimeout(function() {
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open');
+                    $('body').css('padding-right', '');
+                    $('body').css('overflow', '');
+                }, 150);
+            }
+
+            $('.filter-button').click(function() {
+                var tableId = $(this).data('table');
+                $('#currentFilterTable').val(tableId);
+                resetModal();
+            });
+
+            $('.filter-btn').click(function() {
+                var status = $(this).data('status');
+                var tableId = $('#currentFilterTable').val();
+                
+                if (tableId && tables[tableId]) {
+                    tableFilters[tableId] = status;
+                    tables[tableId].column(5).search(status).draw();
+                    
+                    var filterText = status || 'All';
+                    var statusClass = '';
+                    
+                    if (status === 'Pending') statusClass = 'bg-warning text-dark';
+                    else if (status === 'Working') statusClass = 'bg-info text-white';
+                    else if (status === 'Complete') statusClass = 'bg-success text-white';
+                    else if (status === 'Assigned') statusClass = 'bg-secondary text-white';
+                    else if (status === 'Invalid') statusClass = 'bg-danger text-white';
+                    
+                    $(`.filter-button[data-table="${tableId}"]`).html(
+                        `<i class="bi bi-funnel"></i> Filter ${status ? 
+                            `<span class="filter-badge ${statusClass}">${status}</span>` : ''}`
+                    );
+                }
+                
+                $('#filterModal').modal('hide');
+                resetModal();
+            });
+
+            $('.modal .btn-close, .modal [data-bs-dismiss="modal"]').on('click', function() {
+                resetModal();
+            });
+
+            $('#filterModal').on('hidden.bs.modal', function () {
+                resetModal();
+            });
+
+            styleSearchBar();
+            
             $('.assign-btn').click(function() {
                 $('#checkout_id').val($(this).data('id'));
             });
@@ -531,114 +669,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 });
             });
+            
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yyyy = today.getFullYear();
+            
+            var todayStr = yyyy + '-' + mm + '-' + dd;
+            $('#endDate').val(todayStr);
+            
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            var dd30 = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+            var mm30 = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+            var yyyy30 = thirtyDaysAgo.getFullYear();
+            
+            var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
+            $('#startDate').val(thirtyDaysAgoStr);
 
-            var foodOrdersTable = $('#foodOrdersTable').DataTable({
-                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search...",
-                    paginate: {
-                        first: "",
-                        last: ""
-                    }
-                },
-                pageLength: 5,
-                ordering: true,
-                info: false,
-                lengthChange: false,
-                order: [[0, 'desc']], // Order by first column (ID) descending
-                pagingType: "full_numbers", // Ensures number pagination
-            });
-
-            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
-
-            var customerMessagesTable = $('#customerMessagesTable').DataTable({
-                dom: '<"row"<"col-md-12"f>>rt<"row"<"col-12"p>>',
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search...",
-                    paginate: {
-                        first: "",
-                        last: "",
-                    }
-                },
-                pageLength: 5,
-                ordering: true,
-                info: false,
-                lengthChange: false,
-                order: [[0, 'desc']], // Order by first column (ID) descending
-                pagingType: "full_numbers", // Ensures number pagination
-            });
-
-            $.fn.DataTable.ext.pager.numbers_length = 5; // Limits page number buttons to 5
-
-
-            // Add filter functionality for customer messages
-            $('#messageStatusFilter').on('change', function() {
-                var status = $(this).val();
-                customerMessagesTable.column(5).search(status).draw();
-            });
-
-            // Apply styling to all search bars
-            styleSearchBar();
-
-            $(document).ready(function() {
-                // Add filter button next to search bar
-                if (!$('#customerMessagesTable_filter .filter-button').length) {
-                    var filterButton = $('<button class="btn filter-button mb-2" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="bi bi-funnel mb-4"></i> Filter</button>');
-                    $('#customerMessagesTable_filter').prepend(filterButton);
+            // Store export parameters in global scope
+            window.exportParameters = {};
+            
+            // Setup password verification handlers
+            $('#verifyPasswordBtn').click(function() {
+                var password = $('#adminPassword').val();
+                
+                if (!password) {
+                    $('#passwordError').text('Password cannot be empty').show();
+                    return;
                 }
-
-                // Handle filter button clicks
-                $('.filter-btn').off('click').on('click', function() {
-                    var status = $(this).data('status');
-                    customerMessagesTable.column(5).search(status).draw();
-
-                    // Close modal without affecting scroll behavior
-                    $('#filterModal').modal('hide');
-
-                    setTimeout(function() {
-                        $('body').removeClass('modal-open');
-                        $('.modal-backdrop').remove();
-                    }, 200);
-
-                    // Update button text dynamically
-                    var filterText = status || 'All Status';
-                    $('.filter-button').html('<i class="bi bi-funnel"></i> ' + filterText);
+                
+                // Verify the admin password
+                $.ajax({
+                    url: 'verify_admin_pass.php',
+                    type: 'POST',
+                    data: {
+                        password: password
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            // Password is correct, proceed with export
+                            $('#passwordVerificationModal').modal('hide');
+                            
+                            // Build the export URL with parameters
+                            let url = `export_guest_data.php?type=${window.exportParameters.exportType}&format=${window.exportParameters.exportFormat}`;
+                            
+                            if (window.exportParameters.startDate) 
+                                url += `&startDate=${window.exportParameters.startDate}`;
+                            if (window.exportParameters.endDate) 
+                                url += `&endDate=${window.exportParameters.endDate}`;
+                            if (window.exportParameters.statusFilter) 
+                                url += `&status=${window.exportParameters.statusFilter}`;
+                            
+                            // Add the encryption password (same as admin password for simplicity)
+                            url += `&encryption_password=${encodeURIComponent(password)}`;
+                            
+                            // Open in new window/tab
+                            window.open(url, '_blank');
+                            
+                            // Clean up modal
+                            resetModal();
+                        } else {
+                            // Show error message
+                            $('#passwordError').text(response.message).show();
+                        }
+                    },
+                    error: function() {
+                        $('#passwordError').text('Error verifying password. Please try again.').show();
+                    }
                 });
             });
 
+            // Allow Enter key to trigger verification
+            $('#adminPassword').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $('#verifyPasswordBtn').click();
+                    e.preventDefault();
+                }
+            });
+            
+            // Save export parameters when export modal is closed
+            $('#exportModal').on('hide.bs.modal', function() {
+                window.exportParameters = {
+                    exportType: $('input[name="exportType"]:checked').val(),
+                    exportFormat: $('input[name="exportFormat"]:checked').val(),
+                    startDate: $('#startDate').val(),
+                    endDate: $('#endDate').val(), 
+                    statusFilter: $('#exportStatusFilter').val()
+                };
+            });
         });
 
-        // Export functionality
         function showExportModal() {
-            // Open the modal
+            resetModal();
             $('#exportModal').modal('show');
         }
         
         function exportData() {
-            const exportType = document.querySelector('input[name="exportType"]:checked').value;
-            const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+            // Save export parameters before closing modal
+            window.exportParameters = {
+                exportType: $('input[name="exportType"]:checked').val(),
+                exportFormat: $('input[name="exportFormat"]:checked').val(),
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(), 
+                statusFilter: $('#exportStatusFilter').val()
+            };
             
-            let url = '';
-            
-            if (exportType === 'checkout') {
-                // Export checkout notices
-                url = `export_guest_data.php?type=checkout&format=${exportFormat}`;
-            } else if (exportType === 'foodorders') {
-                // Export food orders
-                url = `export_guest_data.php?type=foodorders&format=${exportFormat}`;
-            } else if (exportType === 'messages') {
-                // Export customer messages
-                url = `export_guest_data.php?type=messages&format=${exportFormat}`;
-            }
-            
-            // Open in new window/tab
-            window.open(url, '_blank');
-            
-            // Close the modal
+            // Close export modal
             $('#exportModal').modal('hide');
-            window.cleanupModal();
+            
+            // Show password verification modal with a delay to ensure proper modal cleanup
+            setTimeout(function() {
+                resetModal();
+                // Clear any previous password input and error message
+                $('#adminPassword').val('');
+                $('#passwordError').hide();
+                // Show the password verification modal
+                $('#passwordVerificationModal').modal('show');
+            }, 300);
         }
     </script>
 </body>

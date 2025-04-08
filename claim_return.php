@@ -123,8 +123,28 @@ $totalPages = ceil($totalRows / $limit);
 <body>
 
     <div class="container mt-0">
-        <h5>Claimed/Return Items</h5>
-        <table class="table table-hover border-0 table-bordered">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Claimed/Return Items</h5>
+            <div class="d-flex align-items-center">
+                <!-- Filter Dropdown -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="claimFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="claimFilterDropdown">
+                        <li><a class="dropdown-item claim-filter-option" href="#" data-filter="all">All Status</a></li>
+                        <li><a class="dropdown-item claim-filter-option" href="#" data-filter="pending">Pending</a></li>
+                        <li><a class="dropdown-item claim-filter-option" href="#" data-filter="claimed">Claimed</a></li>
+                        <li><a class="dropdown-item claim-filter-option" href="#" data-filter="returned">Returned</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Search Input -->
+                <input type="text" id="claimSearchInput" class="form-control form-control-sm" style="width: 200px;" placeholder="Search items...">
+            </div>
+        </div>
+        
+        <table class="table table-hover border-0 table-bordered" id="claimItemsTable">
            <thead class="striky-top">
                  <tr>
                     <th>ID</th>
@@ -307,6 +327,56 @@ $totalPages = ceil($totalRows / $limit);
             
             // Set current date as max date for date_lost
             document.getElementById('date_lost').max = new Date().toISOString().split('T')[0];
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('claimSearchInput');
+        const table = document.getElementById('claimItemsTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchText = searchInput.value.toLowerCase();
+            
+            for (let i = 0; i < rows.length; i++) {
+                let found = false;
+                const cells = rows[i].getElementsByTagName('td');
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent || cells[j].innerText;
+                    
+                    if (cellText.toLowerCase().indexOf(searchText) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                rows[i].style.display = found ? '' : 'none';
+            }
+        });
+        
+        // Filter functionality
+        const filterOptions = document.querySelectorAll('.claim-filter-option');
+        filterOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filterValue = this.getAttribute('data-filter');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    if (filterValue === 'all') {
+                        rows[i].style.display = '';
+                    } else {
+                        const statusCell = rows[i].querySelector('td:nth-child(7)');
+                        if (statusCell) {
+                            const statusText = statusCell.textContent.toLowerCase().trim();
+                            rows[i].style.display = statusText.includes(filterValue) ? '' : 'none';
+                        }
+                    }
+                }
+                
+                // Update dropdown button text to show current filter
+                document.getElementById('claimFilterDropdown').innerHTML = 
+                    `<i class="bi bi-funnel"></i> Filter: ${filterValue === 'all' ? 'All' : filterValue.charAt(0).toUpperCase() + filterValue.slice(1)}`;
+            });
         });
     });
     </script>

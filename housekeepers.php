@@ -74,6 +74,7 @@ if (isset($_POST['requestEmployee'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
      <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+     <script src="https://kit.fontawesome.com/ae360af17e.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/housekeepers.css">
     <link rel="icon" href="img/logo.webp">
@@ -237,8 +238,14 @@ if (isset($_POST['requestEmployee'])) {
                 </div>
             </div>
         </div>
-
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+            
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM fully loaded and parsed');
 
@@ -311,10 +318,12 @@ if (isset($_POST['requestEmployee'])) {
                     console.log('Verification response:', data);
                     
                     if (data.success) {
-                        console.log('Authentication successful, opening manage_face.php in a new tab');
+                        console.log('Authentication successful, redirecting to manage_face.php');
                         faceAuthModal.hide();
                         cleanupModal(); // Ensure modal artifacts are removed
-                        window.open('manage_face.php', '_blank'); // Open in a new tab
+                        
+                        // Use window.location.href to redirect to the manage_face.php page in the same tab
+                        window.location.href = 'manage_face.php';
                     } else {
                         console.log('Authentication failed:', data.message);
                         passwordError.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${data.message}`;

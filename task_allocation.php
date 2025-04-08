@@ -108,7 +108,7 @@ $offset = ($page - 1) * $limit;
             <h3 class="ms-2">Logs</h3>
             <div class="dropdown">
                 <button class="btn btn-success-export dropdown-toggle-export" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-file-export"></i>Export
+                    <i class="fas fa-file-export"></i>Generate Report
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="exportDropdown">
                     <li><a class="dropdown-item" href="#" onclick="exportLogs('excel'); return false;">Excel</a></li>
@@ -393,44 +393,114 @@ $offset = ($page - 1) * $limit;
 
     <!-- Date Range Modal for Export -->
     <div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="dateRangeModalLabel">Select Date Range for Export</h5>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="dateRangeModalLabel">Select Export Options</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body px-4">
                     <form id="exportForm">
                         <input type="hidden" id="exportFormat" name="format" value="excel">
                         
                         <div class="mb-3">
-                            <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" id="startDate" name="start" value="<?php echo date('Y-m-d', strtotime('-30 days')); ?>">
+                            <label for="startDate" class="form-label fw-bold">Start Date</label>
+                            <input type="date" class="form-control rounded-3" id="startDate" name="start" value="<?php echo date('Y-m-d', strtotime('-30 days')); ?>">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="endDate" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="endDate" name="end" value="<?php echo date('Y-m-d'); ?>">
+                            <label for="endDate" class="form-label fw-bold">End Date</label>
+                            <input type="date" class="form-control rounded-3" id="endDate" name="end" value="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Filter by Action Type</label>
+                            <select class="form-select rounded-3" id="actionFilter" name="action">
+                                <option value="">All Actions</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="updated">Updated</option>
+                                <option value="completed">Completed</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Export Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormatOption" id="exportFormatExcel" value="excel" checked>
+                                <label class="form-check-label" for="exportFormatExcel">Excel (.xls)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormatOption" id="exportFormatPDF" value="pdf">
+                                <label class="form-check-label" for="exportFormatPDF">PDF</label>
+                            </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmExport">Export</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary px-3 rounded-3" data-bs-dismiss="modal">
+                        <i class="bx bx-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-3 rounded-3" id="confirmExport">
+                        <i class="bx bx-check me-1"></i> Next
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-        
+    
+    <!-- Password Verification Modal -->
+    <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="passwordVerificationModalLabel">Admin Verification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <p class="mb-3">Please enter your admin password to continue with the export.</p>
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control rounded-3" id="adminPassword" placeholder="Enter your password">
+                        <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                            Incorrect password. Please try again.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary px-3 rounded-3" data-bs-dismiss="modal">
+                        <i class="bx bx-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success px-3 rounded-3" id="verifyPasswordBtn">
+                        <i class="bx bx-check me-1"></i> Verify & Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script type="text/javascript" src="../js/jquery.min.js"></script>
     <script type="text/javascript" src="../js/bootstrap.min.js"></script>
     <script src="js/script.js"></script>
     <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function resetModal() {
+            setTimeout(function() {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
+                $('body').css('overflow', '');
+            }, 150);
+        }
+
         function exportLogs(format) {
             // Set the export format in the hidden field
             document.getElementById('exportFormat').value = format;
+            
+            // Update the radio button to match the selected format
+            document.getElementById('exportFormatExcel').checked = (format === 'excel');
+            document.getElementById('exportFormatPDF').checked = (format === 'pdf');
             
             // Show the date range modal
             var dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
@@ -439,22 +509,104 @@ $offset = ($page - 1) * $limit;
             // Handle the export confirmation
             document.getElementById('confirmExport').onclick = function() {
                 const form = document.getElementById('exportForm');
-                const formData = new FormData(form);
-                const searchParams = new URLSearchParams(formData);
                 
-                // Add any existing filters from the current page
-                const currentUrl = new URL(window.location.href);
-                if (currentUrl.searchParams.has('emp_id')) {
-                    searchParams.set('emp_id', currentUrl.searchParams.get('emp_id'));
-                }
+                // Update the format based on the selected radio button
+                document.getElementById('exportFormat').value = document.querySelector('input[name="exportFormatOption"]:checked').value;
                 
-                // Redirect to the export page
-                window.location.href = 'func/export_logs.php?' + searchParams.toString();
+                // Store the form data for later use
+                window.exportParameters = {
+                    format: document.getElementById('exportFormat').value,
+                    start: document.getElementById('startDate').value,
+                    end: document.getElementById('endDate').value,
+                    action: document.getElementById('actionFilter').value
+                };
                 
-                // Close the modal
+                // Close the current modal
                 dateRangeModal.hide();
+                
+                // Open the password verification modal after a short delay
+                setTimeout(function() {
+                    resetModal();
+                    // Clear any previous password input and error message
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('passwordError').style.display = 'none';
+                    
+                    // Show the password verification modal
+                    var passwordModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
+                    passwordModal.show();
+                }, 300);
             };
         }
+
+        // Setup password verification handlers
+        document.getElementById('verifyPasswordBtn').addEventListener('click', function() {
+            var password = document.getElementById('adminPassword').value;
+            
+            if (!password) {
+                document.getElementById('passwordError').textContent = 'Password cannot be empty';
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            // Verify the admin password
+            fetch('verify_admin_pass.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'password=' + encodeURIComponent(password)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Password is correct, proceed with export
+                    var passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordVerificationModal'));
+                    passwordModal.hide();
+                    
+                    // Build the export URL with parameters
+                    let url = 'func/export_logs.php?format=' + window.exportParameters.format;
+                    
+                    if (window.exportParameters.start) 
+                        url += '&start=' + window.exportParameters.start;
+                    if (window.exportParameters.end) 
+                        url += '&end=' + window.exportParameters.end;
+                    if (window.exportParameters.action) 
+                        url += '&action=' + window.exportParameters.action;
+                    
+                    // Add employee filter if present in the current URL
+                    const currentUrl = new URL(window.location.href);
+                    if (currentUrl.searchParams.has('emp_id')) {
+                        url += '&emp_id=' + currentUrl.searchParams.get('emp_id');
+                    }
+                    
+                    // Add the encryption password
+                    url += '&encryption_password=' + encodeURIComponent(password);
+                    
+                    // Open in new window/tab
+                    window.open(url, '_blank');
+                    
+                    // Clean up modal
+                    resetModal();
+                } else {
+                    // Show error message
+                    document.getElementById('passwordError').textContent = data.message || 'Invalid password';
+                    document.getElementById('passwordError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('passwordError').textContent = 'Error verifying password. Please try again.';
+                document.getElementById('passwordError').style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
+
+        // Allow Enter key to trigger verification
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.which === 13) {
+                document.getElementById('verifyPasswordBtn').click();
+                e.preventDefault();
+            }
+        });
 
         //Pagination with AJAX
         document.addEventListener("DOMContentLoaded", function() {
