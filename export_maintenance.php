@@ -3,7 +3,9 @@
 error_reporting(E_ERROR | E_PARSE);
 
 require_once 'database.php';
+require_once 'func/user_logs.php'; // Include user_logs.php
 require 'vendor/autoload.php';
+
 // Check if session already started to avoid warning
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -27,6 +29,15 @@ $encryptionPassword = $_GET['encryption_password'] ?? "paradisehotel2025";
 
 // Store who generated the report
 $generatedBy = $_SESSION['username'] ?? 'Unknown User';
+
+// Log the report generation
+$logDetails = "Generated $format report for $type data";
+if (!empty($status)) {
+    $logDetails .= ", filtered by status: $status";
+}
+$logDetails .= ", period: $startDate to $endDate";
+
+addUserLog($conn, 'report', 'generate_report', $logDetails);
 
 // Validate dates
 if (!strtotime($startDate) || !strtotime($endDate)) {
@@ -128,6 +139,9 @@ if ($format === 'excel') {
  * Export data to Excel format
  */
 function exportToExcel($maintenanceData, $guestMaintenanceData, $type, $filename, $startDate, $endDate, $status, $generatedBy) {
+    global $conn;
+
+    
     // Set headers for Excel download
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $filename . '.xls"');
@@ -332,6 +346,18 @@ function exportToExcel($maintenanceData, $guestMaintenanceData, $type, $filename
  * Export data to PDF with password protection
  */
 function exportToPDF($maintenanceData, $guestMaintenanceData, $type, $filename, $startDate, $endDate, $status, $generatedBy, $encryptionPassword) {
+    global $conn;
+    
+    // Log the PDF report generation
+    $logDetails = "PDF report generated for $type data";
+    if (!empty($status)) {
+        $logDetails .= ", filtered by status: $status";
+    }
+    $logDetails .= ", period: $startDate to $endDate";
+    $logDetails .= ", password-protected";
+    
+    addUserLog($conn, 'report', 'pdf_report', $logDetails);
+    
     try {
         // Clear all previous output and buffers
         while (ob_get_level()) {

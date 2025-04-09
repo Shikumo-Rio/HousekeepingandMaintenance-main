@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'database.php';
+require_once 'func/user_logs.php'; // Add user_logs.php include
 require 'vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -233,6 +234,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("i", $requestID);
         $stmt->execute();
 
+        // Log the email action
+        $logDetails = "Maintenance request #$requestID emailed to $emailTo";
+        if (!empty($additionalNotes)) {
+            $logDetails .= " with additional notes";
+        }
+        addUserLog($conn, 'email', 'maintenance_email', $logDetails);
+
         echo json_encode([
             'success' => true, 
             'message' => 'Email sent successfully!',
@@ -240,6 +248,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
     } catch (Exception $e) {
+        // Log the email failure
+        $logDetails = "Failed to email maintenance request #$requestID to $emailTo: " . $e->getMessage();
+        addUserLog($conn, 'email', 'maintenance_email_failed', $logDetails);
+
         error_log("Mail Error: " . $e->getMessage());
         echo json_encode([
             'success' => false,

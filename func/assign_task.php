@@ -1,5 +1,6 @@
 <?php
 include '../database.php';
+require_once 'user_logs.php'; // Add user logs functionality
 
 // Read JSON input
 $data = json_decode(file_get_contents("php://input"), true);
@@ -50,6 +51,9 @@ try {
     if (!$updateStmt->execute()) {
         throw new Exception("Execute failed: " . $updateStmt->error);
     }
+    
+    // Log the task assignment
+    logTaskAssignment($conn, $task_id, $emp_id, $emp_name);
 
     echo json_encode(['success' => true]);
 } catch (Exception $e) {

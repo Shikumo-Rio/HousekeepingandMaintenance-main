@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once("database.php");
+require_once("func/user_logs.php");
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -12,9 +13,9 @@ if ($_SESSION['user_type'] !== 'Admin') {
 }
 
 // Handle housekeeper assignment
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $checkout_id = $_POST['checkout_id'] ?? '';
-    $housekeeper = $_POST['housekeeper'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout_id'], $_POST['housekeeper'])) {
+    $checkout_id = $_POST['checkout_id'];
+    $housekeeper = $_POST['housekeeper'];
     $stmt = $conn->prepare("UPDATE checkout_notices SET status = 'Assigned', assigned_to = ? WHERE id = ?");
     $stmt->bind_param("si", $housekeeper, $checkout_id);
     if ($stmt->execute()) {
@@ -22,6 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo json_encode(['success' => false, 'error' => $conn->error]);
     }
+    exit();
+}
+
+// Log report generation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exportType'], $_POST['exportFormat'])) {
+    $username = $_SESSION['username'];
+    $reportType = $_POST['exportType'];
+    $format = $_POST['exportFormat'];
+    logReportGeneration($conn, $username, $reportType, $format);
+    echo json_encode(['success' => true]);
     exit();
 }
 ?>
@@ -366,11 +377,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="row">
                                     <div class="col-6">
                                         <label class="form-label">From</label>
-                                        <input type="date" class="form-control date-picker" id="startDate" name="startDate">
+                                        <input type="date" class="form-control date-picker" id="startDate" name="startDate" max="">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label">To</label>
-                                        <input type="date" class="form-control date-picker" id="endDate" name="endDate">
+                                        <input type="date" class="form-control date-picker" id="endDate" name="endDate" max="">
                                     </div>
                                 </div>
                             </div>
@@ -677,6 +688,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             var todayStr = yyyy + '-' + mm + '-' + dd;
             $('#endDate').val(todayStr);
+            // Set max date attribute to today
+            $('#endDate').attr('max', todayStr);
+            $('#startDate').attr('max', todayStr);
             
             var thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -686,6 +700,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
             $('#startDate').val(thirtyDaysAgoStr);
+
+            // Add event listeners to date inputs to prevent future dates
+            $('#startDate, #endDate').on('change', function() {
+                var selectedDate = new Date($(this).val());
+                
+                // If selected date is in the future (after today), reset to today
+                if (selectedDate > today) {
+                    $(this).val(todayStr);
+                    alert("You cannot select a future date");
+                }
+                
+                // Ensure end date isn't before start date
+                if ($(this).attr('id') === 'endDate') {
+                    var startDate = new Date($('#startDate').val());
+                    if (selectedDate < startDate) {
+                        $(this).val($('#startDate').val());
+                        alert("End date cannot be earlier than start date");
+                    }
+                }
+                
+                // Ensure start date isn't after end date
+                if ($(this).attr('id') === 'startDate') {
+                    var endDate = new Date($('#endDate').val());
+                    if (selectedDate > endDate) {
+                        $('#endDate').val($(this).val());
+                    }
+                }
+            });
 
             // Store export parameters in global scope
             window.exportParameters = {};
@@ -722,16 +764,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (window.exportParameters.statusFilter) 
                                 url += `&status=${window.exportParameters.statusFilter}`;
                             
-                            // Add the encryption password (same as admin password for simplicity)
+                            if (window.exportParameters.exportFormat === 'excel') {
+                                url += `&excel_password=${encodeURIComponent(password)}`;
+                            }
+
                             url += `&encryption_password=${encodeURIComponent(password)}`;
-                            
-                            // Open in new window/tab
+
                             window.open(url, '_blank');
-                            
-                            // Clean up modal
+
+                            $.ajax({
+                                url: 'guest.php',
+                                type: 'POST',
+                                data: {
+                                    exportType: window.exportParameters.exportType,
+                                    exportFormat: window.exportParameters.exportFormat
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        console.log('Report generation logged successfully.');
+                                    } else {
+                                        console.error('Failed to log report generation.');
+                                    }
+                                },
+                                error: function() {
+                                    console.error('Error occurred while logging report generation.');
+                                }
+                            });
+
                             resetModal();
                         } else {
-                            // Show error message
                             $('#passwordError').text(response.message).show();
                         }
                     },
@@ -741,7 +802,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
 
-            // Allow Enter key to trigger verification
             $('#adminPassword').on('keypress', function(e) {
                 if (e.which === 13) {
                     $('#verifyPasswordBtn').click();
@@ -749,7 +809,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
             
-            // Save export parameters when export modal is closed
             $('#exportModal').on('hide.bs.modal', function() {
                 window.exportParameters = {
                     exportType: $('input[name="exportType"]:checked').val(),
@@ -767,7 +826,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         function exportData() {
-            // Save export parameters before closing modal
             window.exportParameters = {
                 exportType: $('input[name="exportType"]:checked').val(),
                 exportFormat: $('input[name="exportFormat"]:checked').val(),
@@ -776,16 +834,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 statusFilter: $('#exportStatusFilter').val()
             };
             
-            // Close export modal
             $('#exportModal').modal('hide');
             
-            // Show password verification modal with a delay to ensure proper modal cleanup
             setTimeout(function() {
                 resetModal();
-                // Clear any previous password input and error message
                 $('#adminPassword').val('');
                 $('#passwordError').hide();
-                // Show the password verification modal
                 $('#passwordVerificationModal').modal('show');
             }, 300);
         }

@@ -14,10 +14,27 @@ if ($_SESSION['user_type'] !== 'Employee') {
 
 
 $username = $_SESSION['username'];
-$sql = "SELECT user_type FROM login_accounts WHERE username = '$username'";
+$sql = "
+    SELECT 
+        la.user_type,
+        e.name AS employee_name,
+        e.email,
+        e.role
+    FROM 
+        login_accounts la
+    JOIN 
+        employee e ON la.emp_id = e.emp_id
+    WHERE 
+        la.username = '$username'
+";
 $result = mysqli_query($conn, $sql);
-$user = mysqli_fetch_assoc($result);
-
+if ($result && mysqli_num_rows($result) > 0) {
+    $user = mysqli_fetch_assoc($result);
+    $employee_name = $user['employee_name'] ?? $username;
+    $email = $user['email'] ?? '';
+    $role = $user['role'] ?? '';
+    $user_type = $user['user_type'] ?? $user_type;
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,8 +57,10 @@ $user = mysqli_fetch_assoc($result);
                 <div class="text-center">
                     <!-- Use a default image if the profile picture doesn't exist -->
                     <img src="../image/profile.jpg" alt="Profile Picture" class="profile-img mt-4">
-                    <h2 class="mt-3"><?php echo htmlspecialchars($username); ?></h2>
-                    <p class="text-secondary"><?php echo htmlspecialchars($user['user_type']); ?></p>
+                    <h2 class="mt-3"><?php echo htmlspecialchars($employee_name); ?></h2>
+                    <p class="text-secondary mb-1"><?php echo htmlspecialchars($email); ?></p>
+                    <p class="text-secondary"><?php echo htmlspecialchars($role); ?></p>
+                    <p class="text-muted"><?php echo htmlspecialchars($user_type); ?></p>
                 </div>
 
                 <!-- Change Password Form -->

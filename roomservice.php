@@ -54,6 +54,20 @@
     <?php include('index.php'); ?>
     <?php
     require_once 'PHP_AItask/allocate_tasks.php';
+    require_once 'func/user_logs.php';
+    
+    // Function to log user activities
+    function logUserActivity($conn, $log_type, $action, $details) {
+        // Get username from session if available
+        $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'System';
+        
+        // Insert into user_logs table
+        $stmt = $conn->prepare("INSERT INTO user_logs (emp_id, log_type, action, details, created_at) 
+                               VALUES (?, ?, ?, ?, NOW())");
+        $stmt->bind_param("ssss", $username, $log_type, $action, $details);
+        $stmt->execute();
+        $stmt->close();
+    }
 
     // Add this function near your other functions
     function checkAndAllocateTasks($conn) {
@@ -65,6 +79,9 @@
         if ($row['pending'] > 0) {
             // Call the AI allocation function
             allocateTasks($conn);
+            
+            // Log the AI task allocation
+            logUserActivity($conn, 'system', 'auto_allocate', 'System automatically allocated pending tasks');
         }
     }
 
@@ -311,6 +328,35 @@
                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                     <p class="mb-0">Request has been successfully added!</p>
                     <p class="fw-semibold fs-6 mb-4" id="requestDetails"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invalid Reason Modal -->
+    <div class="modal fade" id="invalidReasonModal" tabindex="-1" aria-labelledby="invalidReasonModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="invalidReasonModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i> Mark Task as Invalid
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-3">
+                    <p>Please provide a reason why this task is being marked as invalid:</p>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control rounded-3 shadow-sm" style="font-size: 12px; height: 100px;" id="invalidReason" required></textarea>
+                        <label for="invalidReason">Reason for Invalid Status</label>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-2 rounded-3" style="font-size: 12px;" data-bs-dismiss="modal">
+                            <i class="bx bx-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger px-2 rounded-3" style="font-size: 12px;" id="confirmInvalidStatus">
+                            <i class="bx bx-check-circle me-1"></i> Confirm
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -566,47 +612,59 @@
         });
     }
 
-    // Function to change task status
     function changeStatus(newStatus) {
-    const taskId = document.querySelector('.status-card.selected')?.dataset.taskId;
+        const taskId = currentTaskId;
 
-    if (!taskId) {
-        alert('Please select a task first.');
-        return;
+        if (!taskId) {
+            alert('Please select a task first.');
+            return;
+        }
+
+        if (newStatus === 'invalid') {
+            const invalidReasonModal = new bootstrap.Modal(document.getElementById('invalidReasonModal'));
+            invalidReasonModal.show();
+
+            document.getElementById('confirmInvalidStatus').addEventListener('click', function () {
+                const reason = document.getElementById('invalidReason').value.trim();
+
+                if (reason === '') {
+                    document.getElementById('invalidReason').classList.add('is-invalid');
+                    return;
+                }
+
+                submitStatusChange(taskId, newStatus, reason);
+                invalidReasonModal.hide();
+            }, { once: true });
+
+            return;
+        }
+
+        submitStatusChange(taskId, newStatus);
     }
 
-    // Debugging: Check the task ID and new status before making the fetch call
-    console.log("Changing status for Task ID:", taskId, "to:", newStatus);
+    function submitStatusChange(taskId, newStatus, reason = '') {
+        const payload = { id: taskId, status: newStatus };
+        if (reason) payload.reason = reason;
 
-    fetch('func/change_task_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: taskId, status: newStatus }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Server Response:", data); // Debugging: See what the server is returning
-
-        if (data.success) {
-            // Show toast notification with animation for better visibility
-            showToast(`Task ${taskId} status changed to ${newStatus}.`, 'bg-success');
-            
-            // Use a timeout to allow the toast to be seen before reload
-            setTimeout(() => {
-                location.reload(); // Reload the page to reflect changes
-            }, 1000);
-        } else {
-            showToast(`Failed to change status: ${data.error || 'Unknown error'}`, 'bg-danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error changing task status:', error);
-        showToast("An error occurred while changing status. Please try again later.", 'bg-danger');
-    });
-}
-
+        fetch('func/change_task_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Task ${taskId} status changed to ${newStatus}.`, 'bg-success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(`Failed to change status: ${data.error || 'Unknown error'}`, 'bg-danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error changing task status:', error);
+            showToast("An error occurred while changing status. Please try again later.", 'bg-danger');
+        });
+    }
 
     // Function to show toast notifications
     function showToast(message, bgClass = '') {
@@ -891,7 +949,6 @@
 
             tableBody.innerHTML = paginatedData.map(task => `
                 <tr class="task-row" data-task-id="${task.id}" onclick="showDetails(${task.id})">
-                    <td>${task.id}</td>
                     <td>${escapeHtml(task.uname)}</td>
                     <td>${escapeHtml(task.request)}</td>
                     <td>${escapeHtml(task.room)}</td>

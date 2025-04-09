@@ -1,5 +1,6 @@
 <?php
 require_once 'database.php'; 
+require_once 'func/user_logs.php'; // Include the logging function
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -46,6 +47,19 @@ if (!$employeesResult) {
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10; // Number of records per page
 $offset = ($page - 1) * $limit;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exportFormat'], $_POST['startDate'], $_POST['endDate'])) {
+    $username = $_SESSION['username'];
+    $format = $_POST['exportFormat'];
+    $startDate = $_POST['startDate'];
+    $endDate = $_POST['endDate'];
+
+    // Log the export action
+    logReportGeneration($conn, $username, 'Task Logs', $format);
+
+    echo json_encode(['success' => true]);
+    exit();
+}
 
 ?>
 
@@ -549,12 +563,12 @@ $offset = ($page - 1) * $limit;
             }
             
             // Verify the admin password
-            fetch('verify_admin_pass.php', {
+            fetch('task_allocation.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'password=' + encodeURIComponent(password)
+                body: `exportFormat=${encodeURIComponent(window.exportParameters.format)}&startDate=${encodeURIComponent(window.exportParameters.start)}&endDate=${encodeURIComponent(window.exportParameters.end)}`
             })
             .then(response => response.json())
             .then(data => {
@@ -564,23 +578,23 @@ $offset = ($page - 1) * $limit;
                     passwordModal.hide();
                     
                     // Build the export URL with parameters
-                    let url = 'func/export_logs.php?format=' + window.exportParameters.format;
+                    let url = `func/export_logs.php?format=${window.exportParameters.format}`;
                     
                     if (window.exportParameters.start) 
-                        url += '&start=' + window.exportParameters.start;
+                        url += `&start=${window.exportParameters.start}`;
                     if (window.exportParameters.end) 
-                        url += '&end=' + window.exportParameters.end;
+                        url += `&end=${window.exportParameters.end}`;
                     if (window.exportParameters.action) 
-                        url += '&action=' + window.exportParameters.action;
+                        url += `&action=${window.exportParameters.action}`;
                     
                     // Add employee filter if present in the current URL
                     const currentUrl = new URL(window.location.href);
                     if (currentUrl.searchParams.has('emp_id')) {
-                        url += '&emp_id=' + currentUrl.searchParams.get('emp_id');
+                        url += `&emp_id=${currentUrl.searchParams.get('emp_id')}`;
                     }
                     
                     // Add the encryption password
-                    url += '&encryption_password=' + encodeURIComponent(password);
+                    url += `&encryption_password=${encodeURIComponent(password)}`;
                     
                     // Open in new window/tab
                     window.open(url, '_blank');
@@ -634,6 +648,55 @@ $offset = ($page - 1) * $limit;
                         document.querySelector(".pagination").innerHTML = newPagination;
                     })
                     .catch(error => console.error("Error loading logs:", error));
+                }
+            });
+
+            // Date validation for export
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yyyy = today.getFullYear();
+            
+            var todayStr = yyyy + '-' + mm + '-' + dd;
+            
+            // Set max date attribute to today
+            $('#endDate').attr('max', todayStr);
+            $('#startDate').attr('max', todayStr);
+            
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            var dd30 = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+            var mm30 = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+            var yyyy30 = thirtyDaysAgo.getFullYear();
+            
+            var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
+            $('#startDate').val(thirtyDaysAgoStr);
+
+            // Add event listeners to date inputs to prevent future dates
+            $('#startDate, #endDate').on('change', function() {
+                var selectedDate = new Date($(this).val());
+                
+                // If selected date is in the future (after today), reset to today
+                if (selectedDate > today) {
+                    $(this).val(todayStr);
+                    alert("You cannot select a future date");
+                }
+                
+                // Ensure end date isn't before start date
+                if ($(this).attr('id') === 'endDate') {
+                    var startDate = new Date($('#startDate').val());
+                    if (selectedDate < startDate) {
+                        $(this).val($('#startDate').val());
+                        alert("End date cannot be earlier than start date");
+                    }
+                }
+                
+                // Ensure start date isn't after end date
+                if ($(this).attr('id') === 'startDate') {
+                    var endDate = new Date($('#endDate').val());
+                    if (selectedDate > endDate) {
+                        $('#endDate').val($(this).val());
+                    }
                 }
             });
         });

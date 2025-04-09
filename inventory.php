@@ -1,5 +1,6 @@
 <?php
 require_once 'database.php';
+require_once 'func/user_logs.php'; // Include user logs functionality
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -59,6 +60,12 @@ if (isset($_POST['request_inventory_item'])) {
         $result = json_decode($response, true);
         if (isset($result['status']) && $result['status'] === 'success') {
             $successMessage = "Stock request for {$item_name} submitted successfully!";
+            
+            // Log the inventory request
+            $details = "Stock request submitted for Item: {$item_name}, Category: {$category}, Quantity: {$quantity}";
+            if (!addUserLog($conn, 'inventory', 'request_stock', $details)) {
+                error_log("Failed to log inventory request for Item: {$item_name}");
+            }
         } else {
             $successMessage = "Error: " . ($result['message'] ?? 'Unknown error occurred');
         }
@@ -77,6 +84,19 @@ $emp_id = $admin['emp_id']; // Use this emp_id for notifications
 // Fetch inventory items from local database
 $sql = "SELECT * FROM inventory";
 $result = $conn->query($sql);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exportType'], $_POST['exportFormat'])) {
+    $exportType = $_POST['exportType'];
+    $exportFormat = $_POST['exportFormat'];
+    $startDate = $_POST['startDate'] ?? '';
+    $endDate = $_POST['endDate'] ?? '';
+
+    // Log the report generation
+    $details = "Report generated. Type: $exportType, Format: $exportFormat, Date Range: $startDate to $endDate";
+    if (!addUserLog($conn, 'report', 'generate_report', $details)) {
+        error_log("Failed to log report generation. Type: $exportType, Format: $exportFormat");
+    }
+}
 
 ?>
 
@@ -753,6 +773,11 @@ $(document).ready(function() {
                     // Open in new window/tab
                     window.open(url, '_blank');
                     
+                    // Log the report generation
+                    const reportType = window.exportParameters.exportType === 'inventory' ? 'Inventory' : 'Usage History';
+                    const format = window.exportParameters.exportFormat === 'excel' ? 'Excel' : 'PDF';
+                    logReportGeneration(<?php echo json_encode($conn); ?>, <?php echo json_encode($_SESSION['username']); ?>, reportType, format);
+
                     // Clean up modal
                     resetModal();
                 } else {
@@ -793,6 +818,51 @@ $(document).ready(function() {
         resetModal();
     });
 });
+
+$(document).ready(function () {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0');
+        var yyyy = today.getFullYear();
+        var todayStr = yyyy + '-' + mm + '-' + dd;
+
+        // Set max date attribute to today
+        $('#endDate').attr('max', todayStr);
+        $('#startDate').attr('max', todayStr);
+        
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        var dd30 = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+        var mm30 = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+        var yyyy30 = thirtyDaysAgo.getFullYear();
+        
+        var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
+        $('#startDate').val(thirtyDaysAgoStr);
+
+        // Add event listeners to date inputs
+        $('#startDate, #endDate').on('change', function () {
+            var selectedDate = new Date($(this).val());
+            if (selectedDate > today) {
+                $(this).val(todayStr);
+                alert("You cannot select a future date");
+            }
+
+            if ($(this).attr('id') === 'endDate') {
+                var startDate = new Date($('#startDate').val());
+                if (selectedDate < startDate) {
+                    $(this).val($('#startDate').val());
+                    alert("End date cannot be earlier than start date");
+                }
+            }
+
+            if ($(this).attr('id') === 'startDate') {
+                var endDate = new Date($('#endDate').val());
+                if (selectedDate > endDate) {
+                    $('#endDate').val($(this).val());
+                }
+            }
+        });
+    });
 </script>
 </body>
 </html>

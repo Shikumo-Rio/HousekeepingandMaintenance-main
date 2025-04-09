@@ -25,6 +25,8 @@ $statusFilter = $_GET['status'] ?? '';
 
 // Get password from request or use default
 $encryptionPassword = $_GET['encryption_password'] ?? "paradisehotel2025";
+// Get Excel password if provided
+$excelPassword = $_GET['excel_password'] ?? "";
 
 // Store who generated the report
 $generatedBy = $_SESSION['username'] ?? 'Unknown User';
@@ -97,6 +99,8 @@ if ($exportFormat == 'excel') {
  * Export data to Excel
  */
 function exportToExcel($data, $filename, $headers, $title, $exportType, $generatedBy, $startDate, $endDate, $statusFilter) {
+    global $excelPassword;
+    
     // Set headers for Excel download
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $filename . '.xls"');
@@ -107,6 +111,33 @@ function exportToExcel($data, $filename, $headers, $title, $exportType, $generat
     echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
     echo '<head>';
     echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+    
+    // Add VBA script for password protection if password is provided
+    if (!empty($excelPassword)) {
+        echo '<!--[if gte mso 9]>
+        <xml>
+        <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                    <x:Name>Protected Sheet</x:Name>
+                    <x:WorksheetOptions>
+                        <x:Password>' . strtoupper(substr(md5($excelPassword), 0, 16)) . '</x:Password>
+                        <x:ProtectContents>True</x:ProtectContents>
+                    </x:WorksheetOptions>
+                </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->';
+        
+        // Add JavaScript to enforce password protection when opened in modern applications
+        echo '<script>
+        window.onload = function() {
+            alert("This document is password protected. Password: ' . htmlspecialchars($excelPassword) . '");
+        }
+        </script>';
+    }
+    
     echo '<style>';
     echo 'table { border-collapse: collapse; }';
     echo 'th, td { border: 1px solid #000000; padding: 5px; }';

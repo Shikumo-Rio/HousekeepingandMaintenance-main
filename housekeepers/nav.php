@@ -13,10 +13,27 @@ if ($_SESSION['user_type'] !== 'Employee') {
 }
 
 $username = $_SESSION['username'];
-$sql = "SELECT user_type FROM login_accounts WHERE username = '$username'";
+$sql = "
+    SELECT 
+        la.user_type,
+        e.name AS employee_name,
+        e.email,
+        e.role
+    FROM 
+        login_accounts la
+    JOIN 
+        employee e ON la.emp_id = e.emp_id
+    WHERE 
+        la.username = '$username'
+";
 $result = mysqli_query($conn, $sql);
-$user = mysqli_fetch_assoc($result);
-
+if ($result && mysqli_num_rows($result) > 0) {
+    $user = mysqli_fetch_assoc($result);
+    $employee_name = $user['employee_name'] ?? $username;
+    $email = $user['email'] ?? '';
+    $role = $user['role'] ?? '';
+    $user_type = $user['user_type'] ?? $user_type;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,8 +76,8 @@ $user = mysqli_fetch_assoc($result);
         <div class="profile">
             <!-- Replace the following line with your profile image URL -->
             <img src="../image/profile.jpg" alt="Profile Picture" class="profile-img mt-4">
-            <div class="mt-2"><?php echo htmlspecialchars($username); ?></div>
-            <div class="text-secondary"><?php echo htmlspecialchars($user['user_type']); ?></div>
+            <div class="fw-bold"><?php echo htmlspecialchars($employee_name); ?></div>
+            <div class="text-secondary"><?php echo htmlspecialchars($role); ?></div>
             <hr>
         </div>
         <ul class="nav flex-column">

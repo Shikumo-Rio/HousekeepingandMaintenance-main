@@ -1,5 +1,6 @@
 <?php
 require_once('database.php');
+require_once('func/user_logs.php'); // Include user_logs.php
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -53,6 +54,30 @@ $totalGuestPages = ceil($totalGuestRecords / $guestLimit);
 // Fetch paginated guest records
 $guestSql = "SELECT id, uname, title, description, room, status, created_at FROM guest_maintenance LIMIT $guestLimit OFFSET $guestOffset";
 $guestResult = $conn->query($guestSql);
+
+// Email Modal Form Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emailAddress'], $_POST['requestID'])) {
+    $emailAddress = $_POST['emailAddress'];
+    $requestID = $_POST['requestID'];
+    $additionalNotes = $_POST['additionalNotes'] ?? '';
+
+    // Log the email request
+    $details = "Email sent for Request ID: $requestID to $emailAddress. Notes: $additionalNotes";
+    addUserLog($conn, 'email', 'request_email', $details);
+}
+
+// Export Modal Form Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exportType'], $_POST['exportFormat'])) {
+    $exportType = $_POST['exportType'];
+    $exportFormat = $_POST['exportFormat'];
+    $statusFilter = $_POST['status'] ?? '';
+    $startDate = $_POST['startDate'] ?? '';
+    $endDate = $_POST['endDate'] ?? '';
+
+    // Log the report generation
+    $details = "Report generated. Type: $exportType, Format: $exportFormat, Status Filter: $statusFilter, Date Range: $startDate to $endDate";
+    addUserLog($conn, 'report', 'generate_report', $details);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -333,7 +358,10 @@ $guestResult = $conn->query($guestSql);
                             <label for="additionalNotes">Additional Notes (Optional)</label>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success btn-sm px-4 py-2" style="font-size: 12px;">Send Email</button>
+                            <button type="submit" class="btn btn-success btn-sm px-4 py-2" id="sendEmailBtn" style="font-size: 12px;">
+                                <span class="btn-text">Send Email</span>
+                                <span class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true" id="emailSpinner"></span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -349,7 +377,23 @@ $guestResult = $conn->query($guestSql);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center p-0">
-                    <div id="emailResponseMessage"></div>
+                    <div id="emailResponseMessage">
+                        <div class="loading-state text-center py-4 d-none">
+                            <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 class="mt-2 mb-2">Sending Email...</h5>
+                            <p class="text-muted">Please wait while we process your request.</p>
+                        </div>
+                        
+                        <div class="success-state d-none">
+                            <!-- Success content will be injected here -->
+                        </div>
+                        
+                        <div class="error-state d-none">
+                            <!-- Error content will be injected here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -648,10 +692,226 @@ $guestResult = $conn->query($guestSql);
         // Apply search bar styling and alignment
         styleSearchBar();
 
+        // Set max date attribute to today
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0');
+        var yyyy = today.getFullYear();
+        var todayStr = yyyy + '-' + mm + '-' + dd;
+
+        $('#endDate').attr('max', todayStr);
+        $('#startDate').attr('max', todayStr);
+        
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        var dd30 = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+        var mm30 = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+        var yyyy30 = thirtyDaysAgo.getFullYear();
+        
+        var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
+        $('#startDate').val(thirtyDaysAgoStr);
+
+        // Add event listeners to date inputs to prevent future dates
+        $('#startDate, #endDate').on('change', function() {
+            var selectedDate = new Date($(this).val());
+            
+            // If selected date is in the future (after today), reset to today
+            if (selectedDate > today) {
+                $(this).val(todayStr);
+                alert("You cannot select a future date");
+            }
+            
+            // Ensure end date isn't before start date
+            if ($(this).attr('id') === 'endDate') {
+                var startDate = new Date($('#startDate').val());
+                if (selectedDate < startDate) {
+                    $(this).val($('#startDate').val());
+                    alert("End date cannot be earlier than start date");
+                }
+            }
+            
+            // Ensure start date isn't after end date
+            if ($(this).attr('id') === 'startDate') {
+                var endDate = new Date($('#endDate').val());
+                if (selectedDate > endDate) {
+                    $('#endDate').val($(this).val());
+                }
+            }
+        });
+
+        // Handle email form submission via AJAX
+        $('#emailForm').submit(function(e) {
+            e.preventDefault(); // Prevent the default form submission
+            
+            // Show loading state on button
+            $('#sendEmailBtn .btn-text').text('Sending...');
+            $('#emailSpinner').removeClass('d-none');
+            $('#sendEmailBtn').prop('disabled', true);
+            
+            // Get form data
+            var formData = $(this).serialize();
+            
+            // Show the loading modal
+            $('#emailModal').modal('hide');
+            setTimeout(function() {
+                $('#emailResponseModal').modal('show');
+                $('#emailResponseMessage .loading-state').removeClass('d-none');
+                $('#emailResponseMessage .success-state, #emailResponseMessage .error-state').addClass('d-none');
+            }, 500);
+            
+            // Send the data using AJAX
+            $.ajax({
+                type: 'POST',
+                url: 'email_request.php',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    // Hide loading state
+                    $('#emailResponseMessage .loading-state').addClass('d-none');
+                    
+                    // Reset form and button
+                    $('#emailForm')[0].reset();
+                    $('#sendEmailBtn .btn-text').text('Send Email');
+                    $('#emailSpinner').addClass('d-none');
+                    $('#sendEmailBtn').prop('disabled', false);
+                    
+                    // Show response in the response modal
+                    if(response.success) {
+                        $('#emailResponseMessage .success-state').html(`
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
+                                <h5 class="mt-3 mb-2">Email Sent Successfully</h5>
+                                <p class="text-muted">${response.message}</p>
+                            </div>
+                        `).removeClass('d-none');
+                        
+                        // Auto close the success message after 2 seconds
+                        setTimeout(function() {
+                            $('#emailResponseModal').modal('hide');
+                            resetModal(); // Clean up modal backdrop
+                        }, 2000);
+                    } else {
+                        $('#emailResponseMessage .error-state').html(`
+                            <div class="text-center py-4">
+                                <i class="fas fa-times-circle text-danger" style="font-size: 48px;"></i>
+                                <h5 class="mt-3 mb-2">Failed to Send Email</h5>
+                                <p class="text-muted">${response.message}</p>
+                            </div>
+                        `).removeClass('d-none');
+                        // Error message will remain until user dismisses it
+                    }
+                    
+                    // Log the action
+                    console.log("Email request submitted:", response);
+                },
+                error: function(xhr, status, error) {
+                    // Hide loading state
+                    $('#emailResponseMessage .loading-state').addClass('d-none');
+                    
+                    // Reset button state
+                    $('#sendEmailBtn .btn-text').text('Send Email');
+                    $('#emailSpinner').addClass('d-none');
+                    $('#sendEmailBtn').prop('disabled', false);
+                    
+                    // Show error in the response modal
+                    $('#emailResponseMessage .error-state').html(`
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px;"></i>
+                            <h5 class="mt-3 mb-2">Error</h5>
+                            <p class="text-muted">There was a problem sending the email. Please try again.</p>
+                        </div>
+                    `).removeClass('d-none');
+                    
+                    console.error("Error sending email:", error);
+                }
+            });
+        });
+
         // ...existing code...
     });
 
-    // ...existing code...
+    function showExportModal() {
+        // Show the export modal
+        const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+        exportModal.show();
+    }
+
+    function nextStep() {
+        // Collect export parameters
+        const exportType = document.querySelector('input[name="exportType"]:checked').value;
+        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        // Store parameters for later use
+        window.exportParameters = {
+            exportType,
+            exportFormat,
+            startDate,
+            endDate,
+            statusFilter
+        };
+
+        // Hide the export modal
+        const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+        exportModal.hide();
+
+        // Show the password verification modal
+        setTimeout(() => {
+            resetModal();
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            const passwordModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
+            passwordModal.show();
+        }, 300);
+    }
+
+    document.getElementById('verifyPasswordBtn').addEventListener('click', function () {
+        const password = document.getElementById('adminPassword').value;
+
+        if (!password) {
+            document.getElementById('passwordError').textContent = 'Password cannot be empty';
+            document.getElementById('passwordError').style.display = 'block';
+            return;
+        }
+
+        // Verify the admin password using verify_admin_pass.php
+        fetch('verify_admin_pass.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `password=${encodeURIComponent(password)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Password is correct, proceed with export
+                const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordVerificationModal'));
+                passwordModal.hide();
+
+                // Build the export URL
+                let url = `export_maintenance.php?type=${window.exportParameters.exportType}&format=${window.exportParameters.exportFormat}`;
+                if (window.exportParameters.startDate) url += `&startDate=${window.exportParameters.startDate}`;
+                if (window.exportParameters.endDate) url += `&endDate=${window.exportParameters.endDate}`;
+                if (window.exportParameters.statusFilter) url += `&status=${window.exportParameters.statusFilter}`;
+                url += `&encryption_password=${encodeURIComponent(password)}`;
+
+                // Open the export file in a new tab
+                window.open(url, '_blank');
+                resetModal();
+            } else {
+                document.getElementById('passwordError').textContent = data.message || 'Invalid password';
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            document.getElementById('passwordError').textContent = 'Error verifying password. Please try again.';
+            document.getElementById('passwordError').style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
     </script>
 </body>
 </html>

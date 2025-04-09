@@ -211,6 +211,7 @@ $username = htmlspecialchars($_SESSION['pending_username']);
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
+            transform: scaleX(-1);
         }
         
         #overlay {
@@ -219,6 +220,7 @@ $username = htmlspecialchars($_SESSION['pending_username']);
             left: 0;
             width: 100%;
             height: 100%;
+            transform: scaleX(-1);
         }
         
         .btn-verify {
@@ -256,6 +258,44 @@ $username = htmlspecialchars($_SESSION['pending_username']);
             border-radius: 5px;
             transition: width 0.3s ease;
         }
+        
+        .instruction-text {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+        
+        .arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+            color: yellow;
+            animation: pulse 1.5s infinite;
+            z-index: 101;
+        }
+        
+        .arrow-up {
+            top: 15px;
+        }
+        
+        .arrow-down {
+            bottom: 15px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
@@ -270,6 +310,11 @@ $username = htmlspecialchars($_SESSION['pending_username']);
             <div class="webcam-container">
                 <video id="webcam" autoplay muted playsinline></video>
                 <canvas id="overlay"></canvas>
+                <div id="head-movement-instruction" class="instruction-text" style="display: none;">
+                    Please move your head as directed
+                </div>
+                <div id="arrow-up" class="arrow arrow-up" style="display: none;">⬆</div>
+                <div id="arrow-down" class="arrow arrow-down" style="display: none;">⬇</div>
                 <div id="spinner" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
                     <div class="spinner-border text-light" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -306,6 +351,9 @@ $username = htmlspecialchars($_SESSION['pending_username']);
         const statusMessage = document.getElementById('status-message');
         const progressBar = document.getElementById('progress-bar');
         const spinner = document.getElementById('spinner');
+        const headMovementInstruction = document.getElementById('head-movement-instruction');
+        const arrowUp = document.getElementById('arrow-up');
+        const arrowDown = document.getElementById('arrow-down');
         
         // Variables
         let stream = null;
@@ -321,6 +369,19 @@ $username = htmlspecialchars($_SESSION['pending_username']);
         const MAX_VERIFICATION_ATTEMPTS = 5;
         const REQUIRED_CONSECUTIVE_MATCHES = 3; // Require multiple successful matches in a row
         const SIMILARITY_THRESHOLD = 0.45; // Lower threshold = stricter matching (was 0.7)
+        
+        // Liveness detection variables
+        let livenessState = 'waiting'; // waiting -> face_detected -> move_up -> move_down -> verified
+        let initialFaceY = null;
+        let currentFaceY = null;
+        let faceMovementHistory = [];
+        const HISTORY_SIZE = 10;
+        const MOVEMENT_THRESHOLD = 10; // Lowered from 15 to 8 - less movement required
+        const STABLE_THRESHOLD = 5; // Lowered from 5 to 3 - more sensitive to stability
+        let movementUpDetected = false;
+        let movementDownDetected = false;
+        let stablePositionDetected = false;
+        let livenessVerified = false;
         
         // Initialize
         async function init() {
@@ -512,9 +573,99 @@ $username = htmlspecialchars($_SESSION['pending_username']);
             return bestMatch;
         }
         
+        // Update liveness state machine
+        function updateLivenessState(face, landmarks) {
+            if (!face) return;
+            
+            // Get face y-position (we use nose position as reference point for tracking movement)
+            const nose = landmarks.getNose();
+            const nosePosition = nose[0]; // Nose tip
+            currentFaceY = nosePosition.y;
+            
+            // Add to history
+            faceMovementHistory.push(currentFaceY);
+            if (faceMovementHistory.length > HISTORY_SIZE) {
+                faceMovementHistory.shift();
+            }
+            
+            const ctx = overlayCanvas.getContext('2d');
+            
+            // State machine
+            switch (livenessState) {
+                case 'waiting':
+                    if (faceDetected) {
+                        livenessState = 'face_detected';
+                        initialFaceY = currentFaceY;
+                        faceMovementHistory = [initialFaceY]; // Reset history
+                        statusMessage.innerHTML = 'Face detected! Starting liveness check...';
+                        // Show the instruction
+                        headMovementInstruction.style.display = 'block';
+                        arrowUp.style.display = 'block';
+                    }
+                    break;
+                
+                case 'face_detected':
+                    // Wait for the user to look up
+                    statusMessage.innerHTML = 'Please move your head UP slowly';
+                    headMovementInstruction.textContent = 'Please move your head UP';
+                    
+                    // Check if head has moved up significantly
+                    if (initialFaceY - currentFaceY > MOVEMENT_THRESHOLD) {
+                        movementUpDetected = true;
+                        livenessState = 'move_up';
+                        arrowUp.style.display = 'none';
+                        arrowDown.style.display = 'block';
+                        faceMovementHistory = []; // Reset history for the next move
+                        statusMessage.innerHTML = 'Good! Now move your head DOWN';
+                        headMovementInstruction.textContent = 'Please move your head DOWN';
+                    }
+                    break;
+                
+                case 'move_up':
+                    // User has moved head up, now wait for down movement
+                    // Check if head has moved down significantly
+                    if (faceMovementHistory.length >= 3) {
+                        const avgRecent = faceMovementHistory.slice(-3).reduce((a, b) => a + b, 0) / 3;
+                        if (avgRecent > initialFaceY + MOVEMENT_THRESHOLD) {
+                            movementDownDetected = true;
+                            livenessState = 'move_down';
+                            arrowDown.style.display = 'none';
+                            statusMessage.innerHTML = 'Perfect! Face movement verified!';
+                            headMovementInstruction.textContent = 'Liveness confirmed!';
+                            livenessVerified = true;
+                            
+                            // Hide instructions after a short delay
+                            setTimeout(() => {
+                                headMovementInstruction.style.display = 'none';
+                                statusMessage.innerHTML = 'Identity verification in progress...';
+                            }, 1500);
+                        }
+                    }
+                    break;
+                
+                case 'move_down':
+                    // Already verified liveness, proceed to facial recognition
+                    break;
+            }
+            
+            // Debug drawing - show the head movement detection
+            if (face) {
+                // Draw nose position
+                ctx.fillStyle = 'yellow';
+                ctx.beginPath();
+                ctx.arc(nosePosition.x, nosePosition.y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Text showing current state and position
+                ctx.font = '14px Arial';
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Liveness: ${livenessState}`, 10, 20);
+            }
+        }
+        
         // Verify if the face matches any reference image
         async function verifyFace() {
-            if (!liveDescriptor || checkingFace) return;
+            if (!liveDescriptor || checkingFace || !livenessVerified) return;
             
             checkingFace = true;
             verificationAttempts++;
@@ -627,31 +778,32 @@ $username = htmlspecialchars($_SESSION['pending_username']);
                     faceDetected = true;
                     liveDescriptor = result.descriptor;
                     
+                    // Update liveness detection
+                    updateLivenessState(result.detection, result.landmarks);
+                    
                     // Draw detection box
-                    ctx.strokeStyle = '#28a745';
+                    ctx.strokeStyle = livenessVerified ? '#28a745' : '#ffc107';
                     ctx.lineWidth = 2;
                     
                     const box = result.detection.box;
                     ctx.strokeRect(box.x, box.y, box.width, box.height);
                     
                     // Add text showing verification progress
-                    if (consecutiveMatches > 0) {
+                    if (livenessVerified && consecutiveMatches > 0) {
                         ctx.fillStyle = '#28a745';
                         ctx.font = '14px Arial';
                         ctx.fillText(`Match progress: ${consecutiveMatches}/${REQUIRED_CONSECUTIVE_MATCHES}`, box.x, box.y - 5);
                     }
                     
                     // Update verification progress
-                    if (verificationProgress < 100) {
+                    if (livenessVerified && verificationProgress < 100) {
                         verificationProgress += 5;
                         progressBar.style.width = `${verificationProgress}%`;
                     }
                     
-                    if (verificationProgress >= 100 && !checkingFace) {
+                    if (livenessVerified && verificationProgress >= 100 && !checkingFace) {
                         // Automatically verify without button click
                         verifyFace();
-                    } else if (verificationProgress < 100) {
-                        statusMessage.innerHTML = 'Face detected! Keep looking at the camera...';
                     }
                 } else {
                     // No face detected - reset consecutive matches if face disappears
@@ -666,6 +818,15 @@ $username = htmlspecialchars($_SESSION['pending_username']);
                     }
                     
                     statusMessage.innerHTML = 'No face detected. Please look directly at the camera.';
+                    faceDetected = false;
+                    
+                    // Reset liveness state if we lose the face
+                    if (livenessState !== 'waiting' && livenessState !== 'move_down') {
+                        livenessState = 'waiting';
+                        headMovementInstruction.style.display = 'none';
+                        arrowUp.style.display = 'none';
+                        arrowDown.style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.error('Face detection error:', error);
@@ -681,6 +842,159 @@ $username = htmlspecialchars($_SESSION['pending_username']);
                 clearInterval(detectionInterval);
             }
         });
+        
+        // Brightness-based blink detection variables
+        let irisC = []; // Store eye brightness values over time
+        let nowBlinking = false; // Current blinking state
+        let blinkCount = 0; // Number of blinks detected
+        const irisBufferMax = 100; // Maximum values to store (matches script.js)
+        const vThreshold = 1.5; // Brightness threshold multiplier (matches script.js)
+        
+        // Function to get eye brightness using the same approach as script.js
+        function getEyeBrightness(landmarks, ctx) {
+            try {
+                // Get positions of eye landmarks
+                const landmarkPositions = landmarks.positions;
+                
+                // Get left eye region (using same indices as script.js)
+                const leftEyeX = landmarkPositions[37].x; // 38-1 for zero-based indexing
+                const leftEyeY = landmarkPositions[37].y;
+                const leftEyeWidth = landmarkPositions[38].x - landmarkPositions[37].x;
+                const leftEyeHeight = landmarkPositions[41].y - landmarkPositions[37].y;
+                
+                // Get pixel data from video frame for eye region
+                const canvas = document.createElement('canvas');
+                canvas.width = webcamElement.videoWidth;
+                canvas.height = webcamElement.videoHeight;
+                const tempCtx = canvas.getContext('2d');
+                tempCtx.drawImage(webcamElement, 0, 0, canvas.width, canvas.height);
+                
+                // Calculate pixel coordinates (matching script.js approach)
+                const x = Math.floor(leftEyeX + leftEyeWidth/2);
+                const y = Math.floor(leftEyeY + leftEyeHeight/2);
+                
+                // Get average RGB value from this pixel
+                const frame = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixelIndex = Math.floor(x + y * canvas.width);
+                const r = frame.data[pixelIndex * 4];
+                const g = frame.data[pixelIndex * 4 + 1];
+                const b = frame.data[pixelIndex * 4 + 2];
+                
+                // Calculate brightness (average of RGB)
+                return Math.floor((r + g + b) / 3);
+            } catch (error) {
+                console.error("Error calculating eye brightness:", error);
+                return 0;
+            }
+        }
+        
+        // Enhanced update liveness state function with brightness-based blink detection
+        function updateLivenessState(face, landmarks) {
+            if (!face) return;
+            
+            const ctx = overlayCanvas.getContext('2d');
+            
+            // Get face position for head movement detection
+            const nose = landmarks.getNose();
+            const nosePosition = nose[0]; // Nose tip
+            currentFaceY = nosePosition.y;
+            
+            // Get eye brightness for blink detection (using script.js approach)
+            const brightness = getEyeBrightness(landmarks, ctx);
+            
+            // Add to history (same as script.js)
+            irisC.push(brightness);
+            if (irisC.length > irisBufferMax) {
+                irisC.shift();
+            }
+            
+            // Calculate mean brightness (same as script.js)
+            let meanIrisC = irisC.reduce(function(sum, element) {
+                return sum + element;
+            }, 0);
+            meanIrisC = meanIrisC / irisC.length;
+            
+            // Get current brightness
+            let currentIrisC = irisC[irisC.length-1];
+            
+            // Detect blinks using exactly the same logic as script.js
+            if (irisC.length >= 50) { // Need enough samples, but lower than script.js's 100 for faster response
+                if (nowBlinking == false) {
+                    if (currentIrisC >= meanIrisC * vThreshold) {
+                        nowBlinking = true;
+                        console.log("Blink started - eyes closed");
+                    }
+                } else {
+                    if (currentIrisC < meanIrisC * vThreshold) {
+                        nowBlinking = false;
+                        blinkCount += 1;
+                        console.log("Blink completed - count:", blinkCount);
+                        
+                        // If we're in the waiting or face_detected state, progress to next stage
+                        if (livenessState === 'waiting' || livenessState === 'face_detected') {
+                            movementUpDetected = true;
+                            livenessState = 'move_up';
+                            arrowUp.style.display = 'none';
+                            arrowDown.style.display = 'block';
+                            statusMessage.innerHTML = 'Blink detected! Now move your head DOWN';
+                            headMovementInstruction.textContent = 'Please move your head DOWN';
+                        }
+                    }
+                }
+            }
+            
+            // Add face movement tracking to history
+            faceMovementHistory.push(currentFaceY);
+            if (faceMovementHistory.length > HISTORY_SIZE) {
+                faceMovementHistory.shift();
+            }
+            
+            // Existing state machine with modifications for blink detection
+            switch (livenessState) {
+                case 'waiting':
+                    if (faceDetected) {
+                        livenessState = 'face_detected';
+                        initialFaceY = currentFaceY;
+                        faceMovementHistory = [initialFaceY]; // Reset history
+                        statusMessage.innerHTML = 'Face detected! Please blink once...';
+                        headMovementInstruction.style.display = 'block';
+                        headMovementInstruction.textContent = 'Please blink once';
+                    }
+                    break;
+                
+                case 'face_detected':
+                    // Just wait for blink detection to trigger state change
+                    break;
+                
+                case 'move_up':
+                    // After blink, wait for head movement down
+                    if (faceMovementHistory.length >= 3) {
+                        const avgRecent = faceMovementHistory.slice(-3).reduce((a, b) => a + b, 0) / 3;
+                        if (avgRecent > initialFaceY + MOVEMENT_THRESHOLD) {
+                            movementDownDetected = true;
+                            livenessState = 'move_down';
+                            arrowDown.style.display = 'none';
+                            statusMessage.innerHTML = 'Perfect! Face movement verified!';
+                            headMovementInstruction.textContent = 'Liveness confirmed!';
+                            livenessVerified = true;
+                            
+                            // Hide instructions after a short delay
+                            setTimeout(() => {
+                                headMovementInstruction.style.display = 'none';
+                                statusMessage.innerHTML = 'Identity verification in progress...';
+                            }, 1500);
+                        }
+                    }
+                    break;
+                
+                case 'move_down':
+                    // Already verified liveness, proceed to facial recognition
+                    break;
+            }
+            
+            // Debug drawing - show values from blink detection
+          
+        }
         
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);

@@ -814,6 +814,51 @@ document.addEventListener('DOMContentLoaded', () => {
         resetModal();
         new bootstrap.Modal(document.getElementById('exportModal')).show();
     }
+    $(document).ready(function () {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0');
+        var yyyy = today.getFullYear();
+        var todayStr = yyyy + '-' + mm + '-' + dd;
+
+        // Set max date attribute to today
+        $('#endDate').attr('max', todayStr);
+        $('#startDate').attr('max', todayStr);
+        
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        var dd30 = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+        var mm30 = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+        var yyyy30 = thirtyDaysAgo.getFullYear();
+        
+        var thirtyDaysAgoStr = yyyy30 + '-' + mm30 + '-' + dd30;
+        $('#startDate').val(thirtyDaysAgoStr);
+
+        // Add event listeners to date inputs
+        $('#startDate, #endDate').on('change', function () {
+            var selectedDate = new Date($(this).val());
+            if (selectedDate > today) {
+                $(this).val(todayStr);
+                alert("You cannot select a future date");
+            }
+
+            if ($(this).attr('id') === 'endDate') {
+                var startDate = new Date($('#startDate').val());
+                if (selectedDate < startDate) {
+                    $(this).val($('#startDate').val());
+                    alert("End date cannot be earlier than start date");
+                }
+            }
+
+            if ($(this).attr('id') === 'startDate') {
+                var endDate = new Date($('#endDate').val());
+                if (selectedDate > endDate) {
+                    $('#endDate').val($(this).val());
+                }
+            }
+        });
+    });
+    
 
     // Store export parameters in global scope
     window.exportParameters = {};
@@ -1047,6 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     `<span class="filter-badge ${statusClass}">${filterValue.charAt(0).toUpperCase() + filterValue.slice(1)}</span>` : ''}`;
         });
     });
+    
     </script>
 </body>
 </html>
